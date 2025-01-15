@@ -8,13 +8,16 @@ import { AddressForm } from "@/components/GetStarted/AddressForm";
 import { PricingComparison } from "@/components/GetStarted/PricingComparison";
 import { FormValues } from "@/components/GetStarted/schema";
 
+// Define libraries array outside component to prevent unnecessary reloads
+const libraries: ("places")[] = ["places"];
+
 const GetStarted = () => {
   const session = useSession();
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-    libraries: ["places"]
+    libraries
   });
 
   const onPlaceSelected = () => {
@@ -50,7 +53,6 @@ const GetStarted = () => {
 
         const fullStreetAddress = `${streetNumber} ${streetName}`.trim();
         
-        // Update form values using the form methods
         toast.success("Address validated successfully!");
       }
     }
@@ -62,25 +64,22 @@ const GetStarted = () => {
 
       // Validate address using Edge Function
       const fullAddress = `${values.streetAddress}, ${values.city}, ${values.state} ${values.zipCode}`;
-      const response = await fetch('https://aocjoukjdsoynvbuzvas.supabase.co/functions/v1/validate-address', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({ address: fullAddress })
+      console.log("Validating address:", fullAddress);
+      
+      const { data: validatedAddress, error: validationError } = await supabase.functions.invoke('validate-address', {
+        body: { address: fullAddress }
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to validate address');
+      if (validationError) {
+        console.error('Address validation error:', validationError);
+        toast.error("Failed to validate address");
+        return;
       }
 
-      const validatedAddress = await response.json();
       console.log("Validated address:", validatedAddress);
 
       // Insert validated address into database
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('property_requests')
         .insert({
           name: values.name,
@@ -97,8 +96,8 @@ const GetStarted = () => {
           }
         });
 
-      if (error) {
-        console.error('Error submitting property request:', error);
+      if (insertError) {
+        console.error('Error submitting property request:', insertError);
         toast.error("Failed to submit property request");
         return;
       }

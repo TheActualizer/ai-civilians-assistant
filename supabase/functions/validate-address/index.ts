@@ -33,6 +33,7 @@ serve(async (req) => {
 
   try {
     const { address } = await req.json()
+    console.log('Validating address:', address)
     
     // Create Supabase client
     const supabaseClient = createClient(
@@ -48,7 +49,6 @@ serve(async (req) => {
     )
     
     const data: GooglePlacesResponse = await response.json()
-    
     console.log('Google Places API response:', data)
 
     if (data.status !== 'OK') {
@@ -88,6 +88,8 @@ serve(async (req) => {
       formatted_address: result.formatted_address,
       coordinates: result.geometry.location
     }
+
+    console.log('Validated address:', validatedAddress)
 
     return new Response(
       JSON.stringify(validatedAddress),
