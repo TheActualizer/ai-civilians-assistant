@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Session } from "@supabase/supabase-js";
 import { 
   ChevronDown, 
   Menu, 
@@ -24,12 +25,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useToast } from "@/hooks/use-toast";
 
-const Navbar = () => {
+interface NavbarProps {
+  session: Session | null;
+  setSession: (session: Session | null) => void;
+}
+
+const Navbar = ({ session, setSession }: NavbarProps) => {
   const navigate = useNavigate();
-  const session = useSession();
   const supabase = useSupabaseClient();
   const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -38,6 +43,8 @@ const Navbar = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      setSession(null);
       
       toast({
         title: "Logged out successfully",
