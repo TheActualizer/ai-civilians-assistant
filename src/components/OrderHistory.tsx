@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info } from "lucide-react";
+import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info, Share2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Order {
   id: string;
@@ -30,44 +30,42 @@ const OrderHistory = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        console.log("Fetching orders for user:", session?.user.id);
-        const { data, error } = await supabase
-          .from("reports_orders")
-          .select(`
-            *,
-            report:reports (
-              description,
-              created_at,
-              metadata
-            )
-          `)
-          .order("purchase_date", { ascending: false });
-
-        if (error) {
-          console.error("Error fetching orders:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load order history",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        console.log("Fetched orders:", data);
-        setOrders(data || []);
-      } catch (error) {
-        console.error("Error in fetchOrders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (session) {
-      fetchOrders();
-    }
+    fetchOrders();
   }, [session, toast]);
+
+  const fetchOrders = async () => {
+    try {
+      console.log("Fetching orders for user:", session?.user.id);
+      const { data, error } = await supabase
+        .from("reports_orders")
+        .select(`
+          *,
+          report:reports (
+            description,
+            created_at,
+            metadata
+          )
+        `)
+        .order("purchase_date", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching orders:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load order history",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Fetched orders:", data);
+      setOrders(data || []);
+    } catch (error) {
+      console.error("Error in fetchOrders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDownload = async (order: Order) => {
     try {
@@ -109,13 +107,72 @@ const OrderHistory = () => {
     }
   };
 
+  const handleShare = async (order: Order) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("reports")
+        .createSignedUrl(order.download_url, 3600); // URL valid for 1 hour
+
+      if (error) {
+        throw error;
+      }
+
+      await navigator.clipboard.writeText(data.signedUrl);
+      toast({
+        title: "Success",
+        description: "Share link copied to clipboard! Link expires in 1 hour.",
+      });
+    } catch (error) {
+      console.error("Error sharing report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate share link",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (order: Order) => {
+    try {
+      const { error: deleteStorageError } = await supabase.storage
+        .from("reports")
+        .remove([order.download_url]);
+
+      if (deleteStorageError) {
+        throw deleteStorageError;
+      }
+
+      const { error: deleteOrderError } = await supabase
+        .from("reports_orders")
+        .delete()
+        .eq("id", order.id);
+
+      if (deleteOrderError) {
+        throw deleteOrderError;
+      }
+
+      setOrders(orders.filter((o) => o.id !== order.id));
+      toast({
+        title: "Success",
+        description: "Report deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete report",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!session) return null;
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Your Order History</h2>
-        <p className="text-gray-600">View and download your purchased reports</p>
+        <p className="text-gray-600">View and manage your purchased reports</p>
       </div>
 
       {loading ? (
@@ -163,13 +220,30 @@ const OrderHistory = () => {
                       </div>
                     </div>
                     
-                    <div className="mt-4 md:mt-0">
+                    <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
                       <Button 
                         onClick={() => handleDownload(order)}
-                        className="w-full md:w-auto"
+                        variant="outline"
+                        className="flex-1 md:flex-none"
                       >
                         <Download className="h-4 w-4 mr-2" />
-                        Download Report
+                        Download
+                      </Button>
+                      <Button 
+                        onClick={() => handleShare(order)}
+                        variant="outline"
+                        className="flex-1 md:flex-none"
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                      <Button 
+                        onClick={() => handleDelete(order)}
+                        variant="destructive"
+                        className="flex-1 md:flex-none"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
                       </Button>
                     </div>
                   </div>
