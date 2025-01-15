@@ -29,6 +29,13 @@ export const NavLinks = () => {
       </DropdownMenu>
 
       <Link
+        to="/calculations"
+        className="px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200"
+      >
+        Calculations
+      </Link>
+
+      <Link
         to="/learn-more"
         className="px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200"
       >
