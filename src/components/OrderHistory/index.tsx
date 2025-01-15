@@ -73,9 +73,9 @@ const OrderHistory = () => {
       });
       
       setDownloadingOrderId(order.id);
-      
-      // Extract just the filename from the path, removing any directory structure
-      const filePath = order.download_url.split('/').pop();
+
+      // Get the file path from the download_url
+      const filePath = order.download_url;
       if (!filePath) {
         throw new Error("Invalid file path");
       }
@@ -101,7 +101,7 @@ const OrderHistory = () => {
         throw new Error("No signed URL received from storage");
       }
 
-      console.log("Successfully obtained signed URL:", signedUrlData.signedUrl);
+      console.log("Successfully obtained signed URL");
       console.log("Initiating file download with signed URL...");
       
       const response = await fetch(signedUrlData.signedUrl);
