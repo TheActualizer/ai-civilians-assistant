@@ -38,7 +38,8 @@ const OrderHistory = () => {
 
   const fetchOrders = async () => {
     try {
-      console.log("Fetching orders for user:", session?.user.id);
+      console.log("=== Fetching Orders Process Started ===");
+      console.log("User ID:", session?.user.id);
       console.log("User timezone:", userTimeZone);
       
       const { data, error } = await supabase
@@ -54,7 +55,13 @@ const OrderHistory = () => {
         .order("purchase_date", { ascending: false });
 
       if (error) {
-        console.error("Error fetching orders:", error);
+        console.error("=== Error Fetching Orders ===");
+        console.error("Error details:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
         toast({
           title: "Error",
           description: "Failed to load order history",
@@ -63,10 +70,17 @@ const OrderHistory = () => {
         return;
       }
 
-      console.log("Fetched orders:", data);
+      console.log("=== Orders Fetched Successfully ===");
+      console.log("Number of orders:", data?.length || 0);
+      console.log("Orders data:", data);
       setOrders(data || []);
     } catch (error) {
-      console.error("Error in fetchOrders:", error);
+      console.error("=== Unexpected Error in fetchOrders ===");
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
     } finally {
       setLoading(false);
     }
@@ -76,57 +90,76 @@ const OrderHistory = () => {
     try {
       setDownloadingOrderId(order.id);
       console.log("=== Download Process Started ===");
-      console.log("Original download URL:", order.download_url);
+      console.log("Order details:", {
+        id: order.id,
+        name: order.report_name,
+        url: order.download_url
+      });
       
       // Clean the file path by removing any potential duplicate 'reports/' prefix
       const filePath = order.download_url.replace(/^reports\//, '');
       console.log("Cleaned file path:", filePath);
       
-      console.log("Attempting to get signed URL from bucket 'reports' for path:", filePath);
-      
-      // Get the signed URL with error handling for storage errors
+      console.log("Requesting signed URL from Supabase storage...");
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from("reports")
         .createSignedUrl(filePath, 60);
 
       if (signedUrlError) {
+        console.error("=== Storage Error Getting Signed URL ===");
         console.error("Storage Error Details:", {
           message: signedUrlError.message,
           name: signedUrlError.name,
+          statusCode: signedUrlError.statusCode,
         });
         throw new Error(`Failed to generate download URL: ${signedUrlError.message}`);
       }
 
       if (!signedUrlData?.signedUrl) {
-        console.error("No signed URL received");
+        console.error("=== No Signed URL Received ===");
         throw new Error("No signed URL received from storage");
       }
 
       console.log("Successfully obtained signed URL");
+      console.log("Signed URL details:", {
+        url: signedUrlData.signedUrl.substring(0, 100) + "...", // Truncate for logging
+        expiresIn: "60 seconds"
+      });
       
-      // Fetch the file using the signed URL
+      console.log("Initiating file download...");
       const response = await fetch(signedUrlData.signedUrl);
-      console.log("Fetch response status:", response.status);
+      console.log("Download response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("HTTP error response:", errorText);
+        console.error("=== HTTP Error Response ===");
+        console.error("Response details:", {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText
+        });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       // Create blob and trigger download
       const blob = await response.blob();
-      console.log("File blob created, size:", blob.size, "type:", blob.type);
+      console.log("File blob created:", {
+        size: blob.size,
+        type: blob.type
+      });
       
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `${order.report_name}.pdf`;
       
+      console.log("Triggering download with filename:", link.download);
       document.body.appendChild(link);
       link.click();
       
       // Cleanup
+      console.log("Cleaning up download resources...");
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
       
