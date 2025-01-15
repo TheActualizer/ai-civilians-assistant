@@ -1,11 +1,10 @@
-import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useEffect, useState } from "react";
+import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -46,11 +45,14 @@ const AccountInfo = () => {
           .single();
 
         if (error) {
-          console.error("Error fetching profile:", error);
+          throw error;
+        }
+
+        if (!data) {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Could not fetch account information",
+            description: "No profile found",
           });
           return;
         }
@@ -111,20 +113,18 @@ const AccountInfo = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-[250px]" />
-        <Skeleton className="h-[200px] w-full" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+        </div>
       </div>
     );
   }
 
-  if (!profile) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No account information available
-      </div>
-    );
-  }
+  if (!profile) return null;
 
   return (
     <div className="space-y-6">
@@ -143,8 +143,8 @@ const AccountInfo = () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Field</TableHead>
-            <TableHead>Value</TableHead>
+            <TableCell className="w-[200px]">Field</TableCell>
+            <TableCell>Value</TableCell>
           </TableRow>
         </TableHeader>
         <TableBody>
