@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import { useSession } from "@supabase/auth-helpers-react";
 
 const LearnMore = () => {
   const navigate = useNavigate();
+  const session = useSession();
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navbar session={session} />
       <div className="pt-24">
         {/* Hero Section */}
         <section className="relative py-20 px-4 sm:px-6 lg:px-8">

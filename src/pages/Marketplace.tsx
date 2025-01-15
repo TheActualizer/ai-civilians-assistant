@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
 import MarketplaceCard from "@/components/MarketplaceCard";
+import { useSession } from "@supabase/auth-helpers-react";
 
 const Marketplace = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const session = useSession();
 
   // Sample data - in a real app, this would come from an API
   const listings = [
@@ -75,8 +77,7 @@ const Marketplace = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
+      <Navbar session={session} />
       <main className="container mx-auto px-4 pt-24 pb-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
