@@ -163,20 +163,41 @@ const OrderHistory = () => {
 
   const handleShare = async (order: Order) => {
     try {
+      console.log("=== Share Process Started ===");
+      console.log("Generating share link for order:", {
+        orderId: order.id,
+        reportName: order.report_name
+      });
+
+      // Remove the bucket name prefix if it exists in the download_url
+      const filePath = order.download_url.replace(/^reports\//, '');
+      console.log("Using file path for share link:", filePath);
+
       const { data, error } = await supabase.storage
         .from("reports")
-        .createSignedUrl(order.download_url, 3600); // URL valid for 1 hour
+        .createSignedUrl(filePath, 3600); // URL valid for 1 hour
 
       if (error) {
+        console.error("=== Error Generating Share Link ===");
+        console.error("Error details:", error);
         throw error;
       }
 
+      if (!data?.signedUrl) {
+        console.error("=== No Signed URL Received ===");
+        throw new Error("Failed to generate share link");
+      }
+
+      console.log("Successfully generated signed URL");
       await navigator.clipboard.writeText(data.signedUrl);
+      
+      console.log("=== Share Process Completed Successfully ===");
       toast({
         title: "Success",
         description: "Share link copied to clipboard! Link expires in 1 hour.",
       });
     } catch (error) {
+      console.error("=== Share Process Failed ===");
       console.error("Error sharing report:", error);
       toast({
         title: "Error",
