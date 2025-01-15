@@ -46,15 +46,20 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
           table: 'property_requests',
           filter: `id=eq.${requestId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Processing status updated:', payload);
-          const { processing_steps, status_details } = payload.new;
-          setStatus({ processing_steps, status_details });
-          
-          // Calculate progress
-          const steps = Object.values(processing_steps || {});
-          const completedSteps = steps.filter(step => step === true).length;
-          setProgress((completedSteps / (steps.length - 1)) * 100); // -1 to exclude the "completed" flag
+          if (payload.new) {
+            const newStatus: ProcessingStatus = {
+              processing_steps: payload.new.processing_steps as ProcessingSteps,
+              status_details: payload.new.status_details as StatusDetails
+            };
+            setStatus(newStatus);
+            
+            // Calculate progress
+            const steps = Object.values(newStatus.processing_steps || {});
+            const completedSteps = steps.filter(step => step === true).length;
+            setProgress((completedSteps / (steps.length - 1)) * 100); // -1 to exclude the "completed" flag
+          }
         }
       )
       .subscribe();
@@ -73,10 +78,14 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
       }
 
       console.log('Initial status:', data);
-      setStatus(data as ProcessingStatus);
+      const initialStatus: ProcessingStatus = {
+        processing_steps: data.processing_steps as ProcessingSteps,
+        status_details: data.status_details as StatusDetails
+      };
+      setStatus(initialStatus);
       
       // Calculate initial progress
-      const steps = Object.values(data.processing_steps || {});
+      const steps = Object.values(initialStatus.processing_steps || {});
       const completedSteps = steps.filter(step => step === true).length;
       setProgress((completedSteps / (steps.length - 1)) * 100);
     };
@@ -98,12 +107,12 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
   };
 
   return (
-    <Card className="mt-8">
-      <CardHeader>
-        <CardTitle>Processing Status</CardTitle>
-        <CardDescription>Track the progress of your property analysis</CardDescription>
+    <Card className="mt-8 bg-white shadow-lg">
+      <CardHeader className="border-b border-gray-100">
+        <CardTitle className="text-2xl font-bold text-gray-900">Processing Status</CardTitle>
+        <CardDescription className="text-gray-600">Track the progress of your property analysis</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <div className="space-y-8">
           <div className="space-y-2">
             <Progress value={progress} className="h-2" />
@@ -112,64 +121,64 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
 
           <div className="space-y-6">
             {/* Address Validation */}
-            <div className="flex items-start gap-4">
-              <div className="bg-gray-100 p-2 rounded-full">
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg transition-all duration-200 hover:bg-gray-100">
+              <div className="bg-blue-100 p-2 rounded-full">
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Address Validation</h4>
+                  <h4 className="font-medium text-gray-900">Address Validation</h4>
                   {getStepIcon(status.processing_steps?.address_validated)}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   {status.status_details?.address_validation || 'Validating address...'}
                 </p>
               </div>
             </div>
 
             {/* Geospatial Analysis */}
-            <div className="flex items-start gap-4">
-              <div className="bg-gray-100 p-2 rounded-full">
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg transition-all duration-200 hover:bg-gray-100">
+              <div className="bg-green-100 p-2 rounded-full">
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Geospatial Analysis</h4>
+                  <h4 className="font-medium text-gray-900">Geospatial Analysis</h4>
                   {getStepIcon(status.processing_steps?.coordinates_mapped)}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   {status.status_details?.geospatial_analysis || 'Analyzing location data...'}
                 </p>
               </div>
             </div>
 
             {/* Zoning Analysis */}
-            <div className="flex items-start gap-4">
-              <div className="bg-gray-100 p-2 rounded-full">
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg transition-all duration-200 hover:bg-gray-100">
+              <div className="bg-purple-100 p-2 rounded-full">
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Zoning Analysis</h4>
+                  <h4 className="font-medium text-gray-900">Zoning Analysis</h4>
                   {getStepIcon(status.processing_steps?.zoning_checked)}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   {status.status_details?.zoning_analysis || 'Checking zoning regulations...'}
                 </p>
               </div>
             </div>
 
             {/* Report Generation */}
-            <div className="flex items-start gap-4">
-              <div className="bg-gray-100 p-2 rounded-full">
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg transition-all duration-200 hover:bg-gray-100">
+              <div className="bg-orange-100 p-2 rounded-full">
                 <FileOutput className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Report Generation</h4>
+                  <h4 className="font-medium text-gray-900">Report Generation</h4>
                   {getStepIcon(status.processing_steps?.report_generated)}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   {status.status_details?.report_generation || 'Generating final report...'}
                 </p>
               </div>
