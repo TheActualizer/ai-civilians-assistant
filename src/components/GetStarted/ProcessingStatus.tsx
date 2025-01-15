@@ -57,6 +57,12 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [functionLogs, setFunctionLogs] = useState<FunctionLog[]>([]);
+  const [originalAddress, setOriginalAddress] = useState<{
+    street_address: string;
+    city: string;
+    state: string;
+    zip_code: string;
+  } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,6 +91,16 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
       const typedData = data as unknown as PropertyRequest;
       console.log('Initial request data:', typedData);
       setLogs(prev => [...prev, `Request ${requestId} loaded successfully`]);
+      
+      // Store original address if this is the first load
+      if (!request && !originalAddress) {
+        setOriginalAddress({
+          street_address: typedData.street_address,
+          city: typedData.city,
+          state: typedData.state,
+          zip_code: typedData.zip_code
+        });
+      }
       
       // If this is the first load, show a welcome toast
       if (!request) {
@@ -132,48 +148,31 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
             const oldRequest = request;
             setRequest(typedPayload);
 
-            // Check for address validation changes
-            if (oldRequest && 
-                oldRequest.status_details.address_validation !== 
-                typedPayload.status_details.address_validation) {
-              toast({
-                title: "Address Validation Update",
-                description: typedPayload.status_details.address_validation || "Address validation in progress",
-              });
-              console.log('Address validation status changed:', typedPayload.status_details.address_validation);
-            }
+            // Check for address changes and show detailed differences
+            if (originalAddress) {
+              const addressChanges: string[] = [];
+              
+              if (originalAddress.street_address !== typedPayload.street_address) {
+                addressChanges.push(`Street Address: "${originalAddress.street_address}" → "${typedPayload.street_address}"`);
+              }
+              if (originalAddress.city !== typedPayload.city) {
+                addressChanges.push(`City: "${originalAddress.city}" → "${typedPayload.city}"`);
+              }
+              if (originalAddress.state !== typedPayload.state) {
+                addressChanges.push(`State: "${originalAddress.state}" → "${typedPayload.state}"`);
+              }
+              if (originalAddress.zip_code !== typedPayload.zip_code) {
+                addressChanges.push(`ZIP Code: "${originalAddress.zip_code}" → "${typedPayload.zip_code}"`);
+              }
 
-            // Check for coordinates update
-            if (oldRequest?.coordinates?.lat !== typedPayload.coordinates?.lat ||
-                oldRequest?.coordinates?.lng !== typedPayload.coordinates?.lng) {
-              const newCoords = typedPayload.coordinates;
-              toast({
-                title: "Location Mapped",
-                description: `Property coordinates updated to: Lat ${newCoords?.lat?.toFixed(6)}, Lng ${newCoords?.lng?.toFixed(6)}`,
-              });
-              console.log('Coordinates updated:', typedPayload.coordinates);
-            }
-
-            // Check for zoning analysis update
-            if (oldRequest && 
-                oldRequest.status_details.zoning_analysis !== 
-                typedPayload.status_details.zoning_analysis) {
-              toast({
-                title: "Zoning Analysis Update",
-                description: typedPayload.status_details.zoning_analysis || "Zoning analysis in progress",
-              });
-              console.log('Zoning analysis status changed:', typedPayload.status_details.zoning_analysis);
-            }
-
-            // Check for report generation update
-            if (oldRequest && 
-                oldRequest.status_details.report_generation !== 
-                typedPayload.status_details.report_generation) {
-              toast({
-                title: "Report Generation Update",
-                description: typedPayload.status_details.report_generation || "Report generation in progress",
-              });
-              console.log('Report generation status changed:', typedPayload.status_details.report_generation);
+              if (addressChanges.length > 0) {
+                toast({
+                  title: "Address Standardized",
+                  description: "The following address components were standardized:\n" + addressChanges.join('\n'),
+                  duration: 10000, // Show for 10 seconds due to longer content
+                });
+                console.log('Address changes detected:', addressChanges);
+              }
             }
 
             const steps = Object.values(typedPayload.processing_steps || {}).filter(step => typeof step === 'boolean');
@@ -206,7 +205,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
     return () => {
       channel.unsubscribe();
     };
-  }, [requestId, request, toast]);
+  }, [requestId, request, toast, originalAddress]);
 
   const getStepIcon = (stepCompleted: boolean) => {
     if (stepCompleted) {
