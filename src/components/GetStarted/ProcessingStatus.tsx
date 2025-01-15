@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProcessingStatusProps {
   requestId: string;
@@ -56,6 +57,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [functionLogs, setFunctionLogs] = useState<FunctionLog[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!requestId) return;
@@ -70,6 +72,11 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
       if (error) {
         console.error('Error fetching request:', error);
         setLogs(prev => [...prev, `Error fetching request: ${error.message}`]);
+        toast({
+          title: "Error Fetching Request",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
 
@@ -77,6 +84,15 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
       const typedData = data as unknown as PropertyRequest;
       console.log('Initial request data:', typedData);
       setLogs(prev => [...prev, `Request ${requestId} loaded successfully`]);
+      
+      // If this is the first load, show a welcome toast
+      if (!request) {
+        toast({
+          title: "Processing Started",
+          description: `Now processing property at ${typedData.street_address}`,
+        });
+      }
+      
       setRequest(typedData);
       
       if (typedData.processing_steps) {
@@ -112,11 +128,60 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
           
           if (payload.new) {
             const typedPayload = payload.new as unknown as PropertyRequest;
+            const oldRequest = request;
             setRequest(typedPayload);
             
+            // Check for status changes
+            if (oldRequest && oldRequest.status !== typedPayload.status) {
+              toast({
+                title: "Status Updated",
+                description: `Request status changed to: ${typedPayload.status}`,
+              });
+            }
+
+            // Check for address validation changes
+            if (oldRequest && 
+                oldRequest.status_details.address_validation !== 
+                typedPayload.status_details.address_validation) {
+              toast({
+                title: "Address Validation Update",
+                description: typedPayload.status_details.address_validation || "Address validation in progress",
+              });
+            }
+
+            // Check for coordinates update
+            if (oldRequest?.coordinates?.lat !== typedPayload.coordinates?.lat ||
+                oldRequest?.coordinates?.lng !== typedPayload.coordinates?.lng) {
+              toast({
+                title: "Location Mapped",
+                description: "Property coordinates have been updated",
+              });
+            }
+
+            // Check for zoning analysis update
+            if (oldRequest && 
+                oldRequest.status_details.zoning_analysis !== 
+                typedPayload.status_details.zoning_analysis) {
+              toast({
+                title: "Zoning Analysis Update",
+                description: typedPayload.status_details.zoning_analysis || "Zoning analysis in progress",
+              });
+            }
+
+            // Check for report generation update
+            if (oldRequest && 
+                oldRequest.status_details.report_generation !== 
+                typedPayload.status_details.report_generation) {
+              toast({
+                title: "Report Generation Update",
+                description: typedPayload.status_details.report_generation || "Report generation in progress",
+              });
+            }
+
             const steps = Object.values(typedPayload.processing_steps || {}).filter(step => typeof step === 'boolean');
             const completedSteps = steps.filter(step => step === true).length;
-            setProgress((completedSteps / (steps.length - 1)) * 100);
+            const newProgress = (completedSteps / (steps.length - 1)) * 100;
+            setProgress(newProgress);
 
             // Log the state change
             setFunctionLogs(prev => [...prev, {
@@ -125,6 +190,14 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
               status: 'info',
               message: `State updated: ${JSON.stringify(payload.new.status_details)}`
             }]);
+
+            // Check if processing is complete
+            if (typedPayload.processing_steps.completed && !oldRequest?.processing_steps.completed) {
+              toast({
+                title: "Processing Complete",
+                description: "Your property analysis has been completed!",
+              });
+            }
           }
         }
       )
@@ -133,7 +206,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
     return () => {
       channel.unsubscribe();
     };
-  }, [requestId]);
+  }, [requestId, request, toast]);
 
   const getStepIcon = (stepCompleted: boolean) => {
     if (stepCompleted) {
