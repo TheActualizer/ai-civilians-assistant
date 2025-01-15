@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import OrderHistory from "@/components/OrderHistory";
+import AccountInfo from "@/components/AccountInfo";
 import { useSession } from "@supabase/auth-helpers-react";
 
 const Index = () => {
@@ -17,7 +18,10 @@ const Index = () => {
             <Features />
           </>
         ) : (
-          <OrderHistory />
+          <div className="container mx-auto px-4 space-y-8">
+            <AccountInfo />
+            <OrderHistory />
+          </div>
         )}
       </div>
     </div>
