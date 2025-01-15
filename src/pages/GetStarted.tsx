@@ -92,22 +92,41 @@ const GetStarted = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      console.log("Form submitted:", values);
-      
+      if (!session?.user?.id) {
+        toast.error("Please log in to submit a property request");
+        return;
+      }
+
       if (!zipCodeRegex.test(values.zipCode)) {
         toast.error("Please enter a valid ZIP code");
         return;
       }
 
-      // Here you would typically save the data to your backend
-      toast.success("Report generation started!");
-      
-      // Reset form after successful submission
+      const { error } = await supabase
+        .from('property_requests')
+        .insert({
+          user_id: session.user.id,
+          name: values.name,
+          email: values.email,
+          street_address: values.streetAddress,
+          city: values.city,
+          state: values.state,
+          zip_code: values.zipCode,
+          description: values.description || '',
+        });
+
+      if (error) {
+        console.error('Error submitting property request:', error);
+        toast.error("Failed to submit property request");
+        return;
+      }
+
+      toast.success("Property request submitted successfully!");
       form.reset();
       
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error("There was an error generating your report");
+      toast.error("There was an error submitting your request");
     }
   };
 
@@ -132,9 +151,6 @@ const GetStarted = () => {
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             Get your detailed zoning analysis, feasibility reports, and maximum buildable area calculations at a fraction of the cost.
           </p>
-          <Button size="lg" className="text-lg px-8">
-            Generate Report – $99
-          </Button>
         </section>
 
         {/* Form Section */}
@@ -275,7 +291,7 @@ const GetStarted = () => {
                   />
 
                   <Button type="submit" className="w-full">
-                    Continue to Payment
+                    Generate Report
                   </Button>
                 </form>
               </Form>

@@ -39,6 +39,59 @@ export type Database = {
         }
         Relationships: []
       }
+      property_requests: {
+        Row: {
+          city: string
+          created_at: string
+          description: string | null
+          email: string
+          id: string
+          name: string
+          state: string
+          status: string | null
+          street_address: string
+          updated_at: string
+          user_id: string | null
+          zip_code: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          description?: string | null
+          email: string
+          id?: string
+          name: string
+          state: string
+          status?: string | null
+          street_address: string
+          updated_at?: string
+          user_id?: string | null
+          zip_code: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          description?: string | null
+          email?: string
+          id?: string
+          name?: string
+          state?: string
+          status?: string | null
+          street_address?: string
+          updated_at?: string
+          user_id?: string | null
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           created_at: string
