@@ -1,3 +1,4 @@
+import { useSession } from "@supabase/auth-helpers-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -9,14 +10,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 
+const addressRegex = /^[0-9]+\s+[A-Za-z0-9\s,.-]+$/;
+
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
-  address: z.string().min(5, "Please enter a valid address"),
+  address: z.string()
+    .min(5, "Address must be at least 5 characters")
+    .regex(addressRegex, "Please enter a valid street address (e.g., 123 Main St)"),
   description: z.string().optional(),
 });
 
 const GetStarted = () => {
+  const session = useSession();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -28,14 +34,25 @@ const GetStarted = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Form submitted:", values);
-    toast.success("Form submitted successfully!");
-    // TODO: Implement form submission logic
+    try {
+      console.log("Form submitted:", values);
+      // Validate address format
+      if (!addressRegex.test(values.address)) {
+        toast.error("Please enter a valid street address");
+        return;
+      }
+      
+      toast.success("Address validated successfully!");
+      // TODO: Implement form submission logic
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("There was an error submitting the form");
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <Navbar session={session} />
       <div className="pt-24">
         {/* Hero Section */}
         <section className="py-12 px-4 text-center">
@@ -97,7 +114,20 @@ const GetStarted = () => {
                       <FormItem>
                         <FormLabel>Property Address</FormLabel>
                         <FormControl>
-                          <Input placeholder="123 Main St, City, State" {...field} />
+                          <Input 
+                            placeholder="123 Main St, City, State" 
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Real-time validation feedback
+                              if (e.target.value && !addressRegex.test(e.target.value)) {
+                                form.setError('address', {
+                                  type: 'manual',
+                                  message: 'Please enter a valid street address (e.g., 123 Main St)'
+                                });
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
