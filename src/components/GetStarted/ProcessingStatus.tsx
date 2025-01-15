@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Check, Loader2, MapPin, FileText, Building2, FileOutput, Database, Terminal, Code, History, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -9,48 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface ProcessingStatusProps {
-  requestId: string;
-}
-
-interface ProcessingSteps {
-  address_validated: boolean;
-  coordinates_mapped: boolean;
-  zoning_checked: boolean;
-  report_generated: boolean;
-  completed: boolean;
-}
-
-interface StatusDetails {
-  address_validation: string | null;
-  geospatial_analysis: string | null;
-  zoning_analysis: string | null;
-  report_generation: string | null;
-}
-
-interface PropertyRequest {
-  id: string;
-  name: string;
-  email: string;
-  street_address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  description: string | null;
-  coordinates: { lat: number | null; lng: number | null } | null;
-  processing_steps: ProcessingSteps;
-  status_details: StatusDetails;
-  created_at: string;
-  updated_at: string;
-}
-
-interface FunctionLog {
-  timestamp: string;
-  function: string;
-  status: 'success' | 'error' | 'info';
-  message: string;
-}
 
 export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
   const [request, setRequest] = useState<PropertyRequest | null>(null);
@@ -65,66 +23,64 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
   } | null>(null);
   const { toast } = useToast();
 
+  // Memoize the fetch function to prevent recreating it on every render
+  const fetchRequest = useCallback(async () => {
+    console.log('Fetching request data for ID:', requestId);
+    const { data, error } = await supabase
+      .from('property_requests')
+      .select('*')
+      .eq('id', requestId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching request:', error);
+      setLogs(prev => [...prev, `Error fetching request: ${error.message}`]);
+      toast({
+        title: "Error Fetching Request",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const typedData = data as unknown as PropertyRequest;
+    
+    // Only log initial data once
+    if (!request) {
+      console.log('Initial request data:', typedData);
+      setLogs(prev => [...prev, `Request ${requestId} loaded successfully`]);
+    }
+    
+    if (!request && !originalAddress) {
+      setOriginalAddress({
+        street_address: typedData.street_address,
+        city: typedData.city,
+        state: typedData.state,
+        zip_code: typedData.zip_code
+      });
+      
+      toast({
+        title: "Processing Started",
+        description: `Now processing property at ${typedData.street_address}`,
+      });
+    }
+    
+    setRequest(typedData);
+    
+    if (typedData.processing_steps) {
+      const steps = Object.values(typedData.processing_steps).filter(step => typeof step === 'boolean');
+      const completedSteps = steps.filter(step => step === true).length;
+      setProgress((completedSteps / (steps.length - 1)) * 100);
+    }
+  }, [requestId, request, originalAddress, toast]);
+
   useEffect(() => {
     if (!requestId) return;
 
-    const fetchRequest = async () => {
-      console.log('Fetching request data for ID:', requestId);
-      const { data, error } = await supabase
-        .from('property_requests')
-        .select('*')
-        .eq('id', requestId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching request:', error);
-        setLogs(prev => [...prev, `Error fetching request: ${error.message}`]);
-        toast({
-          title: "Error Fetching Request",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const typedData = data as unknown as PropertyRequest;
-      console.log('Initial request data:', typedData);
-      setLogs(prev => [...prev, `Request ${requestId} loaded successfully`]);
-      
-      if (!request && !originalAddress) {
-        setOriginalAddress({
-          street_address: typedData.street_address,
-          city: typedData.city,
-          state: typedData.state,
-          zip_code: typedData.zip_code
-        });
-      }
-      
-      if (!request) {
-        toast({
-          title: "Processing Started",
-          description: `Now processing property at ${typedData.street_address}`,
-        });
-      }
-      
-      setRequest(typedData);
-      
-      if (typedData.processing_steps) {
-        const steps = Object.values(typedData.processing_steps).filter(step => typeof step === 'boolean');
-        const completedSteps = steps.filter(step => step === true).length;
-        setProgress((completedSteps / (steps.length - 1)) * 100);
-      }
-
-      setFunctionLogs(prev => [...prev, {
-        timestamp: new Date().toISOString(),
-        function: 'validate-address',
-        status: 'success',
-        message: `Address validation completed for ${typedData.street_address}`
-      }]);
-    };
-
+    // Initial fetch
     fetchRequest();
 
+    // Set up real-time subscription
     const channel = supabase
       .channel(`property_request_${requestId}`)
       .on(
@@ -137,7 +93,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
         },
         (payload: any) => {
           console.log('Real-time update received:', payload);
-          setLogs(prev => [...prev, `Real-time update received at ${new Date().toISOString()}`]);
           
           if (payload.new) {
             const typedPayload = payload.new as unknown as PropertyRequest;
@@ -167,6 +122,14 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                   duration: 10000,
                 });
                 console.log('Address changes detected:', addressChanges);
+                
+                // Only add function logs for actual changes
+                setFunctionLogs(prev => [...prev, {
+                  timestamp: new Date().toISOString(),
+                  function: 'address-standardization',
+                  status: 'success',
+                  message: `Address components standardized`
+                }]);
               }
             }
 
@@ -175,12 +138,15 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
             const newProgress = (completedSteps / (steps.length - 1)) * 100;
             setProgress(newProgress);
 
-            setFunctionLogs(prev => [...prev, {
-              timestamp: new Date().toISOString(),
-              function: 'realtime-update',
-              status: 'info',
-              message: `Processing progress: ${Math.round(newProgress)}%`
-            }]);
+            // Only log progress changes
+            if (newProgress !== progress) {
+              setFunctionLogs(prev => [...prev, {
+                timestamp: new Date().toISOString(),
+                function: 'realtime-update',
+                status: 'info',
+                message: `Processing progress: ${Math.round(newProgress)}%`
+              }]);
+            }
 
             if (typedPayload.processing_steps.completed && !oldRequest?.processing_steps.completed) {
               toast({
@@ -198,7 +164,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
     return () => {
       channel.unsubscribe();
     };
-  }, [requestId, request, toast, originalAddress]);
+  }, [requestId, request, toast, originalAddress, progress, fetchRequest]);
 
   const getStepIcon = (stepCompleted: boolean) => {
     if (stepCompleted) {
@@ -218,7 +184,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
     zip_code: request.zip_code
   };
 
-  // Function to compare strings and determine if they're different
   const isDifferent = (str1: string, str2: string) => 
     str1?.toLowerCase().trim() !== str2?.toLowerCase().trim();
 
@@ -589,4 +554,3 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
       </Card>
     </div>
   );
-};
