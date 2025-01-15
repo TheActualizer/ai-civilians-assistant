@@ -41,6 +41,8 @@ export type Database = {
       }
       property_requests: {
         Row: {
+          api_data: Json | null
+          api_progress: Json | null
           city: string
           coordinates: Json | null
           created_at: string
@@ -61,6 +63,8 @@ export type Database = {
           zip_code: string
         }
         Insert: {
+          api_data?: Json | null
+          api_progress?: Json | null
           city: string
           coordinates?: Json | null
           created_at?: string
@@ -81,6 +85,8 @@ export type Database = {
           zip_code: string
         }
         Update: {
+          api_data?: Json | null
+          api_progress?: Json | null
           city?: string
           coordinates?: Json | null
           created_at?: string

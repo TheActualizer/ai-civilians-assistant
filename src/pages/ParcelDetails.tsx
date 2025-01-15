@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -9,14 +9,15 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
-  const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [lightboxData, setLightboxData] = useState<LightBoxResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -188,7 +189,6 @@ const ParcelDetails = () => {
   const renderAdditionalDetails = () => {
     if (!lightboxData?.rawResponse) return null;
     
-    // Extract all fields from the raw response
     const rawData = lightboxData.rawResponse;
     const additionalFields = Object.entries(rawData).filter(([key]) => 
       !['parcelId', 'address', 'propertyDetails'].includes(key)
@@ -213,7 +213,7 @@ const ParcelDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
-      <div className="container mx-auto pt-24 px-4 pb-8">
+      <div className="container mx-auto pt-24 px-4 pb-8 overflow-auto max-h-screen">
         <div className="flex flex-col gap-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">LightBox Property Analysis</h1>
@@ -403,6 +403,17 @@ const ParcelDetails = () => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          <div className="sticky bottom-8 flex justify-end mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+            <Button
+              onClick={() => navigate('/assessment')}
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
+              size="lg"
+            >
+              Proceed to Assessment Data
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

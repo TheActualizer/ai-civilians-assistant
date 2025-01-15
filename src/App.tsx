@@ -11,6 +11,7 @@ import NewReport from "./pages/NewReport";
 import Calculations from "./pages/Calculations";
 import AddressValidation from "./pages/AddressValidation";
 import ParcelDetails from "./pages/ParcelDetails";
+import Assessment from "./pages/Assessment";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/calculations" element={<Calculations />} />
           <Route path="/address-validation" element={<AddressValidation />} />
           <Route path="/parcel-details" element={<ParcelDetails />} />
+          <Route path="/assessment" element={<Assessment />} />
         </Routes>
         <Toaster />
       </Router>
