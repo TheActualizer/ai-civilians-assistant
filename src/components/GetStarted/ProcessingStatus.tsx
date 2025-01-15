@@ -211,7 +211,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
 
   // Extract validation details from the request
   const validationDetails = request.status_details.address_validation;
-  const originalAddress = {
+  const displayAddress = {
     street_address: request.street_address,
     city: request.city,
     state: request.state,
