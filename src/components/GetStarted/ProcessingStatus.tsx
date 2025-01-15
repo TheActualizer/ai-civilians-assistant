@@ -63,6 +63,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
     if (!requestId) return;
 
     const fetchRequest = async () => {
+      console.log('Fetching request data for ID:', requestId);
       const { data, error } = await supabase
         .from('property_requests')
         .select('*')
@@ -130,14 +131,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
             const typedPayload = payload.new as unknown as PropertyRequest;
             const oldRequest = request;
             setRequest(typedPayload);
-            
-            // Check for status changes
-            if (oldRequest && oldRequest.status !== typedPayload.status) {
-              toast({
-                title: "Status Updated",
-                description: `Request status changed to: ${typedPayload.status}`,
-              });
-            }
 
             // Check for address validation changes
             if (oldRequest && 
@@ -147,15 +140,18 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                 title: "Address Validation Update",
                 description: typedPayload.status_details.address_validation || "Address validation in progress",
               });
+              console.log('Address validation status changed:', typedPayload.status_details.address_validation);
             }
 
             // Check for coordinates update
             if (oldRequest?.coordinates?.lat !== typedPayload.coordinates?.lat ||
                 oldRequest?.coordinates?.lng !== typedPayload.coordinates?.lng) {
+              const newCoords = typedPayload.coordinates;
               toast({
                 title: "Location Mapped",
-                description: "Property coordinates have been updated",
+                description: `Property coordinates updated to: Lat ${newCoords?.lat?.toFixed(6)}, Lng ${newCoords?.lng?.toFixed(6)}`,
               });
+              console.log('Coordinates updated:', typedPayload.coordinates);
             }
 
             // Check for zoning analysis update
@@ -166,6 +162,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                 title: "Zoning Analysis Update",
                 description: typedPayload.status_details.zoning_analysis || "Zoning analysis in progress",
               });
+              console.log('Zoning analysis status changed:', typedPayload.status_details.zoning_analysis);
             }
 
             // Check for report generation update
@@ -176,6 +173,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                 title: "Report Generation Update",
                 description: typedPayload.status_details.report_generation || "Report generation in progress",
               });
+              console.log('Report generation status changed:', typedPayload.status_details.report_generation);
             }
 
             const steps = Object.values(typedPayload.processing_steps || {}).filter(step => typeof step === 'boolean');
@@ -188,7 +186,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
               timestamp: new Date().toISOString(),
               function: 'realtime-update',
               status: 'info',
-              message: `State updated: ${JSON.stringify(payload.new.status_details)}`
+              message: `Processing progress: ${Math.round(newProgress)}%`
             }]);
 
             // Check if processing is complete
@@ -196,7 +194,9 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
               toast({
                 title: "Processing Complete",
                 description: "Your property analysis has been completed!",
+                variant: "default",
               });
+              console.log('Processing completed');
             }
           }
         }
@@ -370,7 +370,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                                   word.charAt(0).toUpperCase() + word.slice(1)
                                 ).join(' ')}:
                               </span>
-                              <Badge variant={value ? "success" : "secondary"}>
+                              <Badge variant={value ? "default" : "secondary"}>
                                 {value ? "Completed" : "Pending"}
                               </Badge>
                             </div>
