@@ -3,20 +3,17 @@ import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import OrderHistory from "@/components/OrderHistory";
 import AccountInfo from "@/components/AccountInfo";
-import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSession } from "@supabase/auth-helpers-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { Session } from "@supabase/supabase-js";
 
 const Index = () => {
   const session = useSession();
-  const supabase = useSupabaseClient();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [localSession, setLocalSession] = useState<Session | null>(session);
 
   console.log("🔄 Index page rendering...", { isAuthenticated: !!session });
 
@@ -26,7 +23,6 @@ const Index = () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      setLocalSession(null);
       console.log("✅ Logout successful");
       toast({
         title: "Logged out successfully",
@@ -46,7 +42,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar session={localSession} setSession={setLocalSession} />
+      <Navbar />
       <div className="pt-24">
         {!session ? (
           <>

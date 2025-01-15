@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Session } from '@supabase/supabase-js';
+import { useSession } from '@supabase/auth-helpers-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  session: Session | null;
 }
 
-const ProtectedRoute = ({ children, session }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const session = useSession();
   const navigate = useNavigate();
   const { toast } = useToast();
 

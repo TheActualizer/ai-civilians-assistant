@@ -4,18 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { useSession } from "@supabase/auth-helpers-react";
-import { useState } from "react";
-import { Session } from "@supabase/supabase-js";
 
 const LearnMore = () => {
   const navigate = useNavigate();
-  const session = useSession();
-  const [localSession, setLocalSession] = useState<Session | null>(session);
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar session={localSession} setSession={setLocalSession} />
+      <Navbar />
       <div className="pt-24">
         {/* Hero Section */}
         <section className="relative py-20 px-4 sm:px-6 lg:px-8">
