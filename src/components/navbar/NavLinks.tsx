@@ -27,6 +27,11 @@ export const NavLinks = () => {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="hover:bg-[#E5DEFF] cursor-pointer">
+            <Link to="/address-validation" className="w-full">
+              Address Validation
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="hover:bg-[#E5DEFF] cursor-pointer">
             Zoning Analysis
           </DropdownMenuItem>
           <DropdownMenuItem className="hover:bg-[#E5DEFF] cursor-pointer">
