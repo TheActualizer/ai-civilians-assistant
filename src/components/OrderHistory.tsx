@@ -110,7 +110,7 @@ const OrderHistory = () => {
         console.error("Storage Error Details:", {
           message: signedUrlError.message,
           name: signedUrlError.name,
-          statusCode: signedUrlError.statusCode,
+          // Remove statusCode as it's not in the type definition
         });
         throw new Error(`Failed to generate download URL: ${signedUrlError.message}`);
       }
