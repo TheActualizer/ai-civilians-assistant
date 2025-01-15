@@ -102,10 +102,9 @@ const GetStarted = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('property_requests')
         .insert({
-          user_id: session?.user?.id || null, // Make user_id optional
           name: values.name,
           email: values.email,
           street_address: values.streetAddress,
@@ -113,10 +112,7 @@ const GetStarted = () => {
           state: values.state,
           zip_code: values.zipCode,
           description: values.description || '',
-        })
-        .select();
-
-      console.log("Supabase response:", { data, error });
+        });
 
       if (error) {
         console.error('Error submitting property request:', error);
