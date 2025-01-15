@@ -209,6 +209,19 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
 
   if (!request) return null;
 
+  // Extract validation details from the request
+  const validationDetails = request.status_details.address_validation;
+  const originalAddress = {
+    street_address: request.street_address,
+    city: request.city,
+    state: request.state,
+    zip_code: request.zip_code
+  };
+
+  // Function to compare strings and determine if they're different
+  const isDifferent = (str1: string, str2: string) => 
+    str1?.toLowerCase().trim() !== str2?.toLowerCase().trim();
+
   return (
     <div className="space-y-6">
       <Card className="bg-white shadow-lg">
@@ -225,7 +238,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
               <p className="text-sm text-gray-500 text-right">{Math.round(progress)}% Complete</p>
             </div>
 
-            <Tabs defaultValue="address" className="w-full">
+            <Tabs defaultValue="technical" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="address">Address Validation</TabsTrigger>
                 <TabsTrigger value="functions">Function Execution</TabsTrigger>
@@ -396,149 +409,156 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
-                      {originalAddress && (
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 mb-4">Address Changes Analysis</h4>
-                          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                            <div>
-                              <h5 className="font-medium text-sm mb-2">Original Input</h5>
-                              <div className="space-y-2">
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">Street:</span>
-                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
-                                    {originalAddress.street_address}
-                                  </code>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">City:</span>
-                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
-                                    {originalAddress.city}
-                                  </code>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">State:</span>
-                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
-                                    {originalAddress.state}
-                                  </code>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">ZIP:</span>
-                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
-                                    {originalAddress.zip_code}
-                                  </code>
-                                </div>
-                              </div>
-                            </div>
-                            <div>
-                              <h5 className="font-medium text-sm mb-2">Standardized Output</h5>
-                              <div className="space-y-2">
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">Street:</span>
-                                  <code className={`text-sm px-2 py-0.5 rounded ${
-                                    originalAddress.street_address !== request?.street_address 
-                                    ? 'bg-yellow-100' 
-                                    : 'bg-gray-100'
-                                  }`}>
-                                    {request?.street_address}
-                                  </code>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">City:</span>
-                                  <code className={`text-sm px-2 py-0.5 rounded ${
-                                    originalAddress.city !== request?.city 
-                                    ? 'bg-yellow-100' 
-                                    : 'bg-gray-100'
-                                  }`}>
-                                    {request?.city}
-                                  </code>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">State:</span>
-                                  <code className={`text-sm px-2 py-0.5 rounded ${
-                                    originalAddress.state !== request?.state 
-                                    ? 'bg-yellow-100' 
-                                    : 'bg-gray-100'
-                                  }`}>
-                                    {request?.state}
-                                  </code>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-gray-600">ZIP:</span>
-                                  <code className={`text-sm px-2 py-0.5 rounded ${
-                                    originalAddress.zip_code !== request?.zip_code 
-                                    ? 'bg-yellow-100' 
-                                    : 'bg-gray-100'
-                                  }`}>
-                                    {request?.zip_code}
-                                  </code>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-6">
-                            <h4 className="text-sm font-medium text-gray-500 mb-2">Changes Detected</h4>
-                            <div className="space-y-2">
-                              {originalAddress.street_address !== request?.street_address && (
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Badge variant="outline" className="bg-yellow-50">Street</Badge>
-                                  <span className="text-gray-600">Changed from</span>
-                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.street_address}</code>
-                                  <span className="text-gray-600">to</span>
-                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.street_address}</code>
-                                </div>
-                              )}
-                              {originalAddress.city !== request?.city && (
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Badge variant="outline" className="bg-yellow-50">City</Badge>
-                                  <span className="text-gray-600">Changed from</span>
-                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.city}</code>
-                                  <span className="text-gray-600">to</span>
-                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.city}</code>
-                                </div>
-                              )}
-                              {originalAddress.state !== request?.state && (
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Badge variant="outline" className="bg-yellow-50">State</Badge>
-                                  <span className="text-gray-600">Changed from</span>
-                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.state}</code>
-                                  <span className="text-gray-600">to</span>
-                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.state}</code>
-                                </div>
-                              )}
-                              {originalAddress.zip_code !== request?.zip_code && (
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Badge variant="outline" className="bg-yellow-50">ZIP</Badge>
-                                  <span className="text-gray-600">Changed from</span>
-                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.zip_code}</code>
-                                  <span className="text-gray-600">to</span>
-                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.zip_code}</code>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {request?.coordinates && (
-                            <div className="mt-6">
-                              <h4 className="text-sm font-medium text-gray-500 mb-2">Geocoding Results</h4>
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Badge variant="outline">Latitude</Badge>
-                                  <code className="bg-gray-100 px-2 py-0.5 rounded">
-                                    {request.coordinates.lat}
-                                  </code>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Badge variant="outline">Longitude</Badge>
-                                  <code className="bg-gray-100 px-2 py-0.5 rounded">
-                                    {request.coordinates.lng}
-                                  </code>
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-4">Address Validation Status</h4>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm">
+                            {validationDetails || "Validation status not available"}
+                          </p>
                         </div>
-                      )}
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-4">Address Components Analysis</h4>
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                          <div>
+                            <h5 className="font-medium text-sm mb-2">Original Input</h5>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">Street:</span>
+                                <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                  {originalAddress.street_address}
+                                </code>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">City:</span>
+                                <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                  {originalAddress.city}
+                                </code>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">State:</span>
+                                <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                  {originalAddress.state}
+                                </code>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">ZIP:</span>
+                                <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                  {originalAddress.zip_code}
+                                </code>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <h5 className="font-medium text-sm mb-2">Google Maps API Output</h5>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">Street:</span>
+                                <code className={`text-sm px-2 py-0.5 rounded ${
+                                  isDifferent(request.street_address, originalAddress.street_address)
+                                  ? 'bg-yellow-100' 
+                                  : 'bg-gray-100'
+                                }`}>
+                                  {request.street_address}
+                                </code>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">City:</span>
+                                <code className={`text-sm px-2 py-0.5 rounded ${
+                                  isDifferent(request.city, originalAddress.city)
+                                  ? 'bg-yellow-100' 
+                                  : 'bg-gray-100'
+                                }`}>
+                                  {request.city}
+                                </code>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">State:</span>
+                                <code className={`text-sm px-2 py-0.5 rounded ${
+                                  isDifferent(request.state, originalAddress.state)
+                                  ? 'bg-yellow-100' 
+                                  : 'bg-gray-100'
+                                }`}>
+                                  {request.state}
+                                </code>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-gray-600">ZIP:</span>
+                                <code className={`text-sm px-2 py-0.5 rounded ${
+                                  isDifferent(request.zip_code, originalAddress.zip_code)
+                                  ? 'bg-yellow-100' 
+                                  : 'bg-gray-100'
+                                }`}>
+                                  {request.zip_code}
+                                </code>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-6">
+                          <h4 className="text-sm font-medium text-gray-500 mb-2">Detected Changes</h4>
+                          <div className="space-y-2">
+                            {isDifferent(request.street_address, originalAddress.street_address) && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline" className="bg-yellow-50">Street</Badge>
+                                <span className="text-gray-600">Changed from</span>
+                                <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.street_address}</code>
+                                <span className="text-gray-600">to</span>
+                                <code className="bg-yellow-100 px-2 py-0.5 rounded">{request.street_address}</code>
+                              </div>
+                            )}
+                            {isDifferent(request.city, originalAddress.city) && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline" className="bg-yellow-50">City</Badge>
+                                <span className="text-gray-600">Changed from</span>
+                                <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.city}</code>
+                                <span className="text-gray-600">to</span>
+                                <code className="bg-yellow-100 px-2 py-0.5 rounded">{request.city}</code>
+                              </div>
+                            )}
+                            {isDifferent(request.state, originalAddress.state) && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline" className="bg-yellow-50">State</Badge>
+                                <span className="text-gray-600">Changed from</span>
+                                <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.state}</code>
+                                <span className="text-gray-600">to</span>
+                                <code className="bg-yellow-100 px-2 py-0.5 rounded">{request.state}</code>
+                              </div>
+                            )}
+                            {isDifferent(request.zip_code, originalAddress.zip_code) && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline" className="bg-yellow-50">ZIP</Badge>
+                                <span className="text-gray-600">Changed from</span>
+                                <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.zip_code}</code>
+                                <span className="text-gray-600">to</span>
+                                <code className="bg-yellow-100 px-2 py-0.5 rounded">{request.zip_code}</code>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {request.coordinates && (
+                          <div className="mt-6">
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Geocoding Results</h4>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline">Latitude</Badge>
+                                <code className="bg-gray-100 px-2 py-0.5 rounded">
+                                  {request.coordinates.lat}
+                                </code>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline">Longitude</Badge>
+                                <code className="bg-gray-100 px-2 py-0.5 rounded">
+                                  {request.coordinates.lng}
+                                </code>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
