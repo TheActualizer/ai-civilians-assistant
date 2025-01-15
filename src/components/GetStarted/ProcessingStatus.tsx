@@ -87,12 +87,10 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
         return;
       }
 
-      // Type assertion to ensure proper typing
       const typedData = data as unknown as PropertyRequest;
       console.log('Initial request data:', typedData);
       setLogs(prev => [...prev, `Request ${requestId} loaded successfully`]);
       
-      // Store original address if this is the first load
       if (!request && !originalAddress) {
         setOriginalAddress({
           street_address: typedData.street_address,
@@ -102,7 +100,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
         });
       }
       
-      // If this is the first load, show a welcome toast
       if (!request) {
         toast({
           title: "Processing Started",
@@ -118,7 +115,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
         setProgress((completedSteps / (steps.length - 1)) * 100);
       }
 
-      // Add function execution log
       setFunctionLogs(prev => [...prev, {
         timestamp: new Date().toISOString(),
         function: 'validate-address',
@@ -148,7 +144,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
             const oldRequest = request;
             setRequest(typedPayload);
 
-            // Check for address changes and show detailed differences
             if (originalAddress) {
               const addressChanges: string[] = [];
               
@@ -169,7 +164,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                 toast({
                   title: "Address Standardized",
                   description: "The following address components were standardized:\n" + addressChanges.join('\n'),
-                  duration: 10000, // Show for 10 seconds due to longer content
+                  duration: 10000,
                 });
                 console.log('Address changes detected:', addressChanges);
               }
@@ -180,7 +175,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
             const newProgress = (completedSteps / (steps.length - 1)) * 100;
             setProgress(newProgress);
 
-            // Log the state change
             setFunctionLogs(prev => [...prev, {
               timestamp: new Date().toISOString(),
               function: 'realtime-update',
@@ -188,7 +182,6 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
               message: `Processing progress: ${Math.round(newProgress)}%`
             }]);
 
-            // Check if processing is complete
             if (typedPayload.processing_steps.completed && !oldRequest?.processing_steps.completed) {
               toast({
                 title: "Processing Complete",
@@ -233,10 +226,11 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
             </div>
 
             <Tabs defaultValue="address" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="address">Address Validation</TabsTrigger>
                 <TabsTrigger value="functions">Function Execution</TabsTrigger>
                 <TabsTrigger value="database">Database State</TabsTrigger>
+                <TabsTrigger value="technical">Technical Analysis</TabsTrigger>
               </TabsList>
 
               <TabsContent value="address" className="space-y-4">
@@ -387,6 +381,164 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
                           </pre>
                         </ScrollArea>
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="technical" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Terminal className="h-5 w-5 text-primary" />
+                      <CardTitle>Address Standardization Analysis</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {originalAddress && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 mb-4">Address Changes Analysis</h4>
+                          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div>
+                              <h5 className="font-medium text-sm mb-2">Original Input</h5>
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">Street:</span>
+                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                    {originalAddress.street_address}
+                                  </code>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">City:</span>
+                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                    {originalAddress.city}
+                                  </code>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">State:</span>
+                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                    {originalAddress.state}
+                                  </code>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">ZIP:</span>
+                                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                                    {originalAddress.zip_code}
+                                  </code>
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-sm mb-2">Standardized Output</h5>
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">Street:</span>
+                                  <code className={`text-sm px-2 py-0.5 rounded ${
+                                    originalAddress.street_address !== request?.street_address 
+                                    ? 'bg-yellow-100' 
+                                    : 'bg-gray-100'
+                                  }`}>
+                                    {request?.street_address}
+                                  </code>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">City:</span>
+                                  <code className={`text-sm px-2 py-0.5 rounded ${
+                                    originalAddress.city !== request?.city 
+                                    ? 'bg-yellow-100' 
+                                    : 'bg-gray-100'
+                                  }`}>
+                                    {request?.city}
+                                  </code>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">State:</span>
+                                  <code className={`text-sm px-2 py-0.5 rounded ${
+                                    originalAddress.state !== request?.state 
+                                    ? 'bg-yellow-100' 
+                                    : 'bg-gray-100'
+                                  }`}>
+                                    {request?.state}
+                                  </code>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">ZIP:</span>
+                                  <code className={`text-sm px-2 py-0.5 rounded ${
+                                    originalAddress.zip_code !== request?.zip_code 
+                                    ? 'bg-yellow-100' 
+                                    : 'bg-gray-100'
+                                  }`}>
+                                    {request?.zip_code}
+                                  </code>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-6">
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">Changes Detected</h4>
+                            <div className="space-y-2">
+                              {originalAddress.street_address !== request?.street_address && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Badge variant="outline" className="bg-yellow-50">Street</Badge>
+                                  <span className="text-gray-600">Changed from</span>
+                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.street_address}</code>
+                                  <span className="text-gray-600">to</span>
+                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.street_address}</code>
+                                </div>
+                              )}
+                              {originalAddress.city !== request?.city && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Badge variant="outline" className="bg-yellow-50">City</Badge>
+                                  <span className="text-gray-600">Changed from</span>
+                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.city}</code>
+                                  <span className="text-gray-600">to</span>
+                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.city}</code>
+                                </div>
+                              )}
+                              {originalAddress.state !== request?.state && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Badge variant="outline" className="bg-yellow-50">State</Badge>
+                                  <span className="text-gray-600">Changed from</span>
+                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.state}</code>
+                                  <span className="text-gray-600">to</span>
+                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.state}</code>
+                                </div>
+                              )}
+                              {originalAddress.zip_code !== request?.zip_code && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Badge variant="outline" className="bg-yellow-50">ZIP</Badge>
+                                  <span className="text-gray-600">Changed from</span>
+                                  <code className="bg-gray-100 px-2 py-0.5 rounded">{originalAddress.zip_code}</code>
+                                  <span className="text-gray-600">to</span>
+                                  <code className="bg-yellow-100 px-2 py-0.5 rounded">{request?.zip_code}</code>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {request?.coordinates && (
+                            <div className="mt-6">
+                              <h4 className="text-sm font-medium text-gray-500 mb-2">Geocoding Results</h4>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Badge variant="outline">Latitude</Badge>
+                                  <code className="bg-gray-100 px-2 py-0.5 rounded">
+                                    {request.coordinates.lat}
+                                  </code>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Badge variant="outline">Longitude</Badge>
+                                  <code className="bg-gray-100 px-2 py-0.5 rounded">
+                                    {request.coordinates.lng}
+                                  </code>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
