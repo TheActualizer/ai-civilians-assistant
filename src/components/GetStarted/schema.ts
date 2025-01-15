@@ -10,6 +10,7 @@ export const formSchema = z.object({
   state: z.string().length(2, "Please enter a valid 2-letter state code"),
   zipCode: z.string().regex(zipCodeRegex, "Please enter a valid ZIP code (e.g., 12345 or 12345-6789)"),
   description: z.string().optional(),
+  autocomplete: z.any().optional(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
