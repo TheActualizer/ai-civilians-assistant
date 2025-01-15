@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -185,6 +185,31 @@ const ParcelDetails = () => {
     );
   };
 
+  const renderAdditionalDetails = () => {
+    if (!lightboxData?.rawResponse) return null;
+    
+    // Extract all fields from the raw response
+    const rawData = lightboxData.rawResponse;
+    const additionalFields = Object.entries(rawData).filter(([key]) => 
+      !['parcelId', 'address', 'propertyDetails'].includes(key)
+    );
+
+    return (
+      <div className="space-y-6">
+        {additionalFields.map(([key, value]) => (
+          <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500 capitalize">
+              {key.replace(/([A-Z])/g, ' $1').trim()}
+            </h3>
+            <p className="mt-1 whitespace-pre-wrap">
+              {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
@@ -198,9 +223,10 @@ const ParcelDetails = () => {
           </div>
 
           <Tabs defaultValue="property" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="property">Property Details</TabsTrigger>
               <TabsTrigger value="address">Address Info</TabsTrigger>
+              <TabsTrigger value="additional">Additional Data</TabsTrigger>
               <TabsTrigger value="api-debug">API Debug</TabsTrigger>
               <TabsTrigger value="parsed">Parsed Data</TabsTrigger>
               <TabsTrigger value="raw">Raw Response</TabsTrigger>
@@ -251,6 +277,21 @@ const ParcelDetails = () => {
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="additional">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Info className="h-5 w-5 text-primary" />
+                    <CardTitle>Additional Property Information</CardTitle>
+                  </div>
+                  <CardDescription>Extended property details from LightBox API</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {renderAdditionalDetails()}
                 </CardContent>
               </Card>
             </TabsContent>
