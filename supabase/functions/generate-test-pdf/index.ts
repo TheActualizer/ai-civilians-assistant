@@ -24,6 +24,12 @@ serve(async (req) => {
     // Create a File object
     const file = new File([binaryData], 'test-report-2024.pdf', { type: 'application/pdf' })
 
+    console.log('Created PDF file object:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    })
+
     // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -47,15 +53,47 @@ serve(async (req) => {
 
     console.log('File uploaded successfully:', data)
 
+    // Create a record in the reports table
+    const { error: dbError } = await supabase
+      .from('reports')
+      .insert({
+        report_name: 'Test Report 2024',
+        description: 'A test PDF file for testing download functionality',
+        file_url: 'reports/test-report-2024.pdf'
+      })
+
+    if (dbError) {
+      console.error('Database error:', dbError)
+      throw dbError
+    }
+
     return new Response(
-      JSON.stringify({ message: 'Test PDF uploaded successfully', data }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      JSON.stringify({ 
+        message: 'Test PDF uploaded successfully', 
+        path: 'reports/test-report-2024.pdf' 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }, 
+        status: 200 
+      }
     )
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to generate and upload test PDF', details: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ 
+        error: 'Failed to generate and upload test PDF', 
+        details: error.message 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }, 
+        status: 500 
+      }
     )
   }
 })
