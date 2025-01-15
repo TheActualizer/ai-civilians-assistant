@@ -1,6 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
+const images = [
+  {
+    src: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7",
+    alt: "Software development visualization",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1487958449943-2429e8be8625",
+    alt: "Modern architecture",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1496307653780-42ee777d4833",
+    alt: "Glass building architecture",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1431576901776-e539bd916ba2",
+    alt: "Modern building perspective",
+  },
+];
 
 const Hero = () => {
   return (
@@ -58,9 +84,24 @@ const Hero = () => {
         transition={{ duration: 1 }}
         className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2"
       >
-        <div className="h-56 w-full bg-gradient-to-br from-primary via-accent to-blue-400 sm:h-72 md:h-96 lg:w-full lg:h-full">
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm mix-blend-overlay" />
-        </div>
+        <Carousel className="w-full h-full" opts={{ loop: true, align: "start" }}>
+          <CarouselContent>
+            {images.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="h-56 w-full sm:h-72 md:h-96 lg:w-full lg:h-full">
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-4" />
+          <CarouselNext className="right-4" />
+        </Carousel>
       </motion.div>
     </div>
   );
