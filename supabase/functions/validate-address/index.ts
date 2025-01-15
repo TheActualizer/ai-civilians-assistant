@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,29 +26,31 @@ interface GooglePlacesResponse {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { address } = await req.json()
     console.log('Validating address:', address)
     
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
+    // Get Google Maps API key from environment
+    const googleApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
+    if (!googleApiKey) {
+      throw new Error('Google Maps API key not configured')
+    }
 
     // Call Google Places API
-    const googleApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
     const encodedAddress = encodeURIComponent(address)
+    console.log('Calling Google Places API with encoded address:', encodedAddress)
+    
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${googleApiKey}`
     )
     
     const data: GooglePlacesResponse = await response.json()
-    console.log('Google Places API response:', data)
+    console.log('Google Places API response status:', data.status)
 
     if (data.status !== 'OK') {
       throw new Error(`Address validation failed: ${data.status}`)
