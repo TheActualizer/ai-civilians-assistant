@@ -92,12 +92,9 @@ const OrderHistory = () => {
       
       setDownloadingOrderId(order.id);
       
-      // Extract just the filename from the path, removing any directory structure
-      const filePath = order.download_url.split('/').pop();
-      if (!filePath) {
-        throw new Error("Invalid file path");
-      }
-      console.log("Using file path:", filePath);
+      // Remove the 'reports/' prefix if it exists at the start of the path
+      const filePath = order.download_url.replace(/^reports\//, '');
+      console.log("Using file path for download:", filePath);
       
       console.log("Requesting signed URL from Supabase storage...");
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
@@ -119,43 +116,14 @@ const OrderHistory = () => {
         throw new Error("No signed URL received from storage");
       }
 
-      console.log("Successfully obtained signed URL:", signedUrlData.signedUrl);
-      console.log("Initiating file download with signed URL...");
+      console.log("Successfully obtained signed URL");
       
-      const response = await fetch(signedUrlData.signedUrl);
-      console.log("Download response status:", response.status);
-      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("=== HTTP Error Response ===");
-        console.error("Response details:", {
-          status: response.status,
-          statusText: response.statusText,
-          errorBody: errorText,
-          url: signedUrlData.signedUrl
-        });
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      console.log("File blob created:", {
-        size: blob.size,
-        type: blob.type
-      });
-      
-      const url = window.URL.createObjectURL(blob);
+      // Create a temporary link and trigger download
       const link = document.createElement("a");
-      link.href = url;
+      link.href = signedUrlData.signedUrl;
       link.download = `${order.report_name}.pdf`;
-      
-      console.log("Triggering download with filename:", link.download);
       document.body.appendChild(link);
       link.click();
-      
-      // Cleanup
-      console.log("Cleaning up download resources...");
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
       
       console.log("=== Download Process Completed Successfully ===");
@@ -184,58 +152,44 @@ const OrderHistory = () => {
 
   const handleShare = async (order: Order) => {
     try {
+      console.log("=== Share Process Started ===");
+      console.log("Generating share link for order:", {
+        orderId: order.id,
+        reportName: order.report_name,
+        downloadUrl: order.download_url
+      });
+
+      // Remove the 'reports/' prefix if it exists
+      const filePath = order.download_url.replace(/^reports\//, '');
+      console.log("Using file path for share link:", filePath);
+
       const { data, error } = await supabase.storage
         .from("reports")
-        .createSignedUrl(order.download_url, 3600); // URL valid for 1 hour
+        .createSignedUrl(filePath, 3600); // URL valid for 1 hour
 
       if (error) {
+        console.error("=== Share Link Generation Failed ===");
+        console.error("Error details:", error);
         throw error;
       }
 
+      if (!data?.signedUrl) {
+        throw new Error("Failed to generate share link");
+      }
+
       await navigator.clipboard.writeText(data.signedUrl);
+      console.log("=== Share Process Completed Successfully ===");
+      
       toast({
         title: "Success",
         description: "Share link copied to clipboard! Link expires in 1 hour.",
       });
     } catch (error) {
+      console.error("=== Share Process Failed ===");
       console.error("Error sharing report:", error);
       toast({
         title: "Error",
         description: "Failed to generate share link",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDelete = async (order: Order) => {
-    try {
-      const { error: deleteStorageError } = await supabase.storage
-        .from("reports")
-        .remove([order.download_url]);
-
-      if (deleteStorageError) {
-        throw deleteStorageError;
-      }
-
-      const { error: deleteOrderError } = await supabase
-        .from("reports_orders")
-        .delete()
-        .eq("id", order.id);
-
-      if (deleteOrderError) {
-        throw deleteOrderError;
-      }
-
-      setOrders(orders.filter((o) => o.id !== order.id));
-      toast({
-        title: "Success",
-        description: "Report deleted successfully",
-      });
-    } catch (error) {
-      console.error("Error deleting report:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete report",
         variant: "destructive",
       });
     }
