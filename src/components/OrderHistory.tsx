@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info, Share2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { formatInTimeZone } from 'date-fns-tz';
 import { useToast } from "@/hooks/use-toast";
 
 interface Order {
@@ -28,6 +29,7 @@ const OrderHistory = () => {
   const [loading, setLoading] = useState(true);
   const session = useSession();
   const { toast } = useToast();
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
     fetchOrders();
@@ -36,6 +38,8 @@ const OrderHistory = () => {
   const fetchOrders = async () => {
     try {
       console.log("Fetching orders for user:", session?.user.id);
+      console.log("User timezone:", userTimeZone);
+      
       const { data, error } = await supabase
         .from("reports_orders")
         .select(`
@@ -168,11 +172,20 @@ const OrderHistory = () => {
 
   if (!session) return null;
 
+  const formatDate = (dateString: string) => {
+    return formatInTimeZone(
+      new Date(dateString),
+      userTimeZone,
+      'MMM d, yyyy h:mm a zzz'
+    );
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Your Order History</h2>
         <p className="text-gray-600">View and manage your purchased reports</p>
+        <p className="text-sm text-gray-500 mt-1">All times shown in {userTimeZone}</p>
       </div>
 
       {loading ? (
@@ -202,7 +215,7 @@ const OrderHistory = () => {
                       <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-2" />
-                          {format(new Date(order.purchase_date), "MMM d, yyyy")}
+                          {formatDate(order.purchase_date)}
                         </div>
                         <div className="flex items-center">
                           <DollarSign className="h-4 w-4 mr-2" />
@@ -280,7 +293,7 @@ const OrderHistory = () => {
                                 <p className="text-sm text-gray-600 mt-1">{order.report.description}</p>
                               )}
                               <p className="text-sm text-gray-600 mt-1">
-                                Created: {format(new Date(order.report.created_at), "MMM d, yyyy")}
+                                Created: {formatDate(order.report.created_at)}
                               </p>
                               {order.report.metadata && Object.keys(order.report.metadata).length > 0 && (
                                 <div className="mt-2">
