@@ -29,6 +29,8 @@ const GetStarted = () => {
   const session = useSession();
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   
+  console.log("Current session:", session); // Debug log for session
+
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
     libraries: ["places"]
@@ -92,17 +94,23 @@ const GetStarted = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      console.log("Form values:", values); // Debug log for form values
+      
       if (!session?.user?.id) {
+        console.log("No user session found"); // Debug log for session check
         toast.error("Please log in to submit a property request");
         return;
       }
 
+      console.log("User ID:", session.user.id); // Debug log for user ID
+
       if (!zipCodeRegex.test(values.zipCode)) {
+        console.log("Invalid ZIP code"); // Debug log for ZIP validation
         toast.error("Please enter a valid ZIP code");
         return;
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('property_requests')
         .insert({
           user_id: session.user.id,
@@ -113,7 +121,10 @@ const GetStarted = () => {
           state: values.state,
           zip_code: values.zipCode,
           description: values.description || '',
-        });
+        })
+        .select();
+
+      console.log("Supabase response:", { data, error }); // Debug log for Supabase response
 
       if (error) {
         console.error('Error submitting property request:', error);
@@ -330,6 +341,7 @@ const GetStarted = () => {
       </div>
     </div>
   );
+
 };
 
 export default GetStarted;
