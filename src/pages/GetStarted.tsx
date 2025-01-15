@@ -29,7 +29,7 @@ const GetStarted = () => {
   const session = useSession();
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   
-  console.log("Current session:", session); // Debug log for session
+  console.log("Current session:", session);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
@@ -112,6 +112,7 @@ const GetStarted = () => {
           state: values.state,
           zip_code: values.zipCode,
           description: values.description || '',
+          user_id: session?.user?.id || null
         });
 
       if (error) {
