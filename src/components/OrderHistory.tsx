@@ -92,8 +92,8 @@ const OrderHistory = () => {
       
       setDownloadingOrderId(order.id);
       
-      // Clean the file path by removing any potential duplicate 'reports/' prefix
-      const filePath = order.download_url.replace(/^reports\//, '');
+      // Clean the file path by removing any potential 'reports/' prefix and leading slash
+      const filePath = order.download_url.replace(/^\/?(reports\/)?/, '');
       console.log("Cleaned file path:", filePath);
       
       console.log("Requesting signed URL from Supabase storage...");
@@ -106,6 +106,7 @@ const OrderHistory = () => {
         console.error("Storage Error Details:", {
           message: signedUrlError.message,
           name: signedUrlError.name,
+          filePath: filePath
         });
         throw new Error(`Failed to generate download URL: ${signedUrlError.message}`);
       }
@@ -115,7 +116,7 @@ const OrderHistory = () => {
         throw new Error("No signed URL received from storage");
       }
 
-      console.log("Successfully obtained signed URL");
+      console.log("Successfully obtained signed URL:", signedUrlData.signedUrl);
       console.log("Initiating file download with signed URL...");
       
       const response = await fetch(signedUrlData.signedUrl);
@@ -128,7 +129,8 @@ const OrderHistory = () => {
         console.error("Response details:", {
           status: response.status,
           statusText: response.statusText,
-          errorBody: errorText
+          errorBody: errorText,
+          url: signedUrlData.signedUrl
         });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
