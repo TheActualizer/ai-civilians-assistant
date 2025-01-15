@@ -6,7 +6,6 @@ import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info, Share2
 import { Button } from "@/components/ui/button";
 import { formatInTimeZone } from 'date-fns-tz';
 import { useToast } from "@/hooks/use-toast";
-import { StorageError } from "@supabase/storage-js";
 
 interface Order {
   id: string;
@@ -76,11 +75,7 @@ const OrderHistory = () => {
       setOrders(data || []);
     } catch (error) {
       console.error("=== Unexpected Error in fetchOrders ===");
-      console.error("Error details:", {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
+      console.error("Error details:", error);
     } finally {
       setLoading(false);
     }
@@ -88,13 +83,14 @@ const OrderHistory = () => {
 
   const handleDownload = async (order: Order) => {
     try {
-      setDownloadingOrderId(order.id);
       console.log("=== Download Process Started ===");
-      console.log("Order details:", {
-        id: order.id,
-        name: order.report_name,
-        url: order.download_url
+      console.log("Download requested for order:", {
+        orderId: order.id,
+        reportName: order.report_name,
+        downloadUrl: order.download_url
       });
+      
+      setDownloadingOrderId(order.id);
       
       // Clean the file path by removing any potential duplicate 'reports/' prefix
       const filePath = order.download_url.replace(/^reports\//, '');
@@ -110,7 +106,6 @@ const OrderHistory = () => {
         console.error("Storage Error Details:", {
           message: signedUrlError.message,
           name: signedUrlError.name,
-          // Remove statusCode as it's not in the type definition
         });
         throw new Error(`Failed to generate download URL: ${signedUrlError.message}`);
       }
@@ -121,12 +116,8 @@ const OrderHistory = () => {
       }
 
       console.log("Successfully obtained signed URL");
-      console.log("Signed URL details:", {
-        url: signedUrlData.signedUrl.substring(0, 100) + "...", // Truncate for logging
-        expiresIn: "60 seconds"
-      });
+      console.log("Initiating file download with signed URL...");
       
-      console.log("Initiating file download...");
       const response = await fetch(signedUrlData.signedUrl);
       console.log("Download response status:", response.status);
       console.log("Response headers:", Object.fromEntries(response.headers.entries()));
