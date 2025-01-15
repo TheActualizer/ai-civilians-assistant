@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowRight, FileText, Database, Terminal, Info, Building2 } from "lucide-react";
+import { ArrowRight, FileText, Database, Terminal, Info, Building2, Code } from "lucide-react";
 import { PropertyRequest, AssessmentData } from '@/components/GetStarted/types';
 
 const Assessment = () => {
@@ -116,6 +116,47 @@ const Assessment = () => {
     fetchPropertyRequest();
   }, []);
 
+  const renderJsonData = () => {
+    if (!propertyRequest?.api_data) {
+      return (
+        <Alert>
+          <AlertTitle>No API Data</AlertTitle>
+          <AlertDescription>
+            No API data has been fetched yet for this property.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(propertyRequest.api_data).map(([key, value]) => (
+            <Card key={key} className="overflow-hidden">
+              <CardHeader className="bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium capitalize">
+                    {key.replace(/_/g, ' ')}
+                  </CardTitle>
+                  <Badge variant={value ? "default" : "secondary"}>
+                    {value ? "Data Present" : "No Data"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[200px]">
+                  <pre className="p-4 text-xs font-mono bg-gray-50 rounded-sm">
+                    {JSON.stringify(value, null, 2)}
+                  </pre>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderAssessmentDetails = () => {
     if (!propertyRequest?.api_data?.assessment) {
       return (
@@ -207,14 +248,17 @@ const Assessment = () => {
       <Navbar session={session} />
       <div className="container mx-auto pt-24 px-4 pb-8">
         <div className="flex flex-col gap-8">
-          {/* Compact Header */}
+          {/* Compact Header with Property Info */}
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-semibold">{propertyRequest?.name}</h2>
-                <p className="text-sm text-gray-500">
-                  {propertyRequest?.street_address}, {propertyRequest?.city}, {propertyRequest?.state} {propertyRequest?.zip_code}
-                </p>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <Building2 className="h-5 w-5 text-gray-500" />
+                <div>
+                  <h2 className="text-lg font-semibold">{propertyRequest?.name}</h2>
+                  <p className="text-sm text-gray-500">
+                    {propertyRequest?.street_address}, {propertyRequest?.city}, {propertyRequest?.state} {propertyRequest?.zip_code}
+                  </p>
+                </div>
               </div>
               <Badge variant={propertyRequest?.api_progress?.assessment_completed ? "outline" : "secondary"}>
                 {propertyRequest?.api_progress?.assessment_completed ? "Completed" : "Pending"}
@@ -222,13 +266,48 @@ const Assessment = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="assessment" className="w-full">
+          <Tabs defaultValue="json" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="assessment">Assessment Data</TabsTrigger>
-              <TabsTrigger value="api-debug">API Debug</TabsTrigger>
-              <TabsTrigger value="raw">Raw Response</TabsTrigger>
-              <TabsTrigger value="progress">Progress</TabsTrigger>
+              <TabsTrigger value="json">
+                <div className="flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  <span>API Data</span>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="assessment">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  <span>Assessment</span>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="debug">
+                <div className="flex items-center gap-2">
+                  <Terminal className="h-4 w-4" />
+                  <span>Debug</span>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="progress">
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  <span>Progress</span>
+                </div>
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="json">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Code className="h-5 w-5 text-primary" />
+                    <CardTitle>Raw API Response Data</CardTitle>
+                  </div>
+                  <CardDescription>Complete API response data for this property</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {renderJsonData()}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="assessment">
               <Card>
@@ -237,7 +316,7 @@ const Assessment = () => {
                     <Building2 className="h-5 w-5 text-primary" />
                     <CardTitle>Property Assessment</CardTitle>
                   </div>
-                  <CardDescription>Detailed assessment information from API</CardDescription>
+                  <CardDescription>Detailed assessment information</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {renderAssessmentDetails()}
@@ -245,12 +324,12 @@ const Assessment = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="api-debug">
+            <TabsContent value="debug">
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Terminal className="h-5 w-5 text-primary" />
-                    <CardTitle>API Integration Debug</CardTitle>
+                    <CardTitle>API Debug Log</CardTitle>
                   </div>
                   <CardDescription>Real-time API integration monitoring</CardDescription>
                 </CardHeader>
@@ -273,25 +352,6 @@ const Assessment = () => {
                         </div>
                       ))}
                     </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="raw">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-primary" />
-                    <CardTitle>Raw API Response</CardTitle>
-                  </div>
-                  <CardDescription>Complete unmodified response from API</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[400px] w-full rounded-md border">
-                    <pre className="p-4 text-sm">
-                      {JSON.stringify(propertyRequest?.api_data?.assessment || {}, null, 2)}
-                    </pre>
                   </ScrollArea>
                 </CardContent>
               </Card>
