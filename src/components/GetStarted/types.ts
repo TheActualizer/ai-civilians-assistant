@@ -34,6 +34,26 @@ export interface PropertyRequest {
   } | null;
 }
 
+export interface LightBoxResponse {
+  parcelId?: string;
+  address?: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+  propertyDetails?: {
+    landUse?: string;
+    lotSize?: string;
+    zoning?: string;
+    yearBuilt?: string;
+  };
+  rawResponse?: any;
+  timestamp?: string;
+  lightbox_processed?: boolean;
+  processed_at?: string;
+}
+
 export interface FunctionLog {
   timestamp: string;
   function: string;

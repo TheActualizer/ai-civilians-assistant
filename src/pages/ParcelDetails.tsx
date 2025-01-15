@@ -8,26 +8,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-
-interface LightBoxResponse {
-  parcelId?: string;
-  address?: {
-    streetAddress: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
-  propertyDetails?: {
-    landUse?: string;
-    lotSize?: string;
-    zoning?: string;
-    yearBuilt?: string;
-  };
-  rawResponse?: any;
-  timestamp?: string;
-  lightbox_processed?: boolean;
-  processed_at?: string;
-}
+import { LightBoxResponse } from "@/components/GetStarted/types";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -65,12 +46,11 @@ const ParcelDetails = () => {
         
         if (propertyRequest.lightbox_data) {
           console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
-          setLightboxData(propertyRequest.lightbox_data);
+          setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
         } else {
-          // Call the LightBox API through our Edge Function
           try {
             console.log('Calling LightBox API...');
-            const response = await supabase.functions.invoke('lightbox-parcel', {
+            const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
               body: {
                 address: propertyRequest.street_address,
                 city: propertyRequest.city,
@@ -79,13 +59,13 @@ const ParcelDetails = () => {
               }
             });
 
-            console.log('LightBox API response:', response);
-            
-            if (response.error) {
-              throw new Error(response.error);
+            if (apiError) {
+              throw apiError;
             }
 
-            setLightboxData(response.data);
+            console.log('LightBox API response:', data);
+            setLightboxData(data as LightBoxResponse);
+            
             toast({
               title: "Success",
               description: "LightBox data fetched successfully"
