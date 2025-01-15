@@ -110,9 +110,7 @@ export const AddressForm = ({ onSubmit, setAutocomplete, onPlaceSelected }: Addr
               <FormLabel>Street Address</FormLabel>
               <FormControl>
                 <Autocomplete
-                  onLoad={(autocomplete) => {
-                    setAutocomplete(autocomplete);
-                  }}
+                  onLoad={setAutocomplete}
                   onPlaceChanged={() => {
                     const autocomplete = document.querySelector('input[name="streetAddress"]')?.parentElement?.querySelector('input');
                     if (autocomplete && 'getPlace' in autocomplete) {
