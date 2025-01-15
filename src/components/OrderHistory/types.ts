@@ -13,3 +13,11 @@ export interface Order {
     metadata: any;
   };
 }
+
+export interface OrderCardProps {
+  order: Order;
+  onDownload: (order: Order) => Promise<void>;
+  onShare: (order: Order) => Promise<void>;
+  onDelete: (order: Order) => Promise<void>;
+  downloadingOrderId: string | null;
+}
