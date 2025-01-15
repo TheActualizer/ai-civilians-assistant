@@ -44,7 +44,7 @@ const Hero = () => {
                 </div>
                 <div className="mt-3 sm:mt-0 sm:ml-3">
                   <Button variant="outline" size="lg" asChild className="w-full">
-                    <Link to="/services">Learn More</Link>
+                    <Link to="/learn-more">Learn More</Link>
                   </Button>
                 </div>
               </motion.div>
