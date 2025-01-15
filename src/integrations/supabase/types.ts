@@ -42,13 +42,16 @@ export type Database = {
       property_requests: {
         Row: {
           city: string
+          coordinates: Json | null
           created_at: string
           description: string | null
           email: string
           id: string
           name: string
+          processing_steps: Json | null
           state: string
           status: string | null
+          status_details: Json | null
           street_address: string
           updated_at: string
           user_id: string | null
@@ -56,13 +59,16 @@ export type Database = {
         }
         Insert: {
           city: string
+          coordinates?: Json | null
           created_at?: string
           description?: string | null
           email: string
           id?: string
           name: string
+          processing_steps?: Json | null
           state: string
           status?: string | null
+          status_details?: Json | null
           street_address: string
           updated_at?: string
           user_id?: string | null
@@ -70,13 +76,16 @@ export type Database = {
         }
         Update: {
           city?: string
+          coordinates?: Json | null
           created_at?: string
           description?: string | null
           email?: string
           id?: string
           name?: string
+          processing_steps?: Json | null
           state?: string
           status?: string | null
+          status_details?: Json | null
           street_address?: string
           updated_at?: string
           user_id?: string | null

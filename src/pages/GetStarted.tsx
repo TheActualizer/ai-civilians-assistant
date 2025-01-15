@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { AddressForm } from "@/components/GetStarted/AddressForm";
+import { ProcessingStatus } from "@/components/GetStarted/ProcessingStatus";
 import { PricingComparison } from "@/components/GetStarted/PricingComparison";
 import { FormValues } from "@/components/GetStarted/schema";
 
@@ -13,6 +14,7 @@ const libraries: ("places")[] = ["places"];
 const GetStarted = () => {
   const session = useSession();
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
@@ -47,7 +49,7 @@ const GetStarted = () => {
       console.log("Validated address:", validationResponse);
 
       // Insert validated address into database
-      const { error: insertError } = await supabase
+      const { data: insertedRequest, error: insertError } = await supabase
         .from('property_requests')
         .insert({
           name: values.name,
@@ -57,8 +59,24 @@ const GetStarted = () => {
           state: validationResponse.state || values.state,
           zip_code: validationResponse.zip_code || values.zipCode,
           description: values.description || '',
-          user_id: session?.user?.id || null
-        });
+          user_id: session?.user?.id || null,
+          coordinates: validationResponse.coordinates || null,
+          status_details: {
+            address_validation: "Address validated successfully",
+            geospatial_analysis: null,
+            zoning_analysis: null,
+            report_generation: null
+          },
+          processing_steps: {
+            address_validated: true,
+            coordinates_mapped: false,
+            zoning_checked: false,
+            report_generated: false,
+            completed: false
+          }
+        })
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Error submitting property request:', insertError);
@@ -66,6 +84,8 @@ const GetStarted = () => {
         return;
       }
 
+      console.log("Property request submitted:", insertedRequest);
+      setCurrentRequestId(insertedRequest.id);
       toast.success("Property request submitted successfully!");
       
     } catch (error) {
@@ -97,14 +117,20 @@ const GetStarted = () => {
           </p>
         </section>
 
-        {/* Form Section */}
-        <section className="max-w-2xl mx-auto px-4 py-8">
-          <AddressForm 
-            onSubmit={onSubmit}
-            setAutocomplete={setAutocomplete}
-            onPlaceSelected={onPlaceSelected}
-          />
-        </section>
+        {/* Form and Status Section */}
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 gap-8">
+            {!currentRequestId ? (
+              <AddressForm 
+                onSubmit={onSubmit}
+                setAutocomplete={setAutocomplete}
+                onPlaceSelected={onPlaceSelected}
+              />
+            ) : (
+              <ProcessingStatus requestId={currentRequestId} />
+            )}
+          </div>
+        </div>
 
         <PricingComparison />
       </div>
