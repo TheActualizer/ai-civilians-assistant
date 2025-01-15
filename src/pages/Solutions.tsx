@@ -3,6 +3,8 @@ import { Building2, LineChart, Map, Users, FileCheck, MessageSquare } from "luci
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@supabase/auth-helpers-react";
+import { useState } from "react";
+import { Session } from "@supabase/supabase-js";
 
 const solutions = [
   {
@@ -45,10 +47,11 @@ const solutions = [
 
 const Solutions = () => {
   const session = useSession();
+  const [localSession, setLocalSession] = useState<Session | null>(session);
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar session={session} />
+      <Navbar session={localSession} setSession={setLocalSession} />
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div

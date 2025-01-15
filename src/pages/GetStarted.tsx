@@ -10,7 +10,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { useSession } from "@supabase/auth-helpers-react";
+import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { Session } from "@supabase/supabase-js";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -21,6 +22,9 @@ const formSchema = z.object({
 
 const GetStarted = () => {
   const session = useSession();
+  const supabase = useSupabaseClient();
+  const [localSession, setLocalSession] = useState<Session | null>(session);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,7 +42,7 @@ const GetStarted = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar session={session} />
+      <Navbar session={localSession} setSession={setLocalSession} />
       <div className="pt-24">
         {/* Hero Section */}
         <section className="py-12 px-4 text-center">

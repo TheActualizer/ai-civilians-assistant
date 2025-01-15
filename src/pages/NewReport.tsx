@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@supabase/auth-helpers-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Session } from "@supabase/supabase-js";
 
 const NewReport = () => {
   const session = useSession();
   const navigate = useNavigate();
+  const [localSession, setLocalSession] = useState<Session | null>(session);
 
   useEffect(() => {
     if (!session) {
@@ -17,7 +19,7 @@ const NewReport = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar session={session} />
+      <Navbar session={localSession} setSession={setLocalSession} />
       <div className="pt-24 px-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Create New Report</h1>
