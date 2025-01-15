@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface LightBoxResponse {
   parcelId?: string;
@@ -24,11 +25,14 @@ interface LightBoxResponse {
   };
   rawResponse?: any;
   timestamp?: string;
+  lightbox_processed?: boolean;
+  processed_at?: string;
 }
 
 const ParcelDetails = () => {
   const session = useSession();
   const location = useLocation();
+  const { toast } = useToast();
   const [lightboxData, setLightboxData] = useState<LightBoxResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,42 +51,55 @@ const ParcelDetails = () => {
       if (error) {
         console.error('Error fetching request:', error);
         setError('Failed to fetch property request');
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch property request data"
+        });
         return;
       }
 
       if (data) {
         console.log('Latest request found:', data);
         setRequestId(data.id);
-        // Simulate LightBox API response for now
-        // In production, this would make an actual API call
-        setLightboxData({
-          parcelId: "123456789",
-          address: {
-            streetAddress: data.street_address,
-            city: data.city,
-            state: data.state,
-            zip: data.zip_code
-          },
-          propertyDetails: {
-            landUse: "Residential",
-            lotSize: "0.25 acres",
-            zoning: "R-1",
-            yearBuilt: "1985"
-          },
-          timestamp: new Date().toISOString(),
-          rawResponse: {
-            // Raw API response would go here
-            status: "success",
-            apiVersion: "1.0",
-            requestId: "lb_" + data.id
+        
+        // Call the LightBox API through our Edge Function
+        try {
+          const response = await supabase.functions.invoke('lightbox-parcel', {
+            body: {
+              address: data.street_address,
+              city: data.city,
+              state: data.state,
+              zip: data.zip_code
+            }
+          });
+
+          console.log('LightBox API response:', response);
+          
+          if (response.error) {
+            throw new Error(response.error);
           }
-        });
+
+          setLightboxData(response.data);
+          toast({
+            title: "Success",
+            description: "LightBox data fetched successfully"
+          });
+        } catch (apiError) {
+          console.error('Error calling LightBox API:', apiError);
+          setError('Failed to fetch LightBox data');
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch LightBox data"
+          });
+        }
       }
       setIsLoading(false);
     };
 
     fetchLatestRequest();
-  }, []);
+  }, [toast]);
 
   if (isLoading) {
     return (
@@ -223,13 +240,15 @@ const ParcelDetails = () => {
                         <p className="text-sm text-gray-500">{lightboxData?.timestamp}</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                      <div>
-                        <p className="font-medium">Response Received</p>
-                        <p className="text-sm text-gray-500">{lightboxData?.timestamp}</p>
+                    {lightboxData?.lightbox_processed && (
+                      <div className="flex items-center space-x-4">
+                        <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                        <div>
+                          <p className="font-medium">Response Received</p>
+                          <p className="text-sm text-gray-500">{lightboxData?.processed_at}</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

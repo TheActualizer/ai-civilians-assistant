@@ -47,6 +47,9 @@ export type Database = {
           description: string | null
           email: string
           id: string
+          lightbox_data: Json | null
+          lightbox_processed_at: string | null
+          lightbox_request_id: string | null
           name: string
           processing_steps: Json | null
           state: string
@@ -64,6 +67,9 @@ export type Database = {
           description?: string | null
           email: string
           id?: string
+          lightbox_data?: Json | null
+          lightbox_processed_at?: string | null
+          lightbox_request_id?: string | null
           name: string
           processing_steps?: Json | null
           state: string
@@ -81,6 +87,9 @@ export type Database = {
           description?: string | null
           email?: string
           id?: string
+          lightbox_data?: Json | null
+          lightbox_processed_at?: string | null
+          lightbox_request_id?: string | null
           name?: string
           processing_steps?: Json | null
           state?: string
