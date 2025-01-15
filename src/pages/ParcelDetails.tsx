@@ -41,15 +41,15 @@ const ParcelDetails = () => {
   useEffect(() => {
     const fetchLatestRequest = async () => {
       console.log("Fetching latest property request...");
-      const { data, error } = await supabase
+      const { data: propertyRequest, error: fetchError } = await supabase
         .from('property_requests')
-        .select('*')
+        .select('*, lightbox_data, status_details')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      if (error) {
-        console.error('Error fetching request:', error);
+      if (fetchError) {
+        console.error('Error fetching request:', fetchError);
         setError('Failed to fetch property request');
         toast({
           variant: "destructive",
@@ -59,40 +59,46 @@ const ParcelDetails = () => {
         return;
       }
 
-      if (data) {
-        console.log('Latest request found:', data);
-        setRequestId(data.id);
+      if (propertyRequest) {
+        console.log('Latest request found:', propertyRequest);
+        setRequestId(propertyRequest.id);
         
-        // Call the LightBox API through our Edge Function
-        try {
-          const response = await supabase.functions.invoke('lightbox-parcel', {
-            body: {
-              address: data.street_address,
-              city: data.city,
-              state: data.state,
-              zip: data.zip_code
+        if (propertyRequest.lightbox_data) {
+          console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
+          setLightboxData(propertyRequest.lightbox_data);
+        } else {
+          // Call the LightBox API through our Edge Function
+          try {
+            console.log('Calling LightBox API...');
+            const response = await supabase.functions.invoke('lightbox-parcel', {
+              body: {
+                address: propertyRequest.street_address,
+                city: propertyRequest.city,
+                state: propertyRequest.state,
+                zip: propertyRequest.zip_code
+              }
+            });
+
+            console.log('LightBox API response:', response);
+            
+            if (response.error) {
+              throw new Error(response.error);
             }
-          });
 
-          console.log('LightBox API response:', response);
-          
-          if (response.error) {
-            throw new Error(response.error);
+            setLightboxData(response.data);
+            toast({
+              title: "Success",
+              description: "LightBox data fetched successfully"
+            });
+          } catch (apiError) {
+            console.error('Error calling LightBox API:', apiError);
+            setError('Failed to fetch LightBox data');
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Failed to fetch LightBox data"
+            });
           }
-
-          setLightboxData(response.data);
-          toast({
-            title: "Success",
-            description: "LightBox data fetched successfully"
-          });
-        } catch (apiError) {
-          console.error('Error calling LightBox API:', apiError);
-          setError('Failed to fetch LightBox data');
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to fetch LightBox data"
-          });
         }
       }
       setIsLoading(false);

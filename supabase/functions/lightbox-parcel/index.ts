@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
-interface LightBoxRequest {
+interface AddressRequest {
   address: string;
   city: string;
   state: string;
@@ -21,34 +21,50 @@ Deno.serve(async (req) => {
     }
 
     // Get request body
-    const { address, city, state, zip } = await req.json() as LightBoxRequest
+    const { address, city, state, zip } = await req.json() as AddressRequest
+    console.log('Received request for address:', { address, city, state, zip })
 
-    console.log('Fetching LightBox data for address:', { address, city, state, zip })
+    // Make the actual LightBox API call
+    const lightboxUrl = 'https://api.lightbox.com/v1/property/search'  // Replace with actual LightBox API endpoint
+    const response = await fetch(lightboxUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LIGHTBOX_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        address: {
+          street: address,
+          city: city,
+          state: state,
+          postalCode: zip
+        }
+      })
+    })
 
-    // Mock API call for now - replace with actual LightBox API endpoint
-    const mockResponse = {
-      parcelId: "123456789",
+    console.log('LightBox API response status:', response.status)
+    const lightboxData = await response.json()
+    console.log('LightBox API raw response:', lightboxData)
+
+    // Parse the LightBox response into our expected format
+    const parsedResponse = {
+      parcelId: lightboxData.parcelId || lightboxData.id,
       address: {
-        streetAddress: address,
-        city: city,
-        state: state,
-        zip: zip
+        streetAddress: lightboxData.address?.streetAddress || address,
+        city: lightboxData.address?.city || city,
+        state: lightboxData.address?.state || state,
+        zip: lightboxData.address?.postalCode || zip
       },
       propertyDetails: {
-        landUse: "Residential",
-        lotSize: "0.25 acres",
-        zoning: "R-1",
-        yearBuilt: "1985"
+        landUse: lightboxData.propertyType || lightboxData.landUse,
+        lotSize: lightboxData.lotSize || lightboxData.parcelSize,
+        zoning: lightboxData.zoning || lightboxData.zoningCode,
+        yearBuilt: lightboxData.yearBuilt || lightboxData.constructionYear
       },
+      rawResponse: lightboxData,
       timestamp: new Date().toISOString(),
-      rawResponse: {
-        status: "success",
-        apiVersion: "1.0",
-        metadata: {
-          requestId: `lb_${Date.now()}`,
-          processedAt: new Date().toISOString()
-        }
-      }
+      lightbox_processed: true,
+      processed_at: new Date().toISOString()
     }
 
     // Store the response in Supabase
@@ -65,6 +81,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (propertyError) {
+      console.error('Error fetching property request:', propertyError)
       throw new Error('Failed to fetch property request')
     }
 
@@ -72,8 +89,11 @@ Deno.serve(async (req) => {
     const { error: updateError } = await supabaseClient
       .from('property_requests')
       .update({
+        lightbox_data: parsedResponse,
+        lightbox_processed_at: new Date().toISOString(),
+        status: 'processed',
         status_details: {
-          ...mockResponse,
+          ...parsedResponse,
           lightbox_processed: true,
           processed_at: new Date().toISOString()
         }
@@ -81,16 +101,17 @@ Deno.serve(async (req) => {
       .eq('id', propertyRequest.id)
 
     if (updateError) {
+      console.error('Error updating property request:', updateError)
       throw new Error('Failed to update property request with LightBox data')
     }
 
     return new Response(
-      JSON.stringify(mockResponse),
+      JSON.stringify(parsedResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('Error:', error.message)
+    console.error('Error in lightbox-parcel function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
