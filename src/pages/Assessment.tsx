@@ -12,11 +12,39 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowRight, FileText, Database, Terminal, Info, Building2 } from "lucide-react";
 
+interface AssessmentData {
+  assessmentYear: number;
+  totalValue: number;
+  landValue: number;
+  improvementValue: number;
+  taxRate: number;
+  assessmentDate: string;
+  propertyClass: string;
+  taxStatus: string;
+  lastSalePrice: number;
+  lastSaleDate: string;
+}
+
+interface PropertyRequest {
+  id: string;
+  name: string;
+  street_address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  api_data: {
+    assessment?: AssessmentData;
+  };
+  api_progress: {
+    assessment_completed?: boolean;
+  };
+}
+
 const Assessment = () => {
   const session = useSession();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [propertyRequest, setPropertyRequest] = useState<any>(null);
+  const [propertyRequest, setPropertyRequest] = useState<PropertyRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiCallHistory, setApiCallHistory] = useState<Array<{
@@ -34,8 +62,30 @@ const Assessment = () => {
     }]);
   };
 
+  const fetchAssessmentData = async (propertyId: string) => {
+    try {
+      addToHistory("Initiating assessment data fetch");
+      
+      const { data, error } = await supabase.functions.invoke('get-property-assessment', {
+        body: { propertyId }
+      });
+
+      if (error) {
+        console.error('Error fetching assessment:', error);
+        addToHistory("Error fetching assessment data", error);
+        throw error;
+      }
+
+      addToHistory("Assessment data received", data);
+      return data;
+    } catch (error) {
+      console.error('Error in fetchAssessmentData:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    const fetchAssessmentData = async () => {
+    const fetchPropertyRequest = async () => {
       try {
         addToHistory("Fetching latest property request");
         
@@ -61,10 +111,23 @@ const Assessment = () => {
             address: `${request.street_address}, ${request.city}, ${request.state} ${request.zip_code}`
           });
 
-          if (request.api_data?.assessment) {
-            addToHistory("Using cached assessment data", request.api_data.assessment);
+          if (!request.api_data?.assessment) {
+            addToHistory("No assessment data found, fetching from API");
+            await fetchAssessmentData(request.id);
+            
+            // Refresh the property request to get the updated data
+            const { data: updatedRequest } = await supabase
+              .from('property_requests')
+              .select('*')
+              .eq('id', request.id)
+              .single();
+              
+            if (updatedRequest) {
+              setPropertyRequest(updatedRequest);
+              addToHistory("Property request updated with assessment data");
+            }
           } else {
-            addToHistory("No cached assessment data found, will need to fetch from API");
+            addToHistory("Using cached assessment data", request.api_data.assessment);
           }
         }
       } catch (error) {
@@ -76,7 +139,7 @@ const Assessment = () => {
       }
     };
 
-    fetchAssessmentData();
+    fetchPropertyRequest();
   }, []);
 
   const renderAssessmentDetails = () => {
@@ -91,17 +154,49 @@ const Assessment = () => {
       );
     }
 
-    const assessmentData = propertyRequest.api_data.assessment;
+    const assessment = propertyRequest.api_data.assessment;
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(assessmentData).map(([key, value]) => (
-          <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500 capitalize">
-              {key.replace(/([A-Z])/g, ' $1').trim()}
-            </h3>
-            <p className="mt-1 text-lg">{String(value)}</p>
-          </div>
-        ))}
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Assessment Year</h3>
+          <p className="mt-1 text-lg">{assessment.assessmentYear}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Total Value</h3>
+          <p className="mt-1 text-lg">${assessment.totalValue.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Land Value</h3>
+          <p className="mt-1 text-lg">${assessment.landValue.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Improvement Value</h3>
+          <p className="mt-1 text-lg">${assessment.improvementValue.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Tax Rate</h3>
+          <p className="mt-1 text-lg">{(assessment.taxRate * 100).toFixed(2)}%</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Assessment Date</h3>
+          <p className="mt-1 text-lg">{new Date(assessment.assessmentDate).toLocaleDateString()}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Property Class</h3>
+          <p className="mt-1 text-lg">{assessment.propertyClass}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Tax Status</h3>
+          <p className="mt-1 text-lg">{assessment.taxStatus}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Last Sale Price</h3>
+          <p className="mt-1 text-lg">${assessment.lastSalePrice.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-sm font-medium text-gray-500">Last Sale Date</h3>
+          <p className="mt-1 text-lg">{new Date(assessment.lastSaleDate).toLocaleDateString()}</p>
+        </div>
       </div>
     );
   };
@@ -147,7 +242,7 @@ const Assessment = () => {
                   {propertyRequest?.street_address}, {propertyRequest?.city}, {propertyRequest?.state} {propertyRequest?.zip_code}
                 </p>
               </div>
-              <Badge variant={propertyRequest?.api_progress?.assessment_completed ? "success" : "secondary"}>
+              <Badge variant={propertyRequest?.api_progress?.assessment_completed ? "outline" : "secondary"}>
                 {propertyRequest?.api_progress?.assessment_completed ? "Completed" : "Pending"}
               </Badge>
             </div>
@@ -168,7 +263,7 @@ const Assessment = () => {
                     <Building2 className="h-5 w-5 text-primary" />
                     <CardTitle>Property Assessment</CardTitle>
                   </div>
-                  <CardDescription>Detailed assessment information from LightBox API</CardDescription>
+                  <CardDescription>Detailed assessment information from API</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {renderAssessmentDetails()}
@@ -216,7 +311,7 @@ const Assessment = () => {
                     <Database className="h-5 w-5 text-primary" />
                     <CardTitle>Raw API Response</CardTitle>
                   </div>
-                  <CardDescription>Complete unmodified response from LightBox API</CardDescription>
+                  <CardDescription>Complete unmodified response from API</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[400px] w-full rounded-md border">
@@ -242,7 +337,7 @@ const Assessment = () => {
                     {propertyRequest?.api_progress && Object.entries(propertyRequest.api_progress).map(([key, value]) => (
                       <div key={key} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-                        <Badge variant={value ? "success" : "secondary"}>
+                        <Badge variant={value ? "outline" : "secondary"}>
                           {value ? "Completed" : "Pending"}
                         </Badge>
                       </div>
