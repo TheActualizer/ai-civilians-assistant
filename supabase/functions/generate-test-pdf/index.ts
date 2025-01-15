@@ -39,7 +39,7 @@ serve(async (req) => {
     console.log('Uploading file to storage...')
 
     // Upload the file to storage
-    const { data, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('reports')
       .upload('reports/test-report-2024.pdf', file, {
         contentType: 'application/pdf',
@@ -51,26 +51,52 @@ serve(async (req) => {
       throw uploadError
     }
 
-    console.log('File uploaded successfully:', data)
+    console.log('File uploaded successfully:', uploadData)
 
     // Create a record in the reports table
-    const { error: dbError } = await supabase
+    const { data: reportData, error: dbError } = await supabase
       .from('reports')
       .insert({
         report_name: 'Test Report 2024',
         description: 'A test PDF file for testing download functionality',
         file_url: 'reports/test-report-2024.pdf'
       })
+      .select()
+      .single()
 
     if (dbError) {
       console.error('Database error:', dbError)
       throw dbError
     }
 
+    console.log('Database record created:', reportData)
+
+    // Create an order for the test report
+    const { data: orderData, error: orderError } = await supabase
+      .from('reports_orders')
+      .insert({
+        user_id: req.headers.get('x-user-id'),
+        report_name: 'Test Report 2024',
+        amount: 0,
+        download_url: 'reports/test-report-2024.pdf',
+        report_id: reportData.id
+      })
+      .select()
+      .single()
+
+    if (orderError) {
+      console.error('Order creation error:', orderError)
+      throw orderError
+    }
+
+    console.log('Order created:', orderData)
+
     return new Response(
       JSON.stringify({ 
         message: 'Test PDF uploaded successfully', 
-        path: 'reports/test-report-2024.pdf' 
+        path: 'reports/test-report-2024.pdf',
+        report: reportData,
+        order: orderData
       }),
       { 
         headers: { 

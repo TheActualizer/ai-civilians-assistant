@@ -88,14 +88,12 @@ const OrderHistory = () => {
         .createSignedUrl(filePath, 60);
 
       if (signedUrlError) {
-        const storageError = signedUrlError as StorageError;
         console.error("Storage Error Details:", {
-          name: storageError.name,
-          message: storageError.message,
-          statusCode: storageError.statusCode,
-          error: storageError.error
+          message: signedUrlError.message,
+          name: signedUrlError.name,
+          cause: signedUrlError.cause
         });
-        throw new Error(`Failed to generate download URL: ${storageError.message}`);
+        throw new Error(`Failed to generate download URL: ${signedUrlError.message}`);
       }
 
       if (!signedUrlData?.signedUrl) {
