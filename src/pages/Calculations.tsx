@@ -43,27 +43,30 @@ const Calculations = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
-      <div className="container mx-auto pt-24 px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Calculation Dashboard</h1>
-        {latestRequestId ? (
-          <div className="space-y-8">
-            <ProcessingStatus requestId={latestRequestId} />
-            <div className="flex justify-end">
-              <Button
-                onClick={handleNextStep}
-                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
-                size="lg"
-              >
-                View Parcel Details
-                <ArrowRight className="h-5 w-5" />
-              </Button>
+      <div className="container mx-auto pt-24 px-4 pb-8">
+        <div className="flex flex-col gap-8">
+          <h1 className="text-3xl font-bold text-gray-900">Calculation Dashboard</h1>
+          
+          {latestRequestId ? (
+            <>
+              <ProcessingStatus requestId={latestRequestId} />
+              <div className="sticky bottom-8 flex justify-end mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+                <Button
+                  onClick={handleNextStep}
+                  className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
+                  size="lg"
+                >
+                  View Parcel Details
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No property requests found.</p>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-600">No property requests found.</p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
