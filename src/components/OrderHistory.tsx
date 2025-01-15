@@ -6,6 +6,7 @@ import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info, Share2
 import { Button } from "@/components/ui/button";
 import { formatInTimeZone } from 'date-fns-tz';
 import { useToast } from "@/hooks/use-toast";
+import { StorageError } from "@supabase/storage-js";
 
 interface Order {
   id: string;
@@ -74,98 +75,79 @@ const OrderHistory = () => {
     try {
       console.log("=== Download Process Started ===");
       console.log("Original download URL:", order.download_url);
-      console.log("Order details:", JSON.stringify(order, null, 2));
       
-      // Remove the bucket prefix if it exists in the path
+      // Clean the file path by removing any potential duplicate 'reports/' prefix
       const filePath = order.download_url.replace(/^reports\//, '');
       console.log("Cleaned file path:", filePath);
+      
       console.log("Attempting to get signed URL from bucket 'reports' for path:", filePath);
       
-      // Get the signed URL
+      // Get the signed URL with error handling for storage errors
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from("reports")
-        .createSignedUrl(filePath, 60); // URL valid for 60 seconds
+        .createSignedUrl(filePath, 60);
 
       if (signedUrlError) {
-        console.error("Error getting signed URL:", signedUrlError);
-        console.error("Error details:", {
-          message: signedUrlError.message,
-          status: signedUrlError.status,
-          statusCode: signedUrlError.statusCode,
-          name: signedUrlError.name
+        const storageError = signedUrlError as StorageError;
+        console.error("Storage Error Details:", {
+          name: storageError.name,
+          message: storageError.message,
+          statusCode: storageError.statusCode,
+          error: storageError.error
         });
-        throw new Error("Failed to generate download URL");
+        throw new Error(`Failed to generate download URL: ${storageError.message}`);
       }
 
       if (!signedUrlData?.signedUrl) {
-        console.error("No signed URL received in response");
-        console.log("Full response data:", signedUrlData);
-        throw new Error("No signed URL received");
+        console.error("No signed URL received");
+        throw new Error("No signed URL received from storage");
       }
 
-      console.log("Successfully obtained signed URL:", signedUrlData.signedUrl);
-      console.log("Attempting to fetch file using signed URL...");
-
+      console.log("Successfully obtained signed URL");
+      
       // Fetch the file using the signed URL
       const response = await fetch(signedUrlData.signedUrl);
       console.log("Fetch response status:", response.status);
-      console.log("Fetch response headers:", Object.fromEntries(response.headers.entries()));
-
+      
       if (!response.ok) {
-        console.error("HTTP error during fetch:", {
-          status: response.status,
-          statusText: response.statusText,
-        });
-        const responseText = await response.text();
-        console.error("Error response body:", responseText);
+        const errorText = await response.text();
+        console.error("HTTP error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log("File fetched successfully, creating blob...");
+      // Create blob and trigger download
       const blob = await response.blob();
-      console.log("Blob created:", {
-        size: blob.size,
-        type: blob.type
-      });
-
-      const url = window.URL.createObjectURL(blob);
-      console.log("Blob URL created:", url);
+      console.log("File blob created, size:", blob.size, "type:", blob.type);
       
-      // Create a temporary link and trigger the download
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `${order.report_name}.pdf`;
-      console.log("Download link created with filename:", link.download);
       
       document.body.appendChild(link);
-      console.log("Link appended to document body");
-      
       link.click();
-      console.log("Download triggered");
       
-      // Clean up
+      // Cleanup
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
-      console.log("Cleanup completed");
-
+      
+      console.log("=== Download Process Completed Successfully ===");
+      
       toast({
         title: "Success",
         description: "Report downloaded successfully",
       });
-      console.log("=== Download Process Completed Successfully ===");
     } catch (error) {
       console.error("=== Download Process Failed ===");
-      console.error("Error in handleDownload:", error);
-      console.error("Full error object:", {
+      console.error("Error Details:", {
         name: error.name,
         message: error.message,
-        stack: error.stack,
-        ...(error.cause && { cause: error.cause })
+        stack: error.stack
       });
       
       toast({
         title: "Error",
-        description: "Failed to download report. Please try again.",
+        description: error.message || "Failed to download report. Please try again.",
         variant: "destructive",
       });
     }
