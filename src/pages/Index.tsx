@@ -15,11 +15,15 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  console.log("🔄 Index page rendering...", { isAuthenticated: !!session });
+
   const handleLogout = async () => {
     try {
+      console.log("🔄 Starting logout process...");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      console.log("✅ Logout successful");
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account",
@@ -27,7 +31,7 @@ const Index = () => {
       
       navigate("/login");
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("❌ Error during logout:", error);
       toast({
         variant: "destructive",
         title: "Error",
