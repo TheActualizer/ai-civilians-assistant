@@ -10,14 +10,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 
-const addressRegex = /^[0-9]+\s+[A-Za-z0-9\s,.-]+$/;
+const streetAddressRegex = /^[0-9]+\s+[A-Za-z0-9\s,.-]+$/;
+const zipCodeRegex = /^\d{5}(-\d{4})?$/;
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
-  address: z.string()
-    .min(5, "Address must be at least 5 characters")
-    .regex(addressRegex, "Please enter a valid street address (e.g., 123 Main St)"),
+  streetAddress: z.string()
+    .min(5, "Street address must be at least 5 characters")
+    .regex(streetAddressRegex, "Please enter a valid street address (e.g., 123 Main St)"),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  state: z.string().length(2, "Please enter a valid 2-letter state code"),
+  zipCode: z.string().regex(zipCodeRegex, "Please enter a valid ZIP code (e.g., 12345 or 12345-6789)"),
   description: z.string().optional(),
 });
 
@@ -28,7 +32,10 @@ const GetStarted = () => {
     defaultValues: {
       name: "",
       email: "",
-      address: "",
+      streetAddress: "",
+      city: "",
+      state: "",
+      zipCode: "",
       description: "",
     },
   });
@@ -36,9 +43,15 @@ const GetStarted = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       console.log("Form submitted:", values);
-      // Validate address format
-      if (!addressRegex.test(values.address)) {
+      // Validate street address format
+      if (!streetAddressRegex.test(values.streetAddress)) {
         toast.error("Please enter a valid street address");
+        return;
+      }
+      
+      // Validate ZIP code format
+      if (!zipCodeRegex.test(values.zipCode)) {
+        toast.error("Please enter a valid ZIP code");
         return;
       }
       
@@ -109,19 +122,18 @@ const GetStarted = () => {
 
                   <FormField
                     control={form.control}
-                    name="address"
+                    name="streetAddress"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Property Address</FormLabel>
+                        <FormLabel>Street Address</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="123 Main St, City, State" 
+                            placeholder="123 Main St" 
                             {...field}
                             onChange={(e) => {
                               field.onChange(e);
-                              // Real-time validation feedback
-                              if (e.target.value && !addressRegex.test(e.target.value)) {
-                                form.setError('address', {
+                              if (e.target.value && !streetAddressRegex.test(e.target.value)) {
+                                form.setError('streetAddress', {
                                   type: 'manual',
                                   message: 'Please enter a valid street address (e.g., 123 Main St)'
                                 });
@@ -133,6 +145,72 @@ const GetStarted = () => {
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <Input placeholder="New York" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="NY" 
+                                maxLength={2}
+                                {...field}
+                                onChange={(e) => {
+                                  const value = e.target.value.toUpperCase();
+                                  field.onChange(value);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>ZIP Code</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="12345" 
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  if (e.target.value && !zipCodeRegex.test(e.target.value)) {
+                                    form.setError('zipCode', {
+                                      type: 'manual',
+                                      message: 'Please enter a valid ZIP code'
+                                    });
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
                   <FormField
                     control={form.control}
