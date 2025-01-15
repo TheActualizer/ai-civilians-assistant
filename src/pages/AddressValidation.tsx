@@ -50,7 +50,12 @@ const AddressValidation = () => {
   };
 
   const handleNextStep = () => {
-    navigate('/parcel-details', { state: { address } });
+    navigate('/parcel-details', { 
+      state: { 
+        address,
+        validationResult 
+      }
+    });
   };
 
   return (
@@ -99,13 +104,14 @@ const AddressValidation = () => {
                     </pre>
                   </div>
                   
-                  <div className="flex justify-end pt-4">
+                  <div className="flex justify-end mt-6">
                     <Button
                       onClick={handleNextStep}
-                      className="gap-2"
+                      className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
+                      size="lg"
                     >
                       View Parcel Details
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-5 w-5" />
                     </Button>
                   </div>
                 </>
