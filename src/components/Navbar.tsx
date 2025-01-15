@@ -1,17 +1,19 @@
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ChevronDown, Menu, Search, Globe, Bell, HelpCircle, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, Menu, Search, Globe, Bell, HelpCircle, User, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <motion.nav 
@@ -116,11 +118,72 @@ const Navbar = () => {
             </div>
 
             {/* Mobile menu button */}
-            <button className="md:hidden p-2 text-gray-600 hover:text-primary transition">
-              <Menu className="h-6 w-6" />
+            <button 
+              className="md:hidden p-2 text-gray-600 hover:text-primary transition"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white border-t border-gray-200"
+            >
+              <div className="px-4 py-2 space-y-1">
+                <Link
+                  to="/solutions"
+                  className="block px-3 py-2 text-gray-700 hover:text-primary transition"
+                >
+                  Solutions
+                </Link>
+                <Link
+                  to="/learn-more"
+                  className="block px-3 py-2 text-gray-700 hover:text-primary transition"
+                >
+                  Learn More
+                </Link>
+                <Link
+                  to="/pricing"
+                  className="block px-3 py-2 text-gray-700 hover:text-primary transition"
+                >
+                  Pricing
+                </Link>
+                <div className="pt-2 space-y-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      navigate("/login");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-center"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      navigate("/get-started");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-center"
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );
