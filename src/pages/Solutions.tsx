@@ -1,92 +1,114 @@
+import { useSession } from "@supabase/auth-helpers-react";
 import Navbar from "@/components/Navbar";
-import { Building2, LineChart, Map, Users, FileCheck, MessageSquare } from "lucide-react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-
-const solutions = [
-  {
-    title: "Project Listings",
-    description: "Browse and post construction projects, renovations, and development opportunities.",
-    icon: Building2,
-    color: "bg-blue-100",
-  },
-  {
-    title: "Professional Network",
-    description: "Connect with verified architects, engineers, and contractors.",
-    icon: Users,
-    color: "bg-green-100",
-  },
-  {
-    title: "Feasibility Studies",
-    description: "Access comprehensive project analysis and feasibility reports.",
-    icon: LineChart,
-    color: "bg-purple-100",
-  },
-  {
-    title: "Zoning Maps",
-    description: "Interactive zoning maps and property information.",
-    icon: Map,
-    color: "bg-yellow-100",
-  },
-  {
-    title: "Permit Processing",
-    description: "Streamlined permit application and tracking system.",
-    icon: FileCheck,
-    color: "bg-red-100",
-  },
-  {
-    title: "Collaboration Tools",
-    description: "Real-time messaging and project collaboration features.",
-    icon: MessageSquare,
-    color: "bg-indigo-100",
-  },
-];
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ArrowRight, Building2, FileText, LineChart, Ruler } from "lucide-react";
 
 const Solutions = () => {
+  const session = useSession();
+
+  const solutions = [
+    {
+      title: "Zoning Analysis",
+      description: "Get detailed insights into zoning regulations and restrictions for your property",
+      icon: Building2,
+      color: "text-blue-500",
+    },
+    {
+      title: "Feasibility Studies",
+      description: "Evaluate the potential of your development project with comprehensive analysis",
+      icon: LineChart,
+      color: "text-purple-500",
+    },
+    {
+      title: "Building Area Calculations",
+      description: "Calculate maximum buildable area and floor area ratios",
+      icon: Ruler,
+      color: "text-green-500",
+    },
+    {
+      title: "Custom Reports",
+      description: "Receive detailed reports tailored to your specific needs",
+      icon: FileText,
+      color: "text-orange-500",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
+    <div className="min-h-screen bg-gray-50">
+      <Navbar session={session} />
+      
+      <div className="pt-24 pb-16">
+        {/* Hero Section */}
+        <section className="text-center px-4 mb-16">
+          <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
+            className="text-4xl md:text-5xl font-bold mb-6"
           >
-            <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl mb-4">
-              Construction & Development Solutions
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Connecting professionals, property owners, and investors with the tools and services they need to succeed in construction and development projects.
-            </p>
-          </motion.div>
+            Our Solutions
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
+            Comprehensive analysis and reports powered by AI to help you make informed decisions about your property development projects.
+          </motion.p>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Solutions Grid */}
+        <section className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8">
             {solutions.map((solution, index) => (
               <motion.div
                 key={solution.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow"
+                transition={{ delay: index * 0.1 }}
               >
-                <div className={`${solution.color} p-3 rounded-lg inline-block mb-4`}>
-                  <solution.icon className="h-6 w-6 text-gray-700" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {solution.title}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {solution.description}
-                </p>
-                <Button variant="outline" className="w-full">
-                  Learn More
-                </Button>
+                <Card className="h-full hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <solution.icon className={`h-12 w-12 ${solution.color} mb-4`} />
+                    <CardTitle>{solution.title}</CardTitle>
+                    <CardDescription>{solution.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Link to="/get-started">
+                      <Button className="w-full">
+                        Get Started
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
-        </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="mt-16 text-center px-4">
+          <Card className="max-w-3xl mx-auto">
+            <CardHeader>
+              <CardTitle>Ready to start your project?</CardTitle>
+              <CardDescription>
+                Get your first analysis report in minutes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/get-started">
+                <Button size="lg" className="px-8">
+                  Begin Analysis
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </div>
   );

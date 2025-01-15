@@ -48,7 +48,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <Navbar />
+      <Navbar session={session} />
       <div className="pt-24 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

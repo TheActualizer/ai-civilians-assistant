@@ -18,7 +18,7 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <Navbar session={session} />
       <div className="container mx-auto px-4 pt-24 pb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Orders & Reports</h1>
         <div className="bg-white rounded-lg shadow-sm border p-6">

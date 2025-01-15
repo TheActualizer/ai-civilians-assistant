@@ -42,7 +42,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <Navbar session={session} />
       <div className="pt-24">
         {!session ? (
           <>
