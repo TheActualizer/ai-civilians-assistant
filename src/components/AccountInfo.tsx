@@ -38,12 +38,13 @@ const AccountInfo = () => {
     const getProfile = async () => {
       try {
         if (!session?.user?.id) {
-          console.log("No user session found");
+          console.log("🔴 No user session found");
           return;
         }
 
-        console.log("Current user ID:", session.user.id);
-        console.log("Fetching profile data from Supabase...");
+        console.log("🟢 Starting profile fetch...");
+        console.log("👤 User ID:", session.user.id);
+        console.log("📧 User Email:", session.user.email);
         
         const { data, error } = await supabase
           .from("profiles")
@@ -52,12 +53,13 @@ const AccountInfo = () => {
           .single();
 
         if (error) {
-          console.error("Error fetching profile:", error.message);
+          console.error("🔴 Error fetching profile:", error.message);
+          console.error("Full error details:", error);
           throw error;
         }
 
         if (!data) {
-          console.log("No profile data found for user");
+          console.log("🔴 No profile data found for user");
           toast({
             variant: "destructive",
             title: "Error",
@@ -66,23 +68,32 @@ const AccountInfo = () => {
           return;
         }
 
-        console.log("Profile data retrieved successfully:", {
+        console.log("🟢 Profile data retrieved successfully!");
+        console.log("📝 Profile details:", {
           id: data.id,
           email: data.email,
-          full_name: data.full_name,
-          phone_number: data.phone_number,
+          full_name: data.full_name || "Not set",
+          phone_number: data.phone_number || "Not set",
+          created_at: new Date(data.created_at).toLocaleString(),
+          updated_at: new Date(data.updated_at).toLocaleString()
         });
 
         setProfile(data);
         setEditedName(data.full_name || "");
         setEditedPhone(data.phone_number || "");
       } catch (error) {
-        console.error("Error in getProfile:", error);
+        console.error("🔴 Error in getProfile:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load profile data",
+        });
       } finally {
         setLoading(false);
       }
     };
 
+    console.log("🔄 Profile component mounted, fetching data...");
     getProfile();
   }, [session, supabase, toast]);
 
@@ -202,83 +213,98 @@ const AccountInfo = () => {
         )}
       </div>
       
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableCell className="w-[200px]">Field</TableCell>
-            <TableCell>Value</TableCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">Email</TableCell>
-            <TableCell>
-              <Input 
-                value={profile.email || ""} 
-                disabled 
-                className="bg-gray-50"
-              />
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Full Name</TableCell>
-            <TableCell>
-              {isEditing ? (
-                <Input
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  placeholder="Enter your full name"
-                />
-              ) : (
+      {loading ? (
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        </div>
+      ) : !profile ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No profile data available</p>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableCell className="w-[200px]">Field</TableCell>
+              <TableCell>Value</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Email</TableCell>
+              <TableCell>
                 <Input 
-                  value={profile.full_name || ""} 
+                  value={profile.email || ""} 
                   disabled 
                   className="bg-gray-50"
                 />
-              )}
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Phone Number</TableCell>
-            <TableCell>
-              {isEditing ? (
-                <Input
-                  value={editedPhone}
-                  onChange={(e) => setEditedPhone(e.target.value)}
-                  placeholder="Enter your phone number"
-                  type="tel"
-                />
-              ) : (
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Full Name</TableCell>
+              <TableCell>
+                {isEditing ? (
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    placeholder="Enter your full name"
+                  />
+                ) : (
+                  <Input 
+                    value={profile.full_name || ""} 
+                    disabled 
+                    className="bg-gray-50"
+                  />
+                )}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Phone Number</TableCell>
+              <TableCell>
+                {isEditing ? (
+                  <Input
+                    value={editedPhone}
+                    onChange={(e) => setEditedPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                    type="tel"
+                  />
+                ) : (
+                  <Input 
+                    value={profile.phone_number || ""} 
+                    disabled 
+                    className="bg-gray-50"
+                  />
+                )}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Member Since</TableCell>
+              <TableCell>
                 <Input 
-                  value={profile.phone_number || ""} 
+                  value={new Date(profile.created_at).toLocaleDateString()} 
                   disabled 
                   className="bg-gray-50"
                 />
-              )}
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Member Since</TableCell>
-            <TableCell>
-              <Input 
-                value={new Date(profile.created_at).toLocaleDateString()} 
-                disabled 
-                className="bg-gray-50"
-              />
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Last Updated</TableCell>
-            <TableCell>
-              <Input 
-                value={new Date(profile.updated_at).toLocaleDateString()} 
-                disabled 
-                className="bg-gray-50"
-              />
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Last Updated</TableCell>
+              <TableCell>
+                <Input 
+                  value={new Date(profile.updated_at).toLocaleDateString()} 
+                  disabled 
+                  className="bg-gray-50"
+                />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 };
