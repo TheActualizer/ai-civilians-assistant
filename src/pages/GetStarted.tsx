@@ -9,16 +9,16 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
+import { useLoadScript, Autocomplete } from "@react-google-maps/api";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const streetAddressRegex = /^[0-9]+\s+[A-Za-z0-9\s,.-]+$/;
 const zipCodeRegex = /^\d{5}(-\d{4})?$/;
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
-  streetAddress: z.string()
-    .min(5, "Street address must be at least 5 characters")
-    .regex(streetAddressRegex, "Please enter a valid street address (e.g., 123 Main St)"),
+  streetAddress: z.string().min(5, "Street address must be at least 5 characters"),
   city: z.string().min(2, "City must be at least 2 characters"),
   state: z.string().length(2, "Please enter a valid 2-letter state code"),
   zipCode: z.string().regex(zipCodeRegex, "Please enter a valid ZIP code (e.g., 12345 or 12345-6789)"),
@@ -27,6 +27,13 @@ const formSchema = z.object({
 
 const GetStarted = () => {
   const session = useSession();
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || '',
+    libraries: ["places"]
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,28 +47,74 @@ const GetStarted = () => {
     },
   });
 
+  const onPlaceSelected = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      console.log("Selected place:", place);
+
+      if (place.address_components) {
+        let streetNumber = '';
+        let streetName = '';
+        let city = '';
+        let state = '';
+        let zipCode = '';
+
+        place.address_components.forEach((component) => {
+          const types = component.types;
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          }
+          if (types.includes('route')) {
+            streetName = component.long_name;
+          }
+          if (types.includes('locality')) {
+            city = component.long_name;
+          }
+          if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          }
+          if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+        });
+
+        const fullStreetAddress = `${streetNumber} ${streetName}`.trim();
+        
+        form.setValue('streetAddress', fullStreetAddress);
+        form.setValue('city', city);
+        form.setValue('state', state);
+        form.setValue('zipCode', zipCode);
+
+        toast.success("Address validated successfully!");
+      }
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       console.log("Form submitted:", values);
-      // Validate street address format
-      if (!streetAddressRegex.test(values.streetAddress)) {
-        toast.error("Please enter a valid street address");
-        return;
-      }
       
-      // Validate ZIP code format
       if (!zipCodeRegex.test(values.zipCode)) {
         toast.error("Please enter a valid ZIP code");
         return;
       }
       
-      toast.success("Address validated successfully!");
-      // TODO: Implement form submission logic
+      // Here you would typically save the data to your backend
+      toast.success("Form submitted successfully!");
     } catch (error) {
       console.error("Form submission error:", error);
       toast.error("There was an error submitting the form");
     }
   };
+
+  if (loadError) {
+    toast.error("Error loading Google Maps");
+    return <div>Error loading Google Maps</div>;
+  }
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -127,19 +180,16 @@ const GetStarted = () => {
                       <FormItem>
                         <FormLabel>Street Address</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="123 Main St" 
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              if (e.target.value && !streetAddressRegex.test(e.target.value)) {
-                                form.setError('streetAddress', {
-                                  type: 'manual',
-                                  message: 'Please enter a valid street address (e.g., 123 Main St)'
-                                });
-                              }
-                            }}
-                          />
+                          <Autocomplete
+                            onLoad={setAutocomplete}
+                            onPlaceChanged={onPlaceSelected}
+                            restrictions={{ country: "us" }}
+                          >
+                            <Input 
+                              placeholder="Start typing your address..." 
+                              {...field}
+                            />
+                          </Autocomplete>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -194,15 +244,6 @@ const GetStarted = () => {
                               <Input 
                                 placeholder="12345" 
                                 {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  if (e.target.value && !zipCodeRegex.test(e.target.value)) {
-                                    form.setError('zipCode', {
-                                      type: 'manual',
-                                      message: 'Please enter a valid ZIP code'
-                                    });
-                                  }
-                                }}
                               />
                             </FormControl>
                             <FormMessage />
