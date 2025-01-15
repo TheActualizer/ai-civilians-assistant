@@ -100,12 +100,20 @@ const Navbar = () => {
               </button>
             </motion.div>
 
-            <Button
-              onClick={() => navigate("/get-started")}
-              className="hidden md:flex"
-            >
-              Get Started
-            </Button>
+            <div className="hidden md:flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/login")}
+                className="text-gray-700 hover:text-primary transition"
+              >
+                Login
+              </Button>
+              <Button
+                onClick={() => navigate("/get-started")}
+              >
+                Get Started
+              </Button>
+            </div>
 
             {/* Mobile menu button */}
             <button className="md:hidden p-2 text-gray-600 hover:text-primary transition">
