@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Solutions from "./pages/Solutions";
 import Marketplace from "./pages/Marketplace";
 import Orders from "./pages/Orders";
+import NewReport from "./pages/NewReport";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/solutions" element={<Solutions />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/new-report" element={<NewReport />} />
         </Routes>
         <Toaster />
       </Router>

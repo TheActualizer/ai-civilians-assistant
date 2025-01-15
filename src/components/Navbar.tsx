@@ -13,7 +13,8 @@ import {
   X,
   Settings,
   FileText,
-  LogOut
+  LogOut,
+  FilePlus
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -79,7 +80,10 @@ const Navbar = () => {
         <div className="flex justify-between items-center px-4 h-16">
           {/* Left section */}
           <div className="flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link 
+              to="/" 
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
               <motion.span 
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
@@ -126,6 +130,16 @@ const Navbar = () => {
               animate={{ opacity: 1 }}
               className="hidden md:flex items-center space-x-4"
             >
+              {session && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/new-report")}
+                  className="flex items-center space-x-2"
+                >
+                  <FilePlus className="h-4 w-4" />
+                  <span>New Report</span>
+                </Button>
+              )}
               <button className="p-2 text-gray-600 hover:text-primary transition">
                 <Search className="h-5 w-5" />
               </button>
@@ -215,6 +229,16 @@ const Navbar = () => {
               className="md:hidden bg-white border-t border-gray-200"
             >
               <div className="px-4 py-2 space-y-1">
+                {session && (
+                  <Link
+                    to="/new-report"
+                    className="flex items-center space-x-2 px-3 py-2 text-primary hover:bg-primary/5 rounded-md transition"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <FilePlus className="h-4 w-4" />
+                    <span>New Report</span>
+                  </Link>
+                )}
                 <Link
                   to="/solutions"
                   className="block px-3 py-2 text-gray-700 hover:text-primary transition"
