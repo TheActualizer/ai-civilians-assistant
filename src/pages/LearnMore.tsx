@@ -2,8 +2,11 @@ import { motion } from "framer-motion";
 import { ArrowRight, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 const LearnMore = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -21,7 +24,11 @@ const LearnMore = () => {
             Our advanced AI platform analyzes every zoning regulation, geospatial constraint, and buildable potential to give you the most accurate report.
           </p>
           <div className="mt-10">
-            <Button size="lg" className="group">
+            <Button 
+              size="lg" 
+              className="group"
+              onClick={() => navigate("/get-started")}
+            >
               Get Your Report Now
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -124,7 +131,11 @@ const LearnMore = () => {
             Get your comprehensive building analysis report in minutes.
           </p>
           <div className="mt-8">
-            <Button size="lg" className="group">
+            <Button 
+              size="lg" 
+              className="group"
+              onClick={() => navigate("/get-started")}
+            >
               Get Started for $99
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
