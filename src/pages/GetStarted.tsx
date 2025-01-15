@@ -102,17 +102,41 @@ const GetStarted = () => {
         return;
       }
 
+      // Validate address using Edge Function
+      const fullAddress = `${values.streetAddress}, ${values.city}, ${values.state} ${values.zipCode}`
+      const response = await fetch('https://aocjoukjdsoynvbuzvas.supabase.co/functions/v1/validate-address', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ address: fullAddress })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to validate address');
+      }
+
+      const validatedAddress = await response.json();
+      console.log("Validated address:", validatedAddress);
+
+      // Insert validated address into database
       const { error } = await supabase
         .from('property_requests')
         .insert({
           name: values.name,
           email: values.email,
-          street_address: values.streetAddress,
-          city: values.city,
-          state: values.state,
-          zip_code: values.zipCode,
+          street_address: validatedAddress.street_address,
+          city: validatedAddress.city,
+          state: validatedAddress.state,
+          zip_code: validatedAddress.zip_code,
           description: values.description || '',
-          user_id: session?.user?.id || null
+          user_id: session?.user?.id || null,
+          metadata: {
+            formatted_address: validatedAddress.formatted_address,
+            coordinates: validatedAddress.coordinates
+          }
         });
 
       if (error) {
@@ -126,7 +150,7 @@ const GetStarted = () => {
       
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error("There was an error submitting your request");
+      toast.error("There was an error validating your address");
     }
   };
 
