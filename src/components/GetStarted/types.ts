@@ -32,6 +32,39 @@ export interface PropertyRequest {
     lat: number | null;
     lng: number | null;
   } | null;
+  api_data: {
+    parcel: any | null;
+    zoning: any | null;
+    geocoding: any | null;
+    assessment: AssessmentData | null;
+    structures: any | null;
+    transactions: any | null;
+    historical_tax: any | null;
+    historical_assessment: any | null;
+  };
+  api_progress: {
+    parcel_completed: boolean;
+    zoning_completed: boolean;
+    geocoding_completed: boolean;
+    assessment_completed: boolean;
+    structures_completed: boolean;
+    transactions_completed: boolean;
+    historical_tax_completed: boolean;
+    historical_assessment_completed: boolean;
+  };
+}
+
+export interface AssessmentData {
+  assessmentYear: number;
+  totalValue: number;
+  landValue: number;
+  improvementValue: number;
+  taxRate: number;
+  assessmentDate: string;
+  propertyClass: string;
+  taxStatus: string;
+  lastSalePrice: number;
+  lastSaleDate: string;
 }
 
 export interface LightBoxResponse {

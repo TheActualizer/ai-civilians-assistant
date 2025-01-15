@@ -24,16 +24,16 @@ serve(async (req) => {
 
     // Mock assessment data for now - replace with actual API call
     const assessmentData = {
-      assessmentYear: 2024,
-      totalValue: 750000,
-      landValue: 300000,
-      improvementValue: 450000,
+      assessmentYear: new Date().getFullYear(),
+      totalValue: 450000,
+      landValue: 150000,
+      improvementValue: 300000,
       taxRate: 0.0125,
-      assessmentDate: "2024-01-15",
-      propertyClass: "Residential",
+      assessmentDate: new Date().toISOString().split('T')[0],
+      propertyClass: "Single Family Residential",
       taxStatus: "Current",
-      lastSalePrice: 725000,
-      lastSaleDate: "2022-06-15"
+      lastSalePrice: 425000,
+      lastSaleDate: "2023-06-15"
     }
 
     // Update property_requests table with assessment data
@@ -41,10 +41,24 @@ serve(async (req) => {
       .from('property_requests')
       .update({
         api_data: {
-          assessment: assessmentData
+          parcel: null,
+          zoning: null,
+          geocoding: null,
+          assessment: assessmentData,
+          structures: null,
+          transactions: null,
+          historical_tax: null,
+          historical_assessment: null
         },
         api_progress: {
-          assessment_completed: true
+          parcel_completed: false,
+          zoning_completed: false,
+          geocoding_completed: false,
+          assessment_completed: true,
+          structures_completed: false,
+          transactions_completed: false,
+          historical_tax_completed: false,
+          historical_assessment_completed: false
         }
       })
       .eq('id', propertyId)

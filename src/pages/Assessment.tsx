@@ -11,34 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowRight, FileText, Database, Terminal, Info, Building2 } from "lucide-react";
-
-interface AssessmentData {
-  assessmentYear: number;
-  totalValue: number;
-  landValue: number;
-  improvementValue: number;
-  taxRate: number;
-  assessmentDate: string;
-  propertyClass: string;
-  taxStatus: string;
-  lastSalePrice: number;
-  lastSaleDate: string;
-}
-
-interface PropertyRequest {
-  id: string;
-  name: string;
-  street_address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  api_data: {
-    assessment?: AssessmentData;
-  };
-  api_progress: {
-    assessment_completed?: boolean;
-  };
-}
+import { PropertyRequest, AssessmentData } from '@/components/GetStarted/types';
 
 const Assessment = () => {
   const session = useSession();
@@ -104,30 +77,31 @@ const Assessment = () => {
         }
 
         if (request) {
-          setPropertyRequest(request);
+          const typedRequest = request as unknown as PropertyRequest;
+          setPropertyRequest(typedRequest);
           addToHistory("Property request found", {
-            id: request.id,
-            name: request.name,
-            address: `${request.street_address}, ${request.city}, ${request.state} ${request.zip_code}`
+            id: typedRequest.id,
+            name: typedRequest.name,
+            address: `${typedRequest.street_address}, ${typedRequest.city}, ${typedRequest.state} ${typedRequest.zip_code}`
           });
 
-          if (!request.api_data?.assessment) {
+          if (!typedRequest.api_data?.assessment) {
             addToHistory("No assessment data found, fetching from API");
-            await fetchAssessmentData(request.id);
+            const assessmentData = await fetchAssessmentData(typedRequest.id);
             
             // Refresh the property request to get the updated data
             const { data: updatedRequest } = await supabase
               .from('property_requests')
               .select('*')
-              .eq('id', request.id)
+              .eq('id', typedRequest.id)
               .single();
               
             if (updatedRequest) {
-              setPropertyRequest(updatedRequest);
+              setPropertyRequest(updatedRequest as unknown as PropertyRequest);
               addToHistory("Property request updated with assessment data");
             }
           } else {
-            addToHistory("Using cached assessment data", request.api_data.assessment);
+            addToHistory("Using cached assessment data", typedRequest.api_data.assessment);
           }
         }
       } catch (error) {
