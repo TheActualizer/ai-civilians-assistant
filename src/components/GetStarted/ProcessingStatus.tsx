@@ -8,8 +8,28 @@ interface ProcessingStatusProps {
   requestId: string;
 }
 
+interface ProcessingSteps {
+  address_validated: boolean;
+  coordinates_mapped: boolean;
+  zoning_checked: boolean;
+  report_generated: boolean;
+  completed: boolean;
+}
+
+interface StatusDetails {
+  address_validation: string | null;
+  geospatial_analysis: string | null;
+  zoning_analysis: string | null;
+  report_generation: string | null;
+}
+
+interface ProcessingStatus {
+  processing_steps: ProcessingSteps;
+  status_details: StatusDetails;
+}
+
 export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<ProcessingStatus | null>(null);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
