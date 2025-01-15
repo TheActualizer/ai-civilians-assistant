@@ -38,6 +38,7 @@ const AccountInfo = () => {
       try {
         if (!session?.user?.id) return;
 
+        console.log("Fetching profile for user:", session.user.id);
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -45,10 +46,12 @@ const AccountInfo = () => {
           .single();
 
         if (error) {
+          console.error("Error fetching profile:", error);
           throw error;
         }
 
         if (!data) {
+          console.log("No profile found for user");
           toast({
             variant: "destructive",
             title: "Error",
@@ -57,6 +60,7 @@ const AccountInfo = () => {
           return;
         }
 
+        console.log("Profile fetched successfully:", data);
         setProfile(data);
         setEditedName(data.full_name || "");
         setEditedPhone(data.phone_number || "");
@@ -75,6 +79,9 @@ const AccountInfo = () => {
 
     setSaving(true);
     try {
+      console.log("Updating profile for user:", session.user.id);
+      console.log("New values:", { full_name: editedName, phone_number: editedPhone });
+
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -84,7 +91,10 @@ const AccountInfo = () => {
         })
         .eq("id", session.user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating profile:", error);
+        throw error;
+      }
 
       setProfile((prev) => 
         prev ? {
@@ -95,6 +105,7 @@ const AccountInfo = () => {
         } : null
       );
 
+      console.log("Profile updated successfully");
       toast({
         title: "Success",
         description: "Profile updated successfully",
