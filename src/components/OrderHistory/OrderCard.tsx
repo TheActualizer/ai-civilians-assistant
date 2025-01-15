@@ -3,6 +3,7 @@ import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info, Share2
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Order } from "./types";
+import OrderDetails from "./OrderDetails";
 
 interface OrderCardProps {
   order: Order;

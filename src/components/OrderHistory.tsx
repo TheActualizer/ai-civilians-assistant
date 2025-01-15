@@ -74,10 +74,14 @@ const OrderHistory = () => {
     try {
       console.log("Starting download for file:", order.download_url);
       
-      // Get the signed URL first
+      // Remove the bucket prefix if it exists in the path
+      const filePath = order.download_url.replace(/^reports\//, '');
+      console.log("Cleaned file path:", filePath);
+      
+      // Get the signed URL
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from("reports")
-        .createSignedUrl(order.download_url, 60); // URL valid for 60 seconds
+        .createSignedUrl(filePath, 60); // URL valid for 60 seconds
 
       if (signedUrlError || !signedUrlData?.signedUrl) {
         console.error("Error getting signed URL:", signedUrlError);
