@@ -1,116 +1,138 @@
+import { useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
-import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useLoadScript } from "@react-google-maps/api";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import { AddressForm } from "@/components/GetStarted/AddressForm";
+import { ProcessingStatus } from "@/components/GetStarted/ProcessingStatus";
+import { PricingComparison } from "@/components/GetStarted/PricingComparison";
+import { FormValues } from "@/components/GetStarted/schema";
 
-const formSchema = z.object({
-  title: z.string().min(2, "Title must be at least 2 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  budget: z.string().regex(/^\d+$/, "Budget must be a number"),
-});
+const libraries: ("places")[] = ["places"];
 
 const NewReport = () => {
   const session = useSession();
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      budget: "",
-    },
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    libraries
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      console.log("Form submitted:", values);
-      toast.success("Report request submitted successfully!");
-    } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("There was an error submitting your request");
+  const onPlaceSelected = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      console.log("Selected place:", place);
     }
   };
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      console.log("Form values:", values);
+
+      // Validate address using Edge Function
+      const fullAddress = `${values.streetAddress}, ${values.city}, ${values.state} ${values.zipCode}`;
+      console.log("Validating address:", fullAddress);
+      
+      const { data: validationResponse, error: validationError } = await supabase.functions.invoke('validate-address', {
+        body: { address: fullAddress }
+      });
+
+      if (validationError) {
+        console.error('Address validation error:', validationError);
+        toast.error("Failed to validate address");
+        return;
+      }
+
+      console.log("Validated address:", validationResponse);
+
+      // Insert validated address into database
+      const { data: insertedRequest, error: insertError } = await supabase
+        .from('property_requests')
+        .insert({
+          name: values.name,
+          email: values.email,
+          street_address: validationResponse.street_address || values.streetAddress,
+          city: validationResponse.city || values.city,
+          state: validationResponse.state || values.state,
+          zip_code: validationResponse.zip_code || values.zipCode,
+          description: values.description || '',
+          user_id: session?.user?.id || null,
+          coordinates: validationResponse.coordinates || null,
+          status_details: {
+            address_validation: "Address validated successfully",
+            geospatial_analysis: null,
+            zoning_analysis: null,
+            report_generation: null
+          },
+          processing_steps: {
+            address_validated: true,
+            coordinates_mapped: false,
+            zoning_checked: false,
+            report_generated: false,
+            completed: false
+          }
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error submitting property request:', insertError);
+        toast.error("Failed to submit property request");
+        return;
+      }
+
+      console.log("Property request submitted:", insertedRequest);
+      setCurrentRequestId(insertedRequest.id);
+      toast.success("Property request submitted successfully!");
+      
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("There was an error processing your request");
+    }
+  };
+
+  if (loadError) {
+    toast.error("Error loading Google Maps");
+    return <div>Error loading Google Maps</div>;
+  }
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
-      <div className="container mx-auto px-4 pt-24 pb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Request New Report</h1>
-        
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>New Report Details</CardTitle>
-            <CardDescription>
-              Fill in the information below to request a new engineering report
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Report Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter report title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      <div className="container mx-auto pt-24 px-4">
+        {/* Hero Section */}
+        <section className="py-12 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Create a New Building Analysis Report
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            Generate detailed zoning analysis, feasibility reports, and maximum buildable area calculations for your project.
+          </p>
+        </section>
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe what you need in the report..."
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {/* Form and Status Section */}
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 gap-8">
+            {!currentRequestId ? (
+              <AddressForm 
+                onSubmit={onSubmit}
+                setAutocomplete={setAutocomplete}
+                onPlaceSelected={onPlaceSelected}
+              />
+            ) : (
+              <ProcessingStatus requestId={currentRequestId} />
+            )}
+          </div>
+        </div>
 
-                <FormField
-                  control={form.control}
-                  name="budget"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Budget (USD)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number"
-                          placeholder="Enter your budget"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" className="w-full">
-                  Submit Request
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+        <PricingComparison />
       </div>
     </div>
   );

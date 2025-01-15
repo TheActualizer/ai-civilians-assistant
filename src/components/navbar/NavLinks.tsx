@@ -17,6 +17,11 @@ export const NavLinks = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56 animate-in slide-in-from-top-1 duration-200">
           <DropdownMenuItem className="hover:bg-[#E5DEFF] cursor-pointer">
+            <Link to="/new-report" className="w-full">
+              New Report
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="hover:bg-[#E5DEFF] cursor-pointer">
             Zoning Analysis
           </DropdownMenuItem>
           <DropdownMenuItem className="hover:bg-[#E5DEFF] cursor-pointer">
