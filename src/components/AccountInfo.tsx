@@ -10,11 +10,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 
 interface Profile {
   id: string;
   email: string | null;
   full_name: string | null;
+  phone_number: string | null;
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
@@ -25,7 +29,10 @@ const AccountInfo = () => {
   const supabase = useSupabaseClient();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [editedName, setEditedName] = useState("");
+  const [editedPhone, setEditedPhone] = useState("");
 
   useEffect(() => {
     const getProfile = async () => {
@@ -49,6 +56,8 @@ const AccountInfo = () => {
         }
 
         setProfile(data);
+        setEditedName(data.full_name || "");
+        setEditedPhone(data.phone_number || "");
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -58,6 +67,47 @@ const AccountInfo = () => {
 
     getProfile();
   }, [session, supabase, toast]);
+
+  const handleSave = async () => {
+    if (!session?.user?.id) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editedName,
+          phone_number: editedPhone,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+
+      setProfile((prev) => 
+        prev ? {
+          ...prev,
+          full_name: editedName,
+          phone_number: editedPhone,
+          updated_at: new Date().toISOString(),
+        } : null
+      );
+
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not update profile",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -78,7 +128,18 @@ const AccountInfo = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Account Information</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold tracking-tight">Account Information</h2>
+        <Button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="flex items-center gap-2"
+        >
+          <Save className="h-4 w-4" />
+          Save Changes
+        </Button>
+      </div>
+      
       <Table>
         <TableHeader>
           <TableRow>
@@ -89,22 +150,53 @@ const AccountInfo = () => {
         <TableBody>
           <TableRow>
             <TableCell className="font-medium">Email</TableCell>
-            <TableCell>{profile.email || "Not set"}</TableCell>
+            <TableCell>
+              <Input 
+                value={profile.email || ""} 
+                disabled 
+                className="bg-gray-50"
+              />
+            </TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">Full Name</TableCell>
-            <TableCell>{profile.full_name || "Not set"}</TableCell>
+            <TableCell>
+              <Input
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                placeholder="Enter your full name"
+              />
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Phone Number</TableCell>
+            <TableCell>
+              <Input
+                value={editedPhone}
+                onChange={(e) => setEditedPhone(e.target.value)}
+                placeholder="Enter your phone number"
+                type="tel"
+              />
+            </TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">Member Since</TableCell>
             <TableCell>
-              {new Date(profile.created_at).toLocaleDateString()}
+              <Input 
+                value={new Date(profile.created_at).toLocaleDateString()} 
+                disabled 
+                className="bg-gray-50"
+              />
             </TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">Last Updated</TableCell>
             <TableCell>
-              {new Date(profile.updated_at).toLocaleDateString()}
+              <Input 
+                value={new Date(profile.updated_at).toLocaleDateString()} 
+                disabled 
+                className="bg-gray-50"
+              />
             </TableCell>
           </TableRow>
         </TableBody>
