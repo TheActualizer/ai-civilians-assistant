@@ -23,37 +23,6 @@ const GetStarted = () => {
     if (autocomplete) {
       const place = autocomplete.getPlace();
       console.log("Selected place:", place);
-
-      if (place.address_components) {
-        let streetNumber = '';
-        let streetName = '';
-        let city = '';
-        let state = '';
-        let zipCode = '';
-
-        place.address_components.forEach((component) => {
-          const types = component.types;
-          if (types.includes('street_number')) {
-            streetNumber = component.long_name;
-          }
-          if (types.includes('route')) {
-            streetName = component.long_name;
-          }
-          if (types.includes('locality')) {
-            city = component.long_name;
-          }
-          if (types.includes('administrative_area_level_1')) {
-            state = component.short_name;
-          }
-          if (types.includes('postal_code')) {
-            zipCode = component.long_name;
-          }
-        });
-
-        const fullStreetAddress = `${streetNumber} ${streetName}`.trim();
-        
-        toast.success("Address validated successfully!");
-      }
     }
   };
 
@@ -83,10 +52,10 @@ const GetStarted = () => {
         .insert({
           name: values.name,
           email: values.email,
-          street_address: validationResponse.street_address,
-          city: validationResponse.city,
-          state: validationResponse.state,
-          zip_code: validationResponse.zip_code,
+          street_address: validationResponse.street_address || values.streetAddress,
+          city: validationResponse.city || values.city,
+          state: validationResponse.state || values.state,
+          zip_code: validationResponse.zip_code || values.zipCode,
           description: values.description || '',
           user_id: session?.user?.id || null
         });
