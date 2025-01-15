@@ -8,7 +8,6 @@ import { AddressForm } from "@/components/GetStarted/AddressForm";
 import { PricingComparison } from "@/components/GetStarted/PricingComparison";
 import { FormValues } from "@/components/GetStarted/schema";
 
-// Define libraries array outside component to prevent unnecessary reloads
 const libraries: ("places")[] = ["places"];
 
 const GetStarted = () => {
@@ -66,7 +65,7 @@ const GetStarted = () => {
       const fullAddress = `${values.streetAddress}, ${values.city}, ${values.state} ${values.zipCode}`;
       console.log("Validating address:", fullAddress);
       
-      const { data: validatedAddress, error: validationError } = await supabase.functions.invoke('validate-address', {
+      const { data: validationResponse, error: validationError } = await supabase.functions.invoke('validate-address', {
         body: { address: fullAddress }
       });
 
@@ -76,7 +75,7 @@ const GetStarted = () => {
         return;
       }
 
-      console.log("Validated address:", validatedAddress);
+      console.log("Validated address:", validationResponse);
 
       // Insert validated address into database
       const { error: insertError } = await supabase
@@ -84,16 +83,12 @@ const GetStarted = () => {
         .insert({
           name: values.name,
           email: values.email,
-          street_address: validatedAddress.street_address,
-          city: validatedAddress.city,
-          state: validatedAddress.state,
-          zip_code: validatedAddress.zip_code,
+          street_address: validationResponse.street_address,
+          city: validationResponse.city,
+          state: validationResponse.state,
+          zip_code: validationResponse.zip_code,
           description: values.description || '',
-          user_id: session?.user?.id || null,
-          metadata: {
-            formatted_address: validatedAddress.formatted_address,
-            coordinates: validatedAddress.coordinates
-          }
+          user_id: session?.user?.id || null
         });
 
       if (insertError) {
@@ -106,7 +101,7 @@ const GetStarted = () => {
       
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error("There was an error validating your address");
+      toast.error("There was an error processing your request");
     }
   };
 
