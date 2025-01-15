@@ -1,9 +1,3 @@
-import { useSession } from "@supabase/auth-helpers-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +6,12 @@ import Navbar from "@/components/Navbar";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useSession } from "@supabase/auth-helpers-react";
 
 const zipCodeRegex = /^\d{5}(-\d{4})?$/;
 
@@ -94,18 +94,10 @@ const GetStarted = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      console.log("Form values:", values); // Debug log for form values
+      console.log("Form values:", values);
       
-      if (!session?.user?.id) {
-        console.log("No user session found"); // Debug log for session check
-        toast.error("Please log in to submit a property request");
-        return;
-      }
-
-      console.log("User ID:", session.user.id); // Debug log for user ID
-
       if (!zipCodeRegex.test(values.zipCode)) {
-        console.log("Invalid ZIP code"); // Debug log for ZIP validation
+        console.log("Invalid ZIP code");
         toast.error("Please enter a valid ZIP code");
         return;
       }
@@ -113,7 +105,7 @@ const GetStarted = () => {
       const { data, error } = await supabase
         .from('property_requests')
         .insert({
-          user_id: session.user.id,
+          user_id: session?.user?.id || null, // Make user_id optional
           name: values.name,
           email: values.email,
           street_address: values.streetAddress,
@@ -124,7 +116,7 @@ const GetStarted = () => {
         })
         .select();
 
-      console.log("Supabase response:", { data, error }); // Debug log for Supabase response
+      console.log("Supabase response:", { data, error });
 
       if (error) {
         console.error('Error submitting property request:', error);
@@ -341,7 +333,6 @@ const GetStarted = () => {
       </div>
     </div>
   );
-
 };
 
 export default GetStarted;
