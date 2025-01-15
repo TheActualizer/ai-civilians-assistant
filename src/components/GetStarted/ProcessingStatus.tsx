@@ -73,7 +73,7 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
       }
 
       console.log('Initial status:', data);
-      setStatus(data);
+      setStatus(data as ProcessingStatus);
       
       // Calculate initial progress
       const steps = Object.values(data.processing_steps || {});
