@@ -36,6 +36,50 @@ export type Database = {
         }
         Relationships: []
       }
+      reports_orders: {
+        Row: {
+          amount: number
+          created_at: string
+          download_url: string | null
+          id: string
+          purchase_date: string
+          report_name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          download_url?: string | null
+          id?: string
+          purchase_date?: string
+          report_name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          download_url?: string | null
+          id?: string
+          purchase_date?: string
+          report_name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
