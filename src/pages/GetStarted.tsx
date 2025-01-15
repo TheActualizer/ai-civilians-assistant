@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const zipCodeRegex = /^\d{5}(-\d{4})?$/;
@@ -98,12 +98,16 @@ const GetStarted = () => {
         toast.error("Please enter a valid ZIP code");
         return;
       }
-      
+
       // Here you would typically save the data to your backend
-      toast.success("Form submitted successfully!");
+      toast.success("Report generation started!");
+      
+      // Reset form after successful submission
+      form.reset();
+      
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error("There was an error submitting the form");
+      toast.error("There was an error generating your report");
     }
   };
 
@@ -123,13 +127,13 @@ const GetStarted = () => {
         {/* Hero Section */}
         <section className="py-12 px-4 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Let's Start Your Building Analysis Journey
+            Let's Generate Your Building Analysis Report
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             Get your detailed zoning analysis, feasibility reports, and maximum buildable area calculations at a fraction of the cost.
           </p>
           <Button size="lg" className="text-lg px-8">
-            Begin Your Report – $99
+            Generate Report – $99
           </Button>
         </section>
 
@@ -139,7 +143,7 @@ const GetStarted = () => {
             <CardHeader>
               <CardTitle>Tell Us About Your Property</CardTitle>
               <CardDescription>
-                Fill in the details below to get started with your analysis
+                Fill in the details below to generate your analysis
               </CardDescription>
             </CardHeader>
             <CardContent>
