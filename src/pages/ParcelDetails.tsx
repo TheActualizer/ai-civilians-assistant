@@ -28,6 +28,7 @@ const ParcelDetails = () => {
   }>>([]);
 
   const addToHistory = (event: string, details?: any) => {
+    console.log(`API Event: ${event}`, details);
     setApiCallHistory(prev => [...prev, {
       timestamp: new Date().toISOString(),
       event,
@@ -75,30 +76,42 @@ const ParcelDetails = () => {
             setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
           } else {
             try {
+              const address = propertyRequest.street_address;
+              const city = propertyRequest.city;
+              const state = propertyRequest.state;
+              const zip = propertyRequest.zip_code;
+
+              console.log('Calling LightBox API with address:', { address, city, state, zip });
               addToHistory("Initiating LightBox API call", {
-                address: propertyRequest.street_address,
-                city: propertyRequest.city,
-                state: propertyRequest.state,
-                zip: propertyRequest.zip_code
+                address,
+                city,
+                state,
+                zip
               });
               
-              console.log('Calling LightBox API...');
               const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
                 body: {
-                  address: propertyRequest.street_address,
-                  city: propertyRequest.city,
-                  state: propertyRequest.state,
-                  zip: propertyRequest.zip_code
+                  address,
+                  city,
+                  state,
+                  zip
                 }
               });
 
               if (apiError) {
+                console.error('LightBox API call error:', apiError);
                 addToHistory("LightBox API call failed", apiError);
                 throw apiError;
               }
 
               console.log('LightBox API response:', data);
               addToHistory("LightBox API call successful", data);
+
+              if (!data.address) {
+                console.warn('No address in LightBox response:', data);
+                addToHistory("Warning: No address in LightBox response", data);
+              }
+
               setLightboxData(data as LightBoxResponse);
               
               toast({
@@ -220,19 +233,19 @@ const ParcelDetails = () => {
                         <TableBody>
                           <TableRow>
                             <TableCell className="font-medium">Street Address</TableCell>
-                            <TableCell>{lightboxData?.address?.streetAddress}</TableCell>
+                            <TableCell>{lightboxData?.address?.streetAddress || 'Not available'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="font-medium">City</TableCell>
-                            <TableCell>{lightboxData?.address?.city}</TableCell>
+                            <TableCell>{lightboxData?.address?.city || 'Not available'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="font-medium">State</TableCell>
-                            <TableCell>{lightboxData?.address?.state}</TableCell>
+                            <TableCell>{lightboxData?.address?.state || 'Not available'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="font-medium">ZIP</TableCell>
-                            <TableCell>{lightboxData?.address?.zip}</TableCell>
+                            <TableCell>{lightboxData?.address?.zip || 'Not available'}</TableCell>
                           </TableRow>
                         </TableBody>
                       </Table>
@@ -246,23 +259,23 @@ const ParcelDetails = () => {
                         <TableBody>
                           <TableRow>
                             <TableCell className="font-medium">Parcel ID</TableCell>
-                            <TableCell>{lightboxData?.parcelId}</TableCell>
+                            <TableCell>{lightboxData?.parcelId || 'Not available'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="font-medium">Land Use</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.landUse}</TableCell>
+                            <TableCell>{lightboxData?.propertyDetails?.landUse || 'Not available'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="font-medium">Lot Size</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.lotSize}</TableCell>
+                            <TableCell>{lightboxData?.propertyDetails?.lotSize || 'Not available'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="font-medium">Zoning</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.zoning}</TableCell>
+                            <TableCell>{lightboxData?.propertyDetails?.zoning || 'Not available'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="font-medium">Year Built</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.yearBuilt}</TableCell>
+                            <TableCell>{lightboxData?.propertyDetails?.yearBuilt || 'Not available'}</TableCell>
                           </TableRow>
                         </TableBody>
                       </Table>
@@ -281,7 +294,7 @@ const ParcelDetails = () => {
                 <CardContent>
                   <ScrollArea className="h-[400px] w-full rounded-md border">
                     <pre className="p-4 text-sm">
-                      {JSON.stringify(lightboxData?.rawResponse, null, 2)}
+                      {JSON.stringify(lightboxData?.rawResponse || {}, null, 2)}
                     </pre>
                   </ScrollArea>
                 </CardContent>

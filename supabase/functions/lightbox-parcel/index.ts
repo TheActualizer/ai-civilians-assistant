@@ -43,10 +43,23 @@ Deno.serve(async (req) => {
     const { address, city, state, zip } = await req.json() as AddressRequest
     console.log('Received request for address:', { address, city, state, zip })
 
+    if (!address || !city || !state || !zip) {
+      console.error('Missing required address components:', { address, city, state, zip })
+      throw new Error('Missing required address components')
+    }
+
     // Attempt to call the actual LightBox API
     try {
       const lightboxUrl = 'https://api.lightbox.com/v1/property/search'
       console.log('Calling LightBox API at:', lightboxUrl)
+      console.log('Request payload:', {
+        address: {
+          street: address,
+          city: city,
+          state: state,
+          zipCode: zip
+        }
+      })
       
       const lightboxResponse = await fetch(lightboxUrl, {
         method: 'POST',
@@ -65,8 +78,9 @@ Deno.serve(async (req) => {
       })
 
       if (!lightboxResponse.ok) {
-        console.error('LightBox API error:', await lightboxResponse.text())
-        throw new Error(`LightBox API returned status ${lightboxResponse.status}`)
+        const errorText = await lightboxResponse.text()
+        console.error('LightBox API error:', errorText)
+        throw new Error(`LightBox API returned status ${lightboxResponse.status}: ${errorText}`)
       }
 
       const lightboxData = await lightboxResponse.json()
@@ -92,6 +106,8 @@ Deno.serve(async (req) => {
         processed_at: new Date().toISOString(),
         rawResponse: lightboxData
       }
+
+      console.log('Transformed response:', response)
 
       // Store the response in Supabase
       const supabaseClient = createClient(
