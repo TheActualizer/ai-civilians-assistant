@@ -11,7 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
+import { Save, Edit2, X } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -29,6 +29,7 @@ const AccountInfo = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [editedName, setEditedName] = useState("");
   const [editedPhone, setEditedPhone] = useState("");
@@ -110,6 +111,7 @@ const AccountInfo = () => {
         title: "Success",
         description: "Profile updated successfully",
       });
+      setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -120,6 +122,14 @@ const AccountInfo = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    if (profile) {
+      setEditedName(profile.full_name || "");
+      setEditedPhone(profile.phone_number || "");
+    }
+    setIsEditing(false);
   };
 
   if (loading) {
@@ -141,14 +151,35 @@ const AccountInfo = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">Account Information</h2>
-        <Button 
-          onClick={handleSave} 
-          disabled={saving}
-          className="flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          Save Changes
-        </Button>
+        {!isEditing ? (
+          <Button 
+            onClick={() => setIsEditing(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Edit2 className="h-4 w-4" />
+            Edit Profile
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={handleCancel}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={saving}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        )}
       </div>
       
       <Table>
@@ -172,22 +203,38 @@ const AccountInfo = () => {
           <TableRow>
             <TableCell className="font-medium">Full Name</TableCell>
             <TableCell>
-              <Input
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                placeholder="Enter your full name"
-              />
+              {isEditing ? (
+                <Input
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder="Enter your full name"
+                />
+              ) : (
+                <Input 
+                  value={profile.full_name || ""} 
+                  disabled 
+                  className="bg-gray-50"
+                />
+              )}
             </TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">Phone Number</TableCell>
             <TableCell>
-              <Input
-                value={editedPhone}
-                onChange={(e) => setEditedPhone(e.target.value)}
-                placeholder="Enter your phone number"
-                type="tel"
-              />
+              {isEditing ? (
+                <Input
+                  value={editedPhone}
+                  onChange={(e) => setEditedPhone(e.target.value)}
+                  placeholder="Enter your phone number"
+                  type="tel"
+                />
+              ) : (
+                <Input 
+                  value={profile.phone_number || ""} 
+                  disabled 
+                  className="bg-gray-50"
+                />
+              )}
             </TableCell>
           </TableRow>
           <TableRow>
