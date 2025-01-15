@@ -195,6 +195,50 @@ const OrderHistory = () => {
     }
   };
 
+  const handleDelete = async (order: Order) => {
+    try {
+      console.log("=== Delete Process Started ===");
+      console.log("Deleting order:", {
+        orderId: order.id,
+        reportName: order.report_name
+      });
+      
+      const { error } = await supabase
+        .from("reports_orders")
+        .delete()
+        .eq("id", order.id);
+
+      if (error) {
+        console.error("=== Delete Process Failed ===");
+        console.error("Error details:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete order",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("=== Delete Process Completed Successfully ===");
+      
+      // Update local state
+      setOrders(orders.filter(o => o.id !== order.id));
+      
+      toast({
+        title: "Success",
+        description: "Order deleted successfully",
+      });
+    } catch (error) {
+      console.error("=== Delete Process Failed ===");
+      console.error("Error deleting order:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete order",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!session) return null;
 
   const formatDate = (dateString: string) => {
