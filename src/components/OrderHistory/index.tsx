@@ -73,12 +73,9 @@ const OrderHistory = () => {
       });
       
       setDownloadingOrderId(order.id);
-
-      // Get the file path from the download_url
-      const filePath = order.download_url;
-      if (!filePath) {
-        throw new Error("Invalid file path");
-      }
+      
+      // Remove the bucket name prefix if it exists in the download_url
+      const filePath = order.download_url.replace(/^reports\//, '');
       console.log("Using file path:", filePath);
       
       console.log("Requesting signed URL from Supabase storage...");
