@@ -62,21 +62,31 @@ const OrderHistory = () => {
 
   const handleDownload = async (order: Order) => {
     try {
-      const { data, error } = await supabase.storage
+      console.log("Attempting to download file:", order.download_url);
+      
+      // First, get the signed URL
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from("reports")
-        .download(order.download_url);
+        .createSignedUrl(order.download_url, 60); // URL valid for 60 seconds
 
-      if (error) {
-        console.error("Error downloading file:", error);
-        toast({
-          title: "Error",
-          description: "Failed to download report",
-          variant: "destructive",
-        });
-        return;
+      if (signedUrlError) {
+        console.error("Error getting signed URL:", signedUrlError);
+        throw signedUrlError;
       }
 
-      const blob = new Blob([data], { type: "application/pdf" });
+      if (!signedUrlData?.signedUrl) {
+        throw new Error("No signed URL received");
+      }
+
+      console.log("Got signed URL:", signedUrlData.signedUrl);
+
+      // Download the file using the signed URL
+      const response = await fetch(signedUrlData.signedUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -94,7 +104,7 @@ const OrderHistory = () => {
       console.error("Error in handleDownload:", error);
       toast({
         title: "Error",
-        description: "Failed to download report",
+        description: "Failed to download report. Please try again later.",
         variant: "destructive",
       });
     }
