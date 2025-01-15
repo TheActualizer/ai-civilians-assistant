@@ -14,12 +14,15 @@ const OrderHistory = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchOrders();
-  }, [session, toast]);
+    if (session?.user?.id) {
+      fetchOrders();
+    }
+  }, [session?.user?.id]);
 
   const fetchOrders = async () => {
     try {
       console.log("Fetching orders for user:", session?.user.id);
+      
       const { data, error } = await supabase
         .from("reports_orders")
         .select(`
@@ -30,6 +33,7 @@ const OrderHistory = () => {
             metadata
           )
         `)
+        .eq('user_id', session?.user.id)
         .order("purchase_date", { ascending: false });
 
       if (error) {
@@ -46,6 +50,11 @@ const OrderHistory = () => {
       setOrders(data || []);
     } catch (error) {
       console.error("Error in fetchOrders:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load order history",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -150,7 +159,16 @@ const OrderHistory = () => {
     }
   };
 
-  if (!session) return null;
+  if (!session) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center h-40">
+          <Receipt className="h-8 w-8 text-gray-400 mb-2" />
+          <p className="text-gray-600">Please log in to view your order history</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
