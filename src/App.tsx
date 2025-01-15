@@ -9,6 +9,8 @@ import Marketplace from "./pages/Marketplace";
 import Orders from "./pages/Orders";
 import NewReport from "./pages/NewReport";
 import Calculations from "./pages/Calculations";
+import AddressValidation from "./pages/AddressValidation";
+import ParcelDetails from "./pages/ParcelDetails";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +28,8 @@ function App() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/new-report" element={<NewReport />} />
           <Route path="/calculations" element={<Calculations />} />
+          <Route path="/address-validation" element={<AddressValidation />} />
+          <Route path="/parcel-details" element={<ParcelDetails />} />
         </Routes>
         <Toaster />
       </Router>
