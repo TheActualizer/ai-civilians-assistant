@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ProcessingStatusProps, PropertyRequest, FunctionLog } from "./types";
 
 export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
   const [request, setRequest] = useState<PropertyRequest | null>(null);
