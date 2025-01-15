@@ -37,9 +37,14 @@ const AccountInfo = () => {
   useEffect(() => {
     const getProfile = async () => {
       try {
-        if (!session?.user?.id) return;
+        if (!session?.user?.id) {
+          console.log("No user session found");
+          return;
+        }
 
-        console.log("Fetching profile for user:", session.user.id);
+        console.log("Current user ID:", session.user.id);
+        console.log("Fetching profile data from Supabase...");
+        
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -47,12 +52,12 @@ const AccountInfo = () => {
           .single();
 
         if (error) {
-          console.error("Error fetching profile:", error);
+          console.error("Error fetching profile:", error.message);
           throw error;
         }
 
         if (!data) {
-          console.log("No profile found for user");
+          console.log("No profile data found for user");
           toast({
             variant: "destructive",
             title: "Error",
@@ -61,12 +66,18 @@ const AccountInfo = () => {
           return;
         }
 
-        console.log("Profile fetched successfully:", data);
+        console.log("Profile data retrieved successfully:", {
+          id: data.id,
+          email: data.email,
+          full_name: data.full_name,
+          phone_number: data.phone_number,
+        });
+
         setProfile(data);
         setEditedName(data.full_name || "");
         setEditedPhone(data.phone_number || "");
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error in getProfile:", error);
       } finally {
         setLoading(false);
       }
@@ -145,7 +156,16 @@ const AccountInfo = () => {
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    console.log("No profile data available to display");
+    return null;
+  }
+
+  console.log("Rendering profile with data:", {
+    email: profile.email,
+    full_name: profile.full_name,
+    phone_number: profile.phone_number,
+  });
 
   return (
     <div className="space-y-6">
