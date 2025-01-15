@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info, Share2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
 import { formatInTimeZone } from 'date-fns-tz';
 import { useToast } from "@/hooks/use-toast";
 
@@ -73,27 +72,38 @@ const OrderHistory = () => {
 
   const handleDownload = async (order: Order) => {
     try {
-      const { data, error } = await supabase.storage
+      console.log("Starting download for file:", order.download_url);
+      
+      // Get the signed URL first
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from("reports")
-        .download(order.download_url);
+        .createSignedUrl(order.download_url, 60); // URL valid for 60 seconds
 
-      if (error) {
-        console.error("Error downloading file:", error);
-        toast({
-          title: "Error",
-          description: "Failed to download report",
-          variant: "destructive",
-        });
-        return;
+      if (signedUrlError || !signedUrlData?.signedUrl) {
+        console.error("Error getting signed URL:", signedUrlError);
+        throw new Error("Failed to generate download URL");
       }
 
-      const blob = new Blob([data], { type: "application/pdf" });
+      console.log("Got signed URL:", signedUrlData.signedUrl);
+
+      // Fetch the file using the signed URL
+      const response = await fetch(signedUrlData.signedUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Create a blob from the response
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link and trigger the download
       const link = document.createElement("a");
       link.href = url;
       link.download = `${order.report_name}.pdf`;
       document.body.appendChild(link);
       link.click();
+      
+      // Clean up
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
 
@@ -105,7 +115,7 @@ const OrderHistory = () => {
       console.error("Error in handleDownload:", error);
       toast({
         title: "Error",
-        description: "Failed to download report",
+        description: "Failed to download report. Please try again.",
         variant: "destructive",
       });
     }
