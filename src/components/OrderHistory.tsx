@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Download, Receipt, DollarSign } from "lucide-react";
+import { Calendar, Download, Receipt, DollarSign, MapPin, FileText, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,6 +14,13 @@ interface Order {
   amount: number;
   status: string;
   download_url: string;
+  shipping_address?: string;
+  notes?: string;
+  report?: {
+    description?: string;
+    created_at: string;
+    metadata: any;
+  };
 }
 
 const OrderHistory = () => {
@@ -28,7 +35,14 @@ const OrderHistory = () => {
         console.log("Fetching orders for user:", session?.user.id);
         const { data, error } = await supabase
           .from("reports_orders")
-          .select("*")
+          .select(`
+            *,
+            report:reports (
+              description,
+              created_at,
+              metadata
+            )
+          `)
           .order("purchase_date", { ascending: false });
 
         if (error) {
@@ -71,7 +85,6 @@ const OrderHistory = () => {
         return;
       }
 
-      // Create a download link and trigger the download
       const blob = new Blob([data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -121,43 +134,96 @@ const OrderHistory = () => {
           {orders.map((order) => (
             <Card key={order.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Receipt className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold text-lg">{order.report_name}</h3>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {format(new Date(order.purchase_date), "MMM d, yyyy")}
+                <div className="flex flex-col space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Receipt className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold text-lg">{order.report_name}</h3>
                       </div>
-                      <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        ${order.amount.toFixed(2)}
-                      </div>
-                      <div className="flex items-center">
-                        <div className={`px-2 py-1 rounded-full text-xs ${
-                          order.status === "completed" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {order.status}
+                      
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          {format(new Date(order.purchase_date), "MMM d, yyyy")}
+                        </div>
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          ${order.amount.toFixed(2)}
+                        </div>
+                        <div className="flex items-center">
+                          <div className={`px-2 py-1 rounded-full text-xs ${
+                            order.status === "completed" 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}>
+                            {order.status}
+                          </div>
                         </div>
                       </div>
                     </div>
+                    
+                    <div className="mt-4 md:mt-0">
+                      <Button 
+                        onClick={() => handleDownload(order)}
+                        className="w-full md:w-auto"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Report
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <div className="mt-4 md:mt-0">
-                    <Button 
-                      onClick={() => handleDownload(order)}
-                      className="w-full md:w-auto"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Report
-                    </Button>
-                  </div>
+
+                  {(order.shipping_address || order.notes || order.report) && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {order.shipping_address && (
+                          <div className="flex items-start space-x-2">
+                            <MapPin className="h-4 w-4 text-gray-400 mt-1" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Shipping Address</p>
+                              <p className="text-sm text-gray-600">{order.shipping_address}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {order.notes && (
+                          <div className="flex items-start space-x-2">
+                            <FileText className="h-4 w-4 text-gray-400 mt-1" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Notes</p>
+                              <p className="text-sm text-gray-600">{order.notes}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {order.report && (
+                          <div className="flex items-start space-x-2 col-span-full">
+                            <Info className="h-4 w-4 text-gray-400 mt-1" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Report Details</p>
+                              {order.report.description && (
+                                <p className="text-sm text-gray-600 mt-1">{order.report.description}</p>
+                              )}
+                              <p className="text-sm text-gray-600 mt-1">
+                                Created: {format(new Date(order.report.created_at), "MMM d, yyyy")}
+                              </p>
+                              {order.report.metadata && Object.keys(order.report.metadata).length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium text-gray-700">Additional Information</p>
+                                  {Object.entries(order.report.metadata).map(([key, value]) => (
+                                    <p key={key} className="text-sm text-gray-600">
+                                      {key}: {value as string}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -36,14 +36,47 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          report_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          report_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          report_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reports_orders: {
         Row: {
           amount: number
           created_at: string
           download_url: string | null
           id: string
+          notes: string | null
           purchase_date: string
+          report_id: string | null
           report_name: string
+          shipping_address: string | null
           status: string
           updated_at: string
           user_id: string
@@ -53,8 +86,11 @@ export type Database = {
           created_at?: string
           download_url?: string | null
           id?: string
+          notes?: string | null
           purchase_date?: string
+          report_id?: string | null
           report_name: string
+          shipping_address?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -64,13 +100,23 @@ export type Database = {
           created_at?: string
           download_url?: string | null
           id?: string
+          notes?: string | null
           purchase_date?: string
+          report_id?: string | null
           report_name?: string
+          shipping_address?: string | null
           status?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reports_orders_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reports_orders_user_id_fkey"
             columns: ["user_id"]
