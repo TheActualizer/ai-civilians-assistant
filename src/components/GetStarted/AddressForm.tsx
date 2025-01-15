@@ -28,10 +28,9 @@ export const AddressForm = ({ onSubmit, setAutocomplete, onPlaceSelected }: Addr
     },
   });
 
-  const handlePlaceSelected = () => {
-    const autocomplete = form.getValues("autocomplete") as google.maps.places.Autocomplete;
-    if (autocomplete) {
-      const place = autocomplete.getPlace();
+  const handlePlaceSelected = (autocompleteInstance: google.maps.places.Autocomplete) => {
+    if (autocompleteInstance) {
+      const place = autocompleteInstance.getPlace();
       console.log("Selected place:", place);
 
       if (place.address_components) {
@@ -111,8 +110,15 @@ export const AddressForm = ({ onSubmit, setAutocomplete, onPlaceSelected }: Addr
               <FormLabel>Street Address</FormLabel>
               <FormControl>
                 <Autocomplete
-                  onLoad={setAutocomplete}
-                  onPlaceChanged={handlePlaceSelected}
+                  onLoad={(autocomplete) => {
+                    setAutocomplete(autocomplete);
+                  }}
+                  onPlaceChanged={() => {
+                    const autocomplete = document.querySelector('input[name="streetAddress"]')?.parentElement?.querySelector('input');
+                    if (autocomplete && 'getPlace' in autocomplete) {
+                      handlePlaceSelected(autocomplete as unknown as google.maps.places.Autocomplete);
+                    }
+                  }}
                   restrictions={{ country: "us" }}
                 >
                   <Input 
