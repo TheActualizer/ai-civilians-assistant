@@ -33,15 +33,13 @@ serve(async (req) => {
 
   try {
     const { address } = await req.json()
-    console.log('Validating address:', address)
+    console.log('Original address submitted:', address)
     
-    // Get Google Maps API key from environment
     const googleApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
     if (!googleApiKey) {
       throw new Error('Google Maps API key not configured')
     }
 
-    // Call Google Places API with address restrictions for better accuracy
     const encodedAddress = encodeURIComponent(address)
     console.log('Calling Google Places API with encoded address:', encodedAddress)
     
@@ -50,7 +48,9 @@ serve(async (req) => {
     )
     
     const data: GooglePlacesResponse = await response.json()
-    console.log('Google Places API response:', data)
+    
+    // Log the complete Google API response for debugging
+    console.log('Complete Google Places API response:', JSON.stringify(data, null, 2))
 
     if (data.status !== 'OK') {
       throw new Error(`Address validation failed: ${data.status}`)
@@ -71,6 +71,7 @@ serve(async (req) => {
     }
     if (addressParts[1]) {
       originalComponents.city = addressParts[1]
+      console.log('Original city component:', addressParts[1])
     }
     if (addressParts[2]) {
       const stateParts = addressParts[2].split(' ')
@@ -88,6 +89,7 @@ serve(async (req) => {
       }
       if (component.types.includes('locality')) {
         city = component.long_name
+        console.log('Google API returned city:', component.long_name)
       }
       if (component.types.includes('administrative_area_level_1')) {
         state = component.short_name
@@ -113,7 +115,11 @@ serve(async (req) => {
       }
     }
 
-    console.log('Standardized address:', standardizedAddress)
+    console.log('City comparison:', {
+      original: originalComponents.city,
+      standardized: city,
+      changed: originalComponents.city?.toLowerCase() !== city.toLowerCase()
+    })
 
     return new Response(
       JSON.stringify(standardizedAddress),
