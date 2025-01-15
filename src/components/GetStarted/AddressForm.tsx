@@ -28,46 +28,49 @@ export const AddressForm = ({ onSubmit, setAutocomplete, onPlaceSelected }: Addr
     },
   });
 
-  const handlePlaceSelected = (autocompleteInstance: google.maps.places.Autocomplete) => {
-    if (autocompleteInstance) {
-      const place = autocompleteInstance.getPlace();
-      console.log("Selected place:", place);
+  const handlePlaceSelected = () => {
+    if (!window.google) return;
+    
+    const autocompleteElement = document.querySelector('input[name="streetAddress"]') as HTMLInputElement;
+    if (!autocompleteElement) return;
 
-      if (place.address_components) {
-        let streetNumber = '';
-        let streetName = '';
-        let city = '';
-        let state = '';
-        let zipCode = '';
+    const autocompleteInstance = new window.google.maps.places.Autocomplete(autocompleteElement);
+    const place = autocompleteInstance.getPlace();
+    
+    if (place && place.address_components) {
+      let streetNumber = '';
+      let streetName = '';
+      let city = '';
+      let state = '';
+      let zipCode = '';
 
-        place.address_components.forEach((component) => {
-          const types = component.types;
-          if (types.includes('street_number')) {
-            streetNumber = component.long_name;
-          }
-          if (types.includes('route')) {
-            streetName = component.long_name;
-          }
-          if (types.includes('locality')) {
-            city = component.long_name;
-          }
-          if (types.includes('administrative_area_level_1')) {
-            state = component.short_name;
-          }
-          if (types.includes('postal_code')) {
-            zipCode = component.long_name;
-          }
-        });
+      place.address_components.forEach((component) => {
+        const types = component.types;
+        if (types.includes('street_number')) {
+          streetNumber = component.long_name;
+        }
+        if (types.includes('route')) {
+          streetName = component.long_name;
+        }
+        if (types.includes('locality')) {
+          city = component.long_name;
+        }
+        if (types.includes('administrative_area_level_1')) {
+          state = component.short_name;
+        }
+        if (types.includes('postal_code')) {
+          zipCode = component.long_name;
+        }
+      });
 
-        const fullStreetAddress = `${streetNumber} ${streetName}`.trim();
-        
-        // Update form fields with validated address
-        form.setValue("streetAddress", fullStreetAddress);
-        form.setValue("city", city);
-        form.setValue("state", state);
-        form.setValue("zipCode", zipCode);
-      }
+      const fullStreetAddress = `${streetNumber} ${streetName}`.trim();
+      
+      form.setValue("streetAddress", fullStreetAddress);
+      form.setValue("city", city);
+      form.setValue("state", state);
+      form.setValue("zipCode", zipCode);
     }
+    
     onPlaceSelected();
   };
 
@@ -111,12 +114,7 @@ export const AddressForm = ({ onSubmit, setAutocomplete, onPlaceSelected }: Addr
               <FormControl>
                 <Autocomplete
                   onLoad={setAutocomplete}
-                  onPlaceChanged={() => {
-                    const autocomplete = document.querySelector('input[name="streetAddress"]')?.parentElement?.querySelector('input');
-                    if (autocomplete && 'getPlace' in autocomplete) {
-                      handlePlaceSelected(autocomplete as unknown as google.maps.places.Autocomplete);
-                    }
-                  }}
+                  onPlaceChanged={handlePlaceSelected}
                   restrictions={{ country: "us" }}
                 >
                   <Input 
