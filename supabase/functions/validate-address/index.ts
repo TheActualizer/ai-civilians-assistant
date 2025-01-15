@@ -41,16 +41,16 @@ serve(async (req) => {
       throw new Error('Google Maps API key not configured')
     }
 
-    // Call Google Places API
+    // Call Google Places API with address restrictions for better accuracy
     const encodedAddress = encodeURIComponent(address)
     console.log('Calling Google Places API with encoded address:', encodedAddress)
     
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${googleApiKey}`
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&components=country:US&key=${googleApiKey}`
     )
     
     const data: GooglePlacesResponse = await response.json()
-    console.log('Google Places API response status:', data.status)
+    console.log('Google Places API response:', data)
 
     if (data.status !== 'OK') {
       throw new Error(`Address validation failed: ${data.status}`)
@@ -62,7 +62,23 @@ serve(async (req) => {
     let city = ''
     let state = ''
     let zipCode = ''
+    let originalComponents: Record<string, string> = {}
 
+    // Store original address components for comparison
+    const addressParts = address.split(',').map(part => part.trim())
+    if (addressParts[0]) {
+      originalComponents.street_address = addressParts[0]
+    }
+    if (addressParts[1]) {
+      originalComponents.city = addressParts[1]
+    }
+    if (addressParts[2]) {
+      const stateParts = addressParts[2].split(' ')
+      if (stateParts[0]) originalComponents.state = stateParts[0]
+      if (stateParts[1]) originalComponents.zip_code = stateParts[1]
+    }
+
+    // Parse standardized components from Google's response
     result.address_components.forEach((component) => {
       if (component.types.includes('street_number')) {
         streetNumber = component.long_name
@@ -81,19 +97,26 @@ serve(async (req) => {
       }
     })
 
-    const validatedAddress = {
+    const standardizedAddress = {
       street_address: `${streetNumber} ${route}`.trim(),
       city,
       state,
       zip_code: zipCode,
       formatted_address: result.formatted_address,
-      coordinates: result.geometry.location
+      coordinates: result.geometry.location,
+      original_components: originalComponents,
+      standardization_changes: {
+        street_changed: originalComponents.street_address?.toLowerCase() !== `${streetNumber} ${route}`.trim().toLowerCase(),
+        city_changed: originalComponents.city?.toLowerCase() !== city.toLowerCase(),
+        state_changed: originalComponents.state?.toLowerCase() !== state.toLowerCase(),
+        zip_changed: originalComponents.zip_code !== zipCode
+      }
     }
 
-    console.log('Validated address:', validatedAddress)
+    console.log('Standardized address:', standardizedAddress)
 
     return new Response(
-      JSON.stringify(validatedAddress),
+      JSON.stringify(standardizedAddress),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
