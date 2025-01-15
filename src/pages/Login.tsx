@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, Lock, LogIn } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -28,7 +29,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <Navbar />
+      <div className="pt-24 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -203,6 +206,7 @@ const Login = () => {
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };
