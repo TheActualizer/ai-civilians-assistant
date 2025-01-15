@@ -80,6 +80,13 @@ export const MobileMenu = ({ session }: MobileMenuProps) => {
                 Solutions
               </Link>
               <Link
+                to="/address-validation"
+                className="block px-3 py-2 text-gray-700 hover:text-[#8B5CF6] hover:bg-[#E5DEFF] rounded-md transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                Address Validation
+              </Link>
+              <Link
                 to="/learn-more"
                 className="block px-3 py-2 text-gray-700 hover:text-[#8B5CF6] hover:bg-[#E5DEFF] rounded-md transition-colors duration-200"
                 onClick={() => setIsOpen(false)}
