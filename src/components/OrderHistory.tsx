@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Download, Receipt, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -54,6 +54,47 @@ const OrderHistory = () => {
       fetchOrders();
     }
   }, [session, toast]);
+
+  const handleDownload = async (order: Order) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("reports")
+        .download(order.download_url);
+
+      if (error) {
+        console.error("Error downloading file:", error);
+        toast({
+          title: "Error",
+          description: "Failed to download report",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create a download link and trigger the download
+      const blob = new Blob([data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${order.report_name}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+
+      toast({
+        title: "Success",
+        description: "Report downloaded successfully",
+      });
+    } catch (error) {
+      console.error("Error in handleDownload:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download report",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!session) return null;
 
@@ -110,7 +151,7 @@ const OrderHistory = () => {
                   
                   <div className="mt-4 md:mt-0">
                     <Button 
-                      onClick={() => window.open(order.download_url, '_blank')}
+                      onClick={() => handleDownload(order)}
                       className="w-full md:w-auto"
                     >
                       <Download className="h-4 w-4 mr-2" />
