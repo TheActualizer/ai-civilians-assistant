@@ -27,6 +27,7 @@ interface Order {
 const OrderHistory = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingOrderId, setDownloadingOrderId] = useState<string | null>(null);
   const session = useSession();
   const { toast } = useToast();
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -73,6 +74,7 @@ const OrderHistory = () => {
 
   const handleDownload = async (order: Order) => {
     try {
+      setDownloadingOrderId(order.id);
       console.log("=== Download Process Started ===");
       console.log("Original download URL:", order.download_url);
       
@@ -91,7 +93,6 @@ const OrderHistory = () => {
         console.error("Storage Error Details:", {
           message: signedUrlError.message,
           name: signedUrlError.name,
-          cause: signedUrlError.cause
         });
         throw new Error(`Failed to generate download URL: ${signedUrlError.message}`);
       }
@@ -148,6 +149,8 @@ const OrderHistory = () => {
         description: error.message || "Failed to download report. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setDownloadingOrderId(null);
     }
   };
 
@@ -278,9 +281,19 @@ const OrderHistory = () => {
                         onClick={() => handleDownload(order)}
                         variant="outline"
                         className="flex-1 md:flex-none"
+                        disabled={downloadingOrderId === order.id}
                       >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
+                        {downloadingOrderId === order.id ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
+                            Downloading...
+                          </div>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </>
+                        )}
                       </Button>
                       <Button 
                         onClick={() => handleShare(order)}
