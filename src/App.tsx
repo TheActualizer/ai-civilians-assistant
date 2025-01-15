@@ -4,6 +4,7 @@ import GetStarted from "./pages/GetStarted";
 import LearnMore from "./pages/LearnMore";
 import Login from "./pages/Login";
 import Solutions from "./pages/Solutions";
+import Marketplace from "./pages/Marketplace";
 import { Toaster } from "@/components/ui/toaster";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/learn-more" element={<LearnMore />} />
         <Route path="/login" element={<Login />} />
         <Route path="/solutions" element={<Solutions />} />
+        <Route path="/marketplace" element={<Marketplace />} />
       </Routes>
       <Toaster />
     </Router>
