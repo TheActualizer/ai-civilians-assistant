@@ -6,6 +6,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
@@ -18,69 +21,108 @@ const ParcelDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
+  const [apiCallHistory, setApiCallHistory] = useState<Array<{
+    timestamp: string;
+    event: string;
+    details?: any;
+  }>>([]);
+
+  const addToHistory = (event: string, details?: any) => {
+    setApiCallHistory(prev => [...prev, {
+      timestamp: new Date().toISOString(),
+      event,
+      details
+    }]);
+  };
 
   useEffect(() => {
     const fetchLatestRequest = async () => {
+      addToHistory("Starting to fetch latest property request");
       console.log("Fetching latest property request...");
-      const { data: propertyRequest, error: fetchError } = await supabase
-        .from('property_requests')
-        .select('*, lightbox_data, status_details')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      
+      try {
+        const { data: propertyRequest, error: fetchError } = await supabase
+          .from('property_requests')
+          .select('*, lightbox_data, status_details')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      if (fetchError) {
-        console.error('Error fetching request:', fetchError);
-        setError('Failed to fetch property request');
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch property request data"
-        });
-        return;
-      }
+        if (fetchError) {
+          console.error('Error fetching request:', fetchError);
+          addToHistory("Error fetching property request", fetchError);
+          setError('Failed to fetch property request');
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch property request data"
+          });
+          return;
+        }
 
-      if (propertyRequest) {
-        console.log('Latest request found:', propertyRequest);
-        setRequestId(propertyRequest.id);
-        
-        if (propertyRequest.lightbox_data) {
-          console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
-          setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
-        } else {
-          try {
-            console.log('Calling LightBox API...');
-            const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
-              body: {
+        if (propertyRequest) {
+          console.log('Latest request found:', propertyRequest);
+          addToHistory("Latest property request found", {
+            id: propertyRequest.id,
+            address: `${propertyRequest.street_address}, ${propertyRequest.city}, ${propertyRequest.state} ${propertyRequest.zip_code}`
+          });
+          
+          setRequestId(propertyRequest.id);
+          
+          if (propertyRequest.lightbox_data) {
+            console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
+            addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
+            setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
+          } else {
+            try {
+              addToHistory("Initiating LightBox API call", {
                 address: propertyRequest.street_address,
                 city: propertyRequest.city,
                 state: propertyRequest.state,
                 zip: propertyRequest.zip_code
+              });
+              
+              console.log('Calling LightBox API...');
+              const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
+                body: {
+                  address: propertyRequest.street_address,
+                  city: propertyRequest.city,
+                  state: propertyRequest.state,
+                  zip: propertyRequest.zip_code
+                }
+              });
+
+              if (apiError) {
+                addToHistory("LightBox API call failed", apiError);
+                throw apiError;
               }
-            });
 
-            if (apiError) {
-              throw apiError;
+              console.log('LightBox API response:', data);
+              addToHistory("LightBox API call successful", data);
+              setLightboxData(data as LightBoxResponse);
+              
+              toast({
+                title: "Success",
+                description: "LightBox data fetched successfully"
+              });
+            } catch (apiError) {
+              console.error('Error calling LightBox API:', apiError);
+              addToHistory("Error in LightBox API call", apiError);
+              setError('Failed to fetch LightBox data');
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to fetch LightBox data"
+              });
             }
-
-            console.log('LightBox API response:', data);
-            setLightboxData(data as LightBoxResponse);
-            
-            toast({
-              title: "Success",
-              description: "LightBox data fetched successfully"
-            });
-          } catch (apiError) {
-            console.error('Error calling LightBox API:', apiError);
-            setError('Failed to fetch LightBox data');
-            toast({
-              variant: "destructive",
-              title: "Error",
-              description: "Failed to fetch LightBox data"
-            });
           }
         }
+      } catch (error) {
+        console.error('Unexpected error:', error);
+        addToHistory("Unexpected error occurred", error);
+        setError('An unexpected error occurred');
       }
+      
       setIsLoading(false);
     };
 
@@ -120,24 +162,55 @@ const ParcelDetails = () => {
       <div className="container mx-auto pt-24 px-4 pb-8">
         <div className="flex flex-col gap-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">LightBox Parcel Debugger</h1>
+            <h1 className="text-3xl font-bold text-gray-900">LightBox API Debug Dashboard</h1>
             <div className="text-sm text-gray-500">
               Request ID: {requestId}
             </div>
           </div>
 
-          <Tabs defaultValue="parsed" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs defaultValue="api-debug" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="api-debug">API Debug</TabsTrigger>
               <TabsTrigger value="parsed">Parsed Data</TabsTrigger>
               <TabsTrigger value="raw">Raw Response</TabsTrigger>
-              <TabsTrigger value="timeline">API Timeline</TabsTrigger>
+              <TabsTrigger value="timeline">Request Timeline</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="parsed" className="space-y-4">
+            <TabsContent value="api-debug">
               <Card>
                 <CardHeader>
-                  <CardTitle>Property Information</CardTitle>
-                  <CardDescription>Parsed data from LightBox API response</CardDescription>
+                  <CardTitle>API Integration Debug</CardTitle>
+                  <CardDescription>Real-time API integration monitoring</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px] w-full rounded-md border">
+                    <div className="p-4 space-y-4">
+                      {apiCallHistory.map((entry, index) => (
+                        <div key={index} className="border-l-2 border-blue-500 pl-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              {new Date(entry.timestamp).toLocaleTimeString()}
+                            </Badge>
+                            <span className="font-medium">{entry.event}</span>
+                          </div>
+                          {entry.details && (
+                            <pre className="mt-2 text-sm bg-gray-50 p-2 rounded overflow-auto">
+                              {JSON.stringify(entry.details, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="parsed">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Parsed LightBox Data</CardTitle>
+                  <CardDescription>Structured data from LightBox API</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
@@ -164,6 +237,8 @@ const ParcelDetails = () => {
                         </TableBody>
                       </Table>
                     </div>
+
+                    <Separator />
 
                     <div>
                       <h3 className="text-lg font-semibold mb-2">Property Details</h3>
@@ -204,9 +279,11 @@ const ParcelDetails = () => {
                   <CardDescription>Complete unmodified response from LightBox API</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm">
-                    {JSON.stringify(lightboxData?.rawResponse, null, 2)}
-                  </pre>
+                  <ScrollArea className="h-[400px] w-full rounded-md border">
+                    <pre className="p-4 text-sm">
+                      {JSON.stringify(lightboxData?.rawResponse, null, 2)}
+                    </pre>
+                  </ScrollArea>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -214,27 +291,26 @@ const ParcelDetails = () => {
             <TabsContent value="timeline">
               <Card>
                 <CardHeader>
-                  <CardTitle>API Request Timeline</CardTitle>
-                  <CardDescription>Detailed timeline of the API request and response</CardDescription>
+                  <CardTitle>Request Timeline</CardTitle>
+                  <CardDescription>Detailed timeline of API requests and responses</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                      <div>
-                        <p className="font-medium">Request Initiated</p>
-                        <p className="text-sm text-gray-500">{lightboxData?.timestamp}</p>
-                      </div>
-                    </div>
-                    {lightboxData?.lightbox_processed && (
-                      <div className="flex items-center space-x-4">
-                        <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                    {apiCallHistory.map((entry, index) => (
+                      <div key={index} className="flex items-start space-x-4">
+                        <div className="min-w-[150px] text-sm text-gray-500">
+                          {new Date(entry.timestamp).toLocaleTimeString()}
+                        </div>
                         <div>
-                          <p className="font-medium">Response Received</p>
-                          <p className="text-sm text-gray-500">{lightboxData?.processed_at}</p>
+                          <p className="font-medium">{entry.event}</p>
+                          {entry.details && (
+                            <pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-auto">
+                              {JSON.stringify(entry.details, null, 2)}
+                            </pre>
+                          )}
                         </div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </CardContent>
               </Card>

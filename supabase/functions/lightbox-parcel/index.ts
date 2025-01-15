@@ -36,79 +36,107 @@ Deno.serve(async (req) => {
   try {
     const LIGHTBOX_API_KEY = Deno.env.get('LIGHTBOX_API_KEY')
     if (!LIGHTBOX_API_KEY) {
+      console.error('LightBox API key not configured')
       throw new Error('LightBox API key not configured')
     }
 
     const { address, city, state, zip } = await req.json() as AddressRequest
     console.log('Received request for address:', { address, city, state, zip })
 
-    // Mock response for testing since we can't access the real LightBox API
-    const mockResponse: LightBoxResponse = {
-      parcelId: "LB" + Date.now(),
-      address: {
-        streetAddress: address,
-        city: city,
-        state: state,
-        zip: zip
-      },
-      propertyDetails: {
-        landUse: "Residential",
-        lotSize: "0.25 acres",
-        zoning: "R-1",
-        yearBuilt: "1985"
-      },
-      timestamp: new Date().toISOString(),
-      lightbox_processed: true,
-      processed_at: new Date().toISOString(),
-      rawResponse: {
-        status: "success",
-        metadata: {
-          requestId: `lb_${Date.now()}`,
-          processedAt: new Date().toISOString()
+    // Attempt to call the actual LightBox API
+    try {
+      const lightboxUrl = 'https://api.lightbox.com/v1/property/search'
+      console.log('Calling LightBox API at:', lightboxUrl)
+      
+      const lightboxResponse = await fetch(lightboxUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LIGHTBOX_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-        apiVersion: "1.0"
-      }
-    };
-
-    // Store the response in Supabase
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const { data: propertyRequest, error: propertyError } = await supabaseClient
-      .from('property_requests')
-      .select('id')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (propertyError) {
-      console.error('Error fetching property request:', propertyError)
-      throw new Error('Failed to fetch property request')
-    }
-
-    const { error: updateError } = await supabaseClient
-      .from('property_requests')
-      .update({
-        lightbox_data: mockResponse,
-        lightbox_processed_at: new Date().toISOString(),
-        status: 'processed',
-        status_details: {
-          ...mockResponse
-        }
+        body: JSON.stringify({
+          address: {
+            street: address,
+            city: city,
+            state: state,
+            zipCode: zip
+          }
+        })
       })
-      .eq('id', propertyRequest.id)
 
-    if (updateError) {
-      console.error('Error updating property request:', updateError)
-      throw new Error('Failed to update property request with LightBox data')
+      if (!lightboxResponse.ok) {
+        console.error('LightBox API error:', await lightboxResponse.text())
+        throw new Error(`LightBox API returned status ${lightboxResponse.status}`)
+      }
+
+      const lightboxData = await lightboxResponse.json()
+      console.log('LightBox API response:', lightboxData)
+
+      // Transform the real API response into our expected format
+      const response: LightBoxResponse = {
+        parcelId: lightboxData.parcelId || `LB${Date.now()}`,
+        address: {
+          streetAddress: address,
+          city: city,
+          state: state,
+          zip: zip
+        },
+        propertyDetails: {
+          landUse: lightboxData.landUse || "Unknown",
+          lotSize: lightboxData.lotSize || "Unknown",
+          zoning: lightboxData.zoning || "Unknown",
+          yearBuilt: lightboxData.yearBuilt || "Unknown"
+        },
+        timestamp: new Date().toISOString(),
+        lightbox_processed: true,
+        processed_at: new Date().toISOString(),
+        rawResponse: lightboxData
+      }
+
+      // Store the response in Supabase
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      )
+
+      const { data: propertyRequest, error: propertyError } = await supabaseClient
+        .from('property_requests')
+        .select('id')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (propertyError) {
+        console.error('Error fetching property request:', propertyError)
+        throw new Error('Failed to fetch property request')
+      }
+
+      const { error: updateError } = await supabaseClient
+        .from('property_requests')
+        .update({
+          lightbox_data: response,
+          lightbox_processed_at: new Date().toISOString(),
+          status: 'processed',
+          status_details: {
+            ...response
+          }
+        })
+        .eq('id', propertyRequest.id)
+
+      if (updateError) {
+        console.error('Error updating property request:', updateError)
+        throw new Error('Failed to update property request with LightBox data')
+      }
+
+      return new Response(
+        JSON.stringify(response),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+
+    } catch (apiError) {
+      console.error('Error calling LightBox API:', apiError)
+      throw new Error(`Error calling LightBox API: ${apiError.message}`)
     }
-
-    return new Response(
-      JSON.stringify(mockResponse),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
 
   } catch (error) {
     console.error('Error in lightbox-parcel function:', error)
