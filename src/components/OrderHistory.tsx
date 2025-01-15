@@ -92,9 +92,12 @@ const OrderHistory = () => {
       
       setDownloadingOrderId(order.id);
       
-      // Clean the file path by removing any potential 'reports/' prefix and leading slash
-      const filePath = order.download_url.replace(/^\/?(reports\/)?/, '');
-      console.log("Cleaned file path:", filePath);
+      // Extract just the filename from the path, removing any directory structure
+      const filePath = order.download_url.split('/').pop();
+      if (!filePath) {
+        throw new Error("Invalid file path");
+      }
+      console.log("Using file path:", filePath);
       
       console.log("Requesting signed URL from Supabase storage...");
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
@@ -135,7 +138,6 @@ const OrderHistory = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Create blob and trigger download
       const blob = await response.blob();
       console.log("File blob created:", {
         size: blob.size,
