@@ -72,51 +72,97 @@ const OrderHistory = () => {
 
   const handleDownload = async (order: Order) => {
     try {
-      console.log("Starting download for file:", order.download_url);
+      console.log("=== Download Process Started ===");
+      console.log("Original download URL:", order.download_url);
+      console.log("Order details:", JSON.stringify(order, null, 2));
       
       // Remove the bucket prefix if it exists in the path
       const filePath = order.download_url.replace(/^reports\//, '');
       console.log("Cleaned file path:", filePath);
+      console.log("Attempting to get signed URL from bucket 'reports' for path:", filePath);
       
       // Get the signed URL
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from("reports")
         .createSignedUrl(filePath, 60); // URL valid for 60 seconds
 
-      if (signedUrlError || !signedUrlData?.signedUrl) {
+      if (signedUrlError) {
         console.error("Error getting signed URL:", signedUrlError);
+        console.error("Error details:", {
+          message: signedUrlError.message,
+          status: signedUrlError.status,
+          statusCode: signedUrlError.statusCode,
+          name: signedUrlError.name
+        });
         throw new Error("Failed to generate download URL");
       }
 
-      console.log("Got signed URL:", signedUrlData.signedUrl);
+      if (!signedUrlData?.signedUrl) {
+        console.error("No signed URL received in response");
+        console.log("Full response data:", signedUrlData);
+        throw new Error("No signed URL received");
+      }
+
+      console.log("Successfully obtained signed URL:", signedUrlData.signedUrl);
+      console.log("Attempting to fetch file using signed URL...");
 
       // Fetch the file using the signed URL
       const response = await fetch(signedUrlData.signedUrl);
+      console.log("Fetch response status:", response.status);
+      console.log("Fetch response headers:", Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        console.error("HTTP error during fetch:", {
+          status: response.status,
+          statusText: response.statusText,
+        });
+        const responseText = await response.text();
+        console.error("Error response body:", responseText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Create a blob from the response
+      console.log("File fetched successfully, creating blob...");
       const blob = await response.blob();
+      console.log("Blob created:", {
+        size: blob.size,
+        type: blob.type
+      });
+
       const url = window.URL.createObjectURL(blob);
+      console.log("Blob URL created:", url);
       
       // Create a temporary link and trigger the download
       const link = document.createElement("a");
       link.href = url;
       link.download = `${order.report_name}.pdf`;
+      console.log("Download link created with filename:", link.download);
+      
       document.body.appendChild(link);
+      console.log("Link appended to document body");
+      
       link.click();
+      console.log("Download triggered");
       
       // Clean up
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
+      console.log("Cleanup completed");
 
       toast({
         title: "Success",
         description: "Report downloaded successfully",
       });
+      console.log("=== Download Process Completed Successfully ===");
     } catch (error) {
+      console.error("=== Download Process Failed ===");
       console.error("Error in handleDownload:", error);
+      console.error("Full error object:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        ...(error.cause && { cause: error.cause })
+      });
+      
       toast({
         title: "Error",
         description: "Failed to download report. Please try again.",
