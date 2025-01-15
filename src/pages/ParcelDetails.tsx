@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
+import { Building2, MapPin, FileText, Database, Terminal } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -106,12 +107,6 @@ const ParcelDetails = () => {
 
               console.log('LightBox API response:', data);
               addToHistory("LightBox API call successful", data);
-
-              if (!data.address) {
-                console.warn('No address in LightBox response:', data);
-                addToHistory("Warning: No address in LightBox response", data);
-              }
-
               setLightboxData(data as LightBoxResponse);
               
               toast({
@@ -169,30 +164,104 @@ const ParcelDetails = () => {
     );
   }
 
+  const renderPropertyDetails = () => {
+    if (!lightboxData?.propertyDetails) return null;
+    
+    const details = lightboxData.propertyDetails;
+    const detailsArray = Object.entries(details).map(([key, value]) => ({
+      key: key.split(/(?=[A-Z])/).join(' ').toLowerCase(),
+      value: value || 'Not available'
+    }));
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {detailsArray.map(({ key, value }) => (
+          <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500 capitalize">{key}</h3>
+            <p className="mt-1 text-lg">{value}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
       <div className="container mx-auto pt-24 px-4 pb-8">
         <div className="flex flex-col gap-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">LightBox API Debug Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">LightBox Property Analysis</h1>
             <div className="text-sm text-gray-500">
               Request ID: {requestId}
             </div>
           </div>
 
-          <Tabs defaultValue="api-debug" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="property" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="property">Property Details</TabsTrigger>
+              <TabsTrigger value="address">Address Info</TabsTrigger>
               <TabsTrigger value="api-debug">API Debug</TabsTrigger>
               <TabsTrigger value="parsed">Parsed Data</TabsTrigger>
               <TabsTrigger value="raw">Raw Response</TabsTrigger>
-              <TabsTrigger value="timeline">Request Timeline</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="property">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-primary" />
+                    <CardTitle>Property Analysis</CardTitle>
+                  </div>
+                  <CardDescription>Comprehensive property details from LightBox</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {renderPropertyDetails()}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="address">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <CardTitle>Address Details</CardTitle>
+                  </div>
+                  <CardDescription>Verified address information</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 className="text-sm font-medium text-gray-500">Street Address</h3>
+                        <p className="mt-1 text-lg">{lightboxData?.address?.streetAddress || 'Not available'}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 className="text-sm font-medium text-gray-500">City</h3>
+                        <p className="mt-1 text-lg">{lightboxData?.address?.city || 'Not available'}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 className="text-sm font-medium text-gray-500">State</h3>
+                        <p className="mt-1 text-lg">{lightboxData?.address?.state || 'Not available'}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 className="text-sm font-medium text-gray-500">ZIP Code</h3>
+                        <p className="mt-1 text-lg">{lightboxData?.address?.zip || 'Not available'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="api-debug">
               <Card>
                 <CardHeader>
-                  <CardTitle>API Integration Debug</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Terminal className="h-5 w-5 text-primary" />
+                    <CardTitle>API Integration Debug</CardTitle>
+                  </div>
                   <CardDescription>Real-time API integration monitoring</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -222,63 +291,52 @@ const ParcelDetails = () => {
             <TabsContent value="parsed">
               <Card>
                 <CardHeader>
-                  <CardTitle>Parsed LightBox Data</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <CardTitle>Parsed LightBox Data</CardTitle>
+                  </div>
                   <CardDescription>Structured data from LightBox API</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Address Details</h3>
-                      <Table>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell className="font-medium">Street Address</TableCell>
-                            <TableCell>{lightboxData?.address?.streetAddress || 'Not available'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">City</TableCell>
-                            <TableCell>{lightboxData?.address?.city || 'Not available'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">State</TableCell>
-                            <TableCell>{lightboxData?.address?.state || 'Not available'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">ZIP</TableCell>
-                            <TableCell>{lightboxData?.address?.zip || 'Not available'}</TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
+                      <h3 className="text-lg font-semibold mb-4">Property Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <h4 className="text-sm font-medium text-gray-500">Parcel ID</h4>
+                          <p className="mt-1">{lightboxData?.parcelId || 'Not available'}</p>
+                        </div>
+                        {lightboxData?.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
+                          <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 className="text-sm font-medium text-gray-500 capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </h4>
+                            <p className="mt-1">{value || 'Not available'}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <Separator />
 
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Property Details</h3>
-                      <Table>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell className="font-medium">Parcel ID</TableCell>
-                            <TableCell>{lightboxData?.parcelId || 'Not available'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">Land Use</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.landUse || 'Not available'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">Lot Size</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.lotSize || 'Not available'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">Zoning</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.zoning || 'Not available'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium">Year Built</TableCell>
-                            <TableCell>{lightboxData?.propertyDetails?.yearBuilt || 'Not available'}</TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
+                      <h3 className="text-lg font-semibold mb-4">Processing Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <h4 className="text-sm font-medium text-gray-500">Processing Status</h4>
+                          <Badge className="mt-2" variant={lightboxData?.lightbox_processed ? "default" : "secondary"}>
+                            {lightboxData?.lightbox_processed ? "Processed" : "Pending"}
+                          </Badge>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                          <h4 className="text-sm font-medium text-gray-500">Processing Time</h4>
+                          <p className="mt-1">
+                            {lightboxData?.processed_at 
+                              ? new Date(lightboxData.processed_at).toLocaleString()
+                              : 'Not processed yet'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -288,7 +346,10 @@ const ParcelDetails = () => {
             <TabsContent value="raw">
               <Card>
                 <CardHeader>
-                  <CardTitle>Raw API Response</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Database className="h-5 w-5 text-primary" />
+                    <CardTitle>Raw API Response</CardTitle>
+                  </div>
                   <CardDescription>Complete unmodified response from LightBox API</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -297,34 +358,6 @@ const ParcelDetails = () => {
                       {JSON.stringify(lightboxData?.rawResponse || {}, null, 2)}
                     </pre>
                   </ScrollArea>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="timeline">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Request Timeline</CardTitle>
-                  <CardDescription>Detailed timeline of API requests and responses</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {apiCallHistory.map((entry, index) => (
-                      <div key={index} className="flex items-start space-x-4">
-                        <div className="min-w-[150px] text-sm text-gray-500">
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </div>
-                        <div>
-                          <p className="font-medium">{entry.event}</p>
-                          {entry.details && (
-                            <pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-auto">
-                              {JSON.stringify(entry.details, null, 2)}
-                            </pre>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
