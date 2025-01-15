@@ -2,18 +2,57 @@ import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Menu, Search, Globe, Bell, HelpCircle, User, X } from "lucide-react";
+import { 
+  ChevronDown, 
+  Menu, 
+  Search, 
+  Globe, 
+  Bell, 
+  HelpCircle, 
+  User, 
+  X,
+  Settings,
+  FileText,
+  LogOut
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const session = useSession();
+  const supabase = useSupabaseClient();
+  const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+      
+      navigate("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "There was a problem logging out",
+      });
+    }
+  };
 
   return (
     <motion.nav 
@@ -93,28 +132,63 @@ const Navbar = () => {
               <button className="p-2 text-gray-600 hover:text-primary transition">
                 <HelpCircle className="h-5 w-5" />
               </button>
-              <button className="p-2 text-gray-600 hover:text-primary transition relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </button>
-              <button className="p-2 text-gray-600 hover:text-primary transition">
-                <User className="h-5 w-5" />
-              </button>
+              {session && (
+                <button className="p-2 text-gray-600 hover:text-primary transition relative">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                </button>
+              )}
             </motion.div>
 
             <div className="hidden md:flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/login")}
-                className="text-gray-700 hover:text-primary transition"
-              >
-                Login
-              </Button>
-              <Button
-                onClick={() => navigate("/get-started")}
-              >
-                Get Started
-              </Button>
+              {session ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative flex items-center space-x-2"
+                    >
+                      <User className="h-5 w-5" />
+                      <span className="hidden sm:inline-block">
+                        {session.user.email?.split('@')[0]}
+                      </span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => navigate("/")}>
+                      <User className="mr-2 h-4 w-4" />
+                      My Account
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/orders")}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Orders & Reports
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/settings")}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/login")}
+                    className="text-gray-700 hover:text-primary transition"
+                  >
+                    Login
+                  </Button>
+                  <Button onClick={() => navigate("/get-started")}>
+                    Get Started
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -159,27 +233,63 @@ const Navbar = () => {
                 >
                   Pricing
                 </Link>
-                <div className="pt-2 space-y-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      navigate("/login");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full justify-center"
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      navigate("/get-started");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full justify-center"
-                  >
-                    Get Started
-                  </Button>
-                </div>
+                {session ? (
+                  <>
+                    <div className="pt-2 border-t border-gray-100">
+                      <div className="px-3 py-2 text-sm text-gray-500">
+                        Signed in as {session.user.email}
+                      </div>
+                      <Link
+                        to="/"
+                        className="block px-3 py-2 text-gray-700 hover:text-primary transition"
+                      >
+                        My Account
+                      </Link>
+                      <Link
+                        to="/orders"
+                        className="block px-3 py-2 text-gray-700 hover:text-primary transition"
+                      >
+                        Orders & Reports
+                      </Link>
+                      <Link
+                        to="/settings"
+                        className="block px-3 py-2 text-gray-700 hover:text-primary transition"
+                      >
+                        Settings
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        onClick={handleLogout}
+                        className="w-full justify-start px-3 py-2 text-red-600 hover:text-red-700 transition"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="pt-2 space-y-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        navigate("/login");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full justify-center"
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        navigate("/get-started");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full justify-center"
+                    >
+                      Get Started
+                    </Button>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
