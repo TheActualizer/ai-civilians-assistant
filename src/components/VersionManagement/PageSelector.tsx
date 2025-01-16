@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Check, Code, FileCode, GitBranch, Package, Puzzle, Link } from "lucide-react";
+import { Check, Code, FileCode, GitBranch, Package, Puzzle, Link, Loader2 } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -29,6 +29,7 @@ export function PageSelector() {
   const [versions, setVersions] = useState<PageVersion[]>([]);
   const [selectedVersions, setSelectedVersions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [rebuilding, setRebuilding] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -72,6 +73,48 @@ export function PageSelector() {
     fetchVersions();
   }, [toast]);
 
+  const handleRebuild = async () => {
+    if (selectedVersions.size === 0) return;
+
+    setRebuilding(true);
+    try {
+      console.log('Initiating rebuild for versions:', Array.from(selectedVersions));
+      
+      const { data, error } = await supabase.functions.invoke('rebuild-versions', {
+        body: {
+          version_ids: Array.from(selectedVersions),
+          rebuild_type: 'full',
+          rebuild_config: {
+            optimize: true,
+            validate: true
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      console.log('Rebuild operation created:', data);
+
+      toast({
+        title: "Rebuild Initiated",
+        description: "The selected versions are being rebuilt. You'll be notified when complete."
+      });
+
+      // Clear selections after successful rebuild initiation
+      setSelectedVersions(new Set());
+
+    } catch (error) {
+      console.error('Error initiating rebuild:', error);
+      toast({
+        variant: "destructive",
+        title: "Rebuild Failed",
+        description: "Failed to initiate rebuild process. Please try again."
+      });
+    } finally {
+      setRebuilding(false);
+    }
+  };
+
   const toggleVersionSelection = (versionId: string) => {
     const newSelected = new Set(selectedVersions);
     if (newSelected.has(versionId)) {
@@ -92,20 +135,20 @@ export function PageSelector() {
             <CardTitle className="text-lg">Page Implementation Details</CardTitle>
           </div>
           <Button
-            onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "Rebuild functionality will be implemented in the next update"
-              });
-            }}
+            onClick={handleRebuild}
             className="gap-2"
-            disabled={selectedVersions.size === 0}
+            disabled={selectedVersions.size === 0 || rebuilding}
           >
-            <Code className="h-4 w-4" />
-            Rebuild Selected
+            {rebuilding ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Code className="h-4 w-4" />
+            )}
+            {rebuilding ? 'Rebuilding...' : 'Rebuild Selected'}
           </Button>
         </div>
       </CardHeader>
+      
       <CardContent>
         {loading ? (
           <div className="flex items-center justify-center py-4">
