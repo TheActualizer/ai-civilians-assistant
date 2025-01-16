@@ -70,6 +70,10 @@ Deno.serve(async (req) => {
     console.log('Using LightBox API key:', LIGHTBOX_API_KEY.substring(0, 5) + '...')
 
     try {
+      // Add timeout to fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const lightboxResponse = await fetch(lightboxUrl, {
         method: 'POST',
         headers: {
@@ -77,21 +81,26 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(requestPayload)
+        body: JSON.stringify(requestPayload),
+        signal: controller.signal
       })
 
+      clearTimeout(timeoutId);
+
       console.log('LightBox API response status:', lightboxResponse.status)
+      console.log('LightBox API response headers:', Object.fromEntries(lightboxResponse.headers.entries()))
       
       const responseText = await lightboxResponse.text()
       console.log('Raw LightBox API response:', responseText)
 
       if (!lightboxResponse.ok) {
-        console.error('LightBox API error details:', {
+        const errorDetails = {
           status: lightboxResponse.status,
           statusText: lightboxResponse.statusText,
           response: responseText,
           headers: Object.fromEntries(lightboxResponse.headers.entries())
-        })
+        }
+        console.error('LightBox API error details:', errorDetails)
 
         // Log the API error
         await supabaseClient.rpc('log_api_execution', {
@@ -99,14 +108,28 @@ Deno.serve(async (req) => {
           endpoint: 'property_search',
           status: 'error',
           message: `API error: ${lightboxResponse.status} ${lightboxResponse.statusText}`,
-          details: { error: responseText, headers: Object.fromEntries(lightboxResponse.headers.entries()) }
+          details: errorDetails
         })
+
+        // Update property request with error status
+        await supabaseClient
+          .from('property_requests')
+          .update({
+            'lightbox_endpoints': {
+              ...propertyRequest.lightbox_endpoints,
+              'property_search': {
+                status: 'error',
+                last_updated: new Date().toISOString(),
+                error: `${lightboxResponse.status}: ${responseText}`
+              }
+            }
+          })
+          .eq('id', propertyRequest.id)
 
         return new Response(
           JSON.stringify({ 
             error: 'LightBox API error',
-            details: `${lightboxResponse.status}: ${responseText}`,
-            headers: Object.fromEntries(lightboxResponse.headers.entries())
+            details: errorDetails
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: lightboxResponse.status }
         )
@@ -200,19 +223,42 @@ Deno.serve(async (req) => {
     } catch (fetchError) {
       console.error('Fetch error:', fetchError)
       
+      // Log the fetch error with more details
+      const errorDetails = {
+        message: fetchError.message,
+        name: fetchError.name,
+        stack: fetchError.stack,
+        cause: fetchError.cause
+      }
+      
       // Log the fetch error
       await supabaseClient.rpc('log_api_execution', {
         request_id: propertyRequest.id,
         endpoint: 'property_search',
         status: 'error',
         message: 'Network error when calling LightBox API',
-        details: { error: fetchError.message }
+        details: errorDetails
       })
+
+      // Update property request with error status
+      await supabaseClient
+        .from('property_requests')
+        .update({
+          'lightbox_endpoints': {
+            ...propertyRequest.lightbox_endpoints,
+            'property_search': {
+              status: 'error',
+              last_updated: new Date().toISOString(),
+              error: fetchError.message
+            }
+          }
+        })
+        .eq('id', propertyRequest.id)
 
       return new Response(
         JSON.stringify({ 
           error: 'Failed to call LightBox API',
-          details: fetchError.message
+          details: errorDetails
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
@@ -223,7 +269,11 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
