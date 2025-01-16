@@ -140,6 +140,39 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_thread_connections: {
+        Row: {
+          connection_score: number | null
+          connection_status: string
+          connection_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          connection_score?: number | null
+          connection_status?: string
+          connection_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          connection_score?: number | null
+          connection_status?: string
+          connection_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_history: {
         Row: {
           context: Json | null
