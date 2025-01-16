@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Brain, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Features from "@/components/Features";
@@ -10,18 +9,29 @@ import { PageSelector } from "@/components/VersionManagement/PageSelector";
 import { VersionSwitcher } from "@/components/VersionSwitcher/VersionSwitcher";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  LazyLoadSection, 
+  useLazyLoad, 
+  fadeInVariants, 
+  flowVariants,
+  staggerChildren,
+  contentFlow 
+} from '@/utils/lazyLoadingController';
 
 const Index = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const heroLazyLoad = useLazyLoad({ threshold: 0.2 });
+  const versionLazyLoad = useLazyLoad({ threshold: 0.1 });
+  const featuresLazyLoad = useLazyLoad({ threshold: 0.1 });
+
   useEffect(() => {
     const initializeSystem = async () => {
       try {
         console.log('🔄 Initializing system...');
         
-        // Create initial debug thread for system analysis
         const { data: threadAnalysis, error: threadError } = await supabase
           .from('debug_thread_analysis')
           .insert({
@@ -66,19 +76,21 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="container mx-auto px-4 pt-20 pb-12">
-        {/* Main Content */}
-        <div className="text-center mb-12">
+        <LazyLoadSection
+          ref={heroLazyLoad.ref}
+          initial="hidden"
+          animate="visible"
+          variants={staggerChildren}
+          className="text-center mb-12"
+        >
           <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={flowVariants}
             className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600"
           >
             AI Civil Engineer
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            variants={contentFlow}
             className="text-xl text-gray-400 mt-4"
           >
             {isLoading ? (
@@ -89,31 +101,27 @@ const Index = () => {
               "Revolutionizing property analysis with advanced AI"
             )}
           </motion.p>
-        </div>
+        </LazyLoadSection>
 
-        {/* Version Management Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
+        <LazyLoadSection
+          ref={versionLazyLoad.ref}
+          initial="hidden"
+          animate="visible"
+          variants={staggerChildren}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16"
+        >
+          <motion.div variants={fadeInVariants}>
             <PageSelector />
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-          >
+          <motion.div variants={fadeInVariants}>
             <VersionSwitcher />
           </motion.div>
-        </div>
+        </LazyLoadSection>
 
-        {/* Main AI Assistant Button */}
         <motion.div 
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          initial="hidden"
+          animate="visible"
+          variants={staggerChildren}
           className="text-center mb-16"
         >
           <Link to="/ai-civil-engineer">
@@ -134,13 +142,27 @@ const Index = () => {
           </Link>
         </motion.div>
 
-        {/* Features Grid */}
-        <div className="mb-16">
-          <Features />
-        </div>
+        <LazyLoadSection
+          ref={featuresLazyLoad.ref}
+          initial="hidden"
+          animate="visible"
+          variants={staggerChildren}
+          className="mb-16"
+        >
+          <motion.div variants={fadeInVariants}>
+            <Features />
+          </motion.div>
+        </LazyLoadSection>
 
-        {/* Core Features Section */}
-        <CoreFeatures />
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={staggerChildren}
+        >
+          <motion.div variants={fadeInVariants}>
+            <CoreFeatures />
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );
