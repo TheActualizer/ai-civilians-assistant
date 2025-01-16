@@ -1,6 +1,6 @@
 import { useSession } from "@supabase/auth-helpers-react";
-import { Hero } from "@/components/Hero";
-import { Features } from "@/components/Features";
+import Hero from "@/components/Hero";
+import Features from "@/components/Features";
 import { LoggingAnalyzer } from "@/components/SystemIntelligence/LoggingAnalyzer";
 
 export default function Index() {
