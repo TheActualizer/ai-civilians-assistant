@@ -312,6 +312,7 @@ export function DebugPanel({
         />
 
         {!isCollapsed && !isMinimized && (
+          <>
             <div className="flex justify-between items-center mb-4">
               <div className="text-sm text-gray-400">
                 Request ID: <span className="font-mono">{requestId || 'Not available'}</span>
@@ -322,8 +323,8 @@ export function DebugPanel({
                 onValueChange={(value) => setViewMode(value as "detailed" | "compact")}
                 className="border border-gray-700 rounded-lg p-1 bg-gray-800/50"
               >
-                <ToggleGroupItem value="basic">Basic</ToggleGroupItem>
-                <ToggleGroupItem value="advanced">Advanced</ToggleGroupItem>
+                <ToggleGroupItem value="detailed">Detailed</ToggleGroupItem>
+                <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
               </ToggleGroup>
             </div>
 
