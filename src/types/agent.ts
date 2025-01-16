@@ -32,6 +32,7 @@ export interface ThreadAnalysis {
     gemini: string;
   };
   last_analysis_timestamp: string;
+  connection_score?: number;
 }
 
 export interface AgentMetricsData {
@@ -62,13 +63,42 @@ export interface AgentMessage {
   role: string;
   content: string;
   timestamp?: string;
+  agent?: string;
+  message?: string;
 }
 
 export interface DifyAgent {
   id: string;
   name: string;
   status: "idle" | "processing" | "completed" | "error";
-  capabilities: string[];
+  capabilities?: string[];
   lastAction?: string;
   metrics?: AgentMetricsData;
+  role?: string;
+  backstory?: string;
+  systemPrompt?: string;
+  model?: string;
+  progress?: number;
+  documents?: boolean;
+}
+
+export interface AgentAction {
+  id: string;
+  description: string;
+  timestamp: string;
+  agentId: string;
+  status: 'success' | 'error' | 'pending';
+}
+
+export interface AgentState {
+  agents: DifyAgent[];
+  actions: AgentAction[];
+  currentPhase?: string;
+  isProcessing?: boolean;
+}
+
+export interface AgentsPanelProps {
+  onMessage: (message: string, agent: string) => Promise<void>;
+  onVoiceInput?: (transcript: string) => void;
+  messages: AgentMessage[];
 }
