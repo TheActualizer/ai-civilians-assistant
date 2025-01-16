@@ -15,7 +15,6 @@ import { AddressTab } from "@/components/ParcelDetails/AddressTab";
 import { AdditionalTab } from "@/components/ParcelDetails/AdditionalTab";
 import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
 import { RawTab } from "@/components/ParcelDetails/RawTab";
-import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
@@ -38,6 +37,41 @@ const AICivilEngineer = () => {
     details?: any;
     timestamp: string;
   } | null>(null);
+
+  // New state for agent interactions
+  const [agentMessages, setAgentMessages] = useState<Array<{
+    agent: string;
+    message: string;
+    timestamp: string;
+  }>>([]);
+
+  const handleAgentMessage = async (message: string, agent: string) => {
+    console.log(`Agent ${agent} received message:`, message);
+    
+    // Add message to history
+    setAgentMessages(prev => [...prev, {
+      agent,
+      message,
+      timestamp: new Date().toISOString()
+    }]);
+
+    // Show toast notification
+    toast({
+      title: `Message from ${agent}`,
+      description: message,
+    });
+
+    // Log the interaction
+    addToHistory(`Agent interaction: ${agent}`, { message });
+  };
+
+  const handleVoiceInput = async (transcript: string) => {
+    console.log('Voice input received:', transcript);
+    addToHistory('Voice input received', { transcript });
+    
+    // Process voice input
+    await handleAgentMessage(transcript, 'Civil Engineer');
+  };
 
   const addToHistory = (event: string, details?: any) => {
     console.log(`API Event: ${event}`, details);
@@ -237,7 +271,11 @@ const AICivilEngineer = () => {
           
           <div className="flex-1 pt-16 px-6 pb-8">
             <div className="mb-8">
-              <AgentsPanel />
+              <AgentsPanel 
+                onMessage={handleAgentMessage}
+                onVoiceInput={handleVoiceInput}
+                messages={agentMessages}
+              />
             </div>
 
             <Tabs defaultValue="property" className="w-full">
