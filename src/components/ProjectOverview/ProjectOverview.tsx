@@ -116,17 +116,17 @@ export function ProjectOverview() {
     entries.filter(entry => entry.category === category);
 
   return (
-    <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 border-gray-700 backdrop-blur-lg shadow-xl">
+    <Card className="bg-gradient-to-br from-[#221F26]/90 to-[#403E43]/90 border-[#8E9196]/20 backdrop-blur-lg shadow-xl">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Network className="h-6 w-6 text-primary animate-pulse" />
+          <div className="p-2 bg-[#9F9EA1]/10 rounded-lg border border-[#8E9196]/20">
+            <Network className="h-6 w-6 text-[#C8C8C9] animate-pulse" />
           </div>
           <div>
-            <CardTitle className="text-2xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl bg-gradient-to-r from-[#F1F0FB] to-[#C8C8C9] bg-clip-text text-transparent font-semibold">
               CrewAI System Overview
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-[#8A898C]">
               Real-time visualization of AI system architecture and controls
             </CardDescription>
           </div>
@@ -134,12 +134,12 @@ export function ProjectOverview() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="crew-ai" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-1">
+          <TabsList className="grid w-full grid-cols-5 bg-[#221F26]/50 backdrop-blur-sm border border-[#8E9196]/20 rounded-xl p-1">
             {sections.map((section) => (
               <TabsTrigger 
                 key={section.id} 
                 value={section.id}
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="data-[state=active]:bg-[#403E43] data-[state=active]:text-[#F1F0FB] transition-all duration-300"
               >
                 <div className="flex items-center gap-2">
                   <section.icon className="h-4 w-4" />
@@ -155,12 +155,12 @@ export function ProjectOverview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-gray-800 bg-gray-900/50">
+              <Card className="border-[#8E9196]/20 bg-[#221F26]/50">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Brain className="h-5 w-5 text-primary" />
+                      <div className="p-2 bg-[#9F9EA1]/10 rounded-lg border border-[#8E9196]/20">
+                        <Brain className="h-5 w-5 text-[#C8C8C9]" />
                       </div>
                       <CardTitle>System Status</CardTitle>
                     </div>
@@ -178,14 +178,15 @@ export function ProjectOverview() {
                       initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.1 }}
+                      className="group"
                     >
-                      <Card className="border-gray-800 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+                      <Card className="border-[#8E9196]/20 bg-gradient-to-br from-blue-500/5 to-purple-500/5 hover:from-blue-500/10 hover:to-purple-500/10 transition-all duration-500">
                         <CardContent className="p-6">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-blue-500/10 rounded-lg">
+                            <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20 group-hover:scale-110 transition-transform duration-300">
                               <Database className="h-5 w-5 text-blue-400" />
                             </div>
-                            <h3 className="text-sm font-medium text-gray-200">Memory Store</h3>
+                            <h3 className="text-sm font-medium text-[#F1F0FB]">Memory Store</h3>
                           </div>
                           <div className="text-3xl font-bold text-blue-400">
                             {entries.length} Entries
@@ -198,14 +199,15 @@ export function ProjectOverview() {
                       initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.2 }}
+                      className="group"
                     >
-                      <Card className="border-gray-800 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+                      <Card className="border-[#8E9196]/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5 hover:from-green-500/10 hover:to-emerald-500/10 transition-all duration-500">
                         <CardContent className="p-6">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-green-500/10 rounded-lg">
+                            <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20 group-hover:scale-110 transition-transform duration-300">
                               <Bot className="h-5 w-5 text-green-400" />
                             </div>
-                            <h3 className="text-sm font-medium text-gray-200">Active Agents</h3>
+                            <h3 className="text-sm font-medium text-[#F1F0FB]">Active Agents</h3>
                           </div>
                           <div className="text-3xl font-bold text-green-400">
                             {getEntriesByCategory('agents').length}
@@ -218,14 +220,15 @@ export function ProjectOverview() {
                       initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.3 }}
+                      className="group"
                     >
-                      <Card className="border-gray-800 bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+                      <Card className="border-[#8E9196]/20 bg-gradient-to-br from-purple-500/5 to-pink-500/5 hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-500">
                         <CardContent className="p-6">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-purple-500/10 rounded-lg">
+                            <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20 group-hover:scale-110 transition-transform duration-300">
                               <GitBranch className="h-5 w-5 text-purple-400" />
                             </div>
-                            <h3 className="text-sm font-medium text-gray-200">Components</h3>
+                            <h3 className="text-sm font-medium text-[#F1F0FB]">Components</h3>
                           </div>
                           <div className="text-3xl font-bold text-purple-400">
                             {getEntriesByCategory('architecture').length}
@@ -245,10 +248,10 @@ export function ProjectOverview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-gray-800 bg-gray-900/50">
+              <Card className="border-[#8E9196]/20 bg-[#221F26]/50">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                    <div className="p-2 bg-blue-500/10 rounded-lg border border-[#8E9196]/20">
                       <Database className="h-5 w-5 text-blue-400" />
                     </div>
                     <CardTitle>Memory System</CardTitle>
@@ -264,16 +267,16 @@ export function ProjectOverview() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
                         >
-                          <Card className="border-gray-800 bg-gradient-to-br from-blue-500/5 to-purple-500/5 hover:from-blue-500/10 hover:to-purple-500/10 transition-all duration-300">
+                          <Card className="border-[#8E9196]/20 bg-gradient-to-br from-blue-500/5 to-purple-500/5 hover:from-blue-500/10 hover:to-purple-500/10 transition-all duration-300 group">
                             <CardContent className="p-6">
-                              <h3 className="text-lg font-medium text-gray-200 mb-2">{entry.title}</h3>
-                              <p className="text-gray-400 mb-4">{entry.content}</p>
+                              <h3 className="text-lg font-medium text-[#F1F0FB] group-hover:text-white transition-colors duration-300">{entry.title}</h3>
+                              <p className="text-[#8A898C] mb-4 group-hover:text-gray-300 transition-colors duration-300">{entry.content}</p>
                               <div className="flex flex-wrap gap-2">
                                 {entry.tags?.map(tag => (
                                   <Badge 
                                     key={tag} 
                                     variant="secondary"
-                                    className="bg-blue-500/10 text-blue-400 border-blue-400/20"
+                                    className="bg-blue-500/10 text-blue-400 border-blue-400/20 group-hover:bg-blue-500/20 transition-colors duration-300"
                                   >
                                     {tag}
                                   </Badge>
@@ -296,10 +299,10 @@ export function ProjectOverview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-gray-800 bg-gray-900/50">
+              <Card className="border-[#8E9196]/20 bg-[#221F26]/50">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/10 rounded-lg">
+                    <div className="p-2 bg-green-500/10 rounded-lg border border-[#8E9196]/20">
                       <Bot className="h-5 w-5 text-green-400" />
                     </div>
                     <CardTitle>AI Agents</CardTitle>
@@ -315,10 +318,10 @@ export function ProjectOverview() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.1 }}
                         >
-                          <Card className="border-gray-800 bg-gradient-to-br from-green-500/5 to-emerald-500/5 hover:from-green-500/10 hover:to-emerald-500/10 transition-all duration-300">
+                          <Card className="border-[#8E9196]/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5 hover:from-green-500/10 hover:to-emerald-500/10 transition-all duration-300">
                             <CardContent className="p-6">
-                              <h3 className="text-lg font-medium text-gray-200 mb-2">{agent.title}</h3>
-                              <p className="text-gray-400 mb-4">{agent.content}</p>
+                              <h3 className="text-lg font-medium text-[#F1F0FB] mb-2">{agent.title}</h3>
+                              <p className="text-[#8A898C] mb-4">{agent.content}</p>
                               <Badge variant="outline">Active</Badge>
                             </CardContent>
                           </Card>
@@ -337,10 +340,10 @@ export function ProjectOverview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-gray-800 bg-gray-900/50">
+              <Card className="border-[#8E9196]/20 bg-[#221F26]/50">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-500/10 rounded-lg">
+                    <div className="p-2 bg-purple-500/10 rounded-lg border border-[#8E9196]/20">
                       <GitBranch className="h-5 w-5 text-purple-400" />
                     </div>
                     <CardTitle>System Architecture</CardTitle>
@@ -356,10 +359,10 @@ export function ProjectOverview() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.1 }}
                         >
-                          <Card className="border-gray-800 bg-gradient-to-br from-purple-500/5 to-pink-500/5 hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300">
+                          <Card className="border-[#8E9196]/20 bg-gradient-to-br from-purple-500/5 to-pink-500/5 hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300">
                             <CardContent className="p-6">
-                              <h3 className="text-lg font-medium text-gray-200 mb-2">{entry.title}</h3>
-                              <p className="text-gray-400 mb-4">{entry.content}</p>
+                              <h3 className="text-lg font-medium text-[#F1F0FB] mb-2">{entry.title}</h3>
+                              <p className="text-[#8A898C] mb-4">{entry.content}</p>
                               <div className="flex flex-wrap gap-2">
                                 {entry.tags?.map(tag => (
                                   <Badge 
@@ -388,10 +391,10 @@ export function ProjectOverview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-gray-800 bg-gray-900/50">
+              <Card className="border-[#8E9196]/20 bg-[#221F26]/50">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-500/10 rounded-lg">
+                    <div className="p-2 bg-gray-500/10 rounded-lg border border-[#8E9196]/20">
                       <Settings2 className="h-5 w-5 text-gray-400" />
                     </div>
                     <CardTitle>System Parameters</CardTitle>
