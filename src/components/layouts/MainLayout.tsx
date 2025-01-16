@@ -9,6 +9,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const session = useSession();
+  console.log("🔄 MainLayout rendering with session:", !!session);
 
   return (
     <div className="min-h-screen flex flex-col">
