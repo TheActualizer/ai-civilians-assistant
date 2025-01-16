@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Flask } from "lucide-react";
+import { Microscope } from "lucide-react";
 
 export default function Research() {
   return (
@@ -7,13 +7,13 @@ export default function Research() {
       <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-gray-800">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Flask className="h-6 w-6 text-indigo-400" />
-            <CardTitle className="text-2xl text-gray-100">Research Center</CardTitle>
+            <Microscope className="h-6 w-6 text-indigo-400" />
+            <CardTitle className="text-2xl text-gray-100">Research Lab</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-gray-400">
-            Advanced research and development projects.
+            Advanced research and development center for emerging technologies.
           </p>
         </CardContent>
       </Card>

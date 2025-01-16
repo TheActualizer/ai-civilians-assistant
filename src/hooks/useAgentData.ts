@@ -10,7 +10,7 @@ const initialMetrics: AgentMetricsData = {
   activeFlows: 0,
   successRate: 0,
   totalInteractions: 0,
-  systemLoad: {
+  system_load: {
     cpu_threads: [],
     io_operations: [],
     memory_allocation: []
@@ -49,9 +49,9 @@ export function useAgentData() {
           console.log('New metrics received:', payload);
           setLastUpdate(new Date().toISOString());
           
-          const systemLoad = typeof payload.new.system_load === 'string' 
+          const system_load = typeof payload.new.system_load === 'string' 
             ? JSON.parse(payload.new.system_load)
-            : payload.new.system_load || initialMetrics.systemLoad;
+            : payload.new.system_load || initialMetrics.system_load;
 
           const networkMetrics = typeof payload.new.network_metrics === 'string'
             ? JSON.parse(payload.new.network_metrics)
@@ -68,7 +68,7 @@ export function useAgentData() {
             activeFlows: payload.new.active_flows || 0,
             successRate: payload.new.success_rate || 0,
             totalInteractions: payload.new.total_interactions || 0,
-            systemLoad,
+            system_load,
             networkMetrics,
             performanceIndicators
           };
@@ -104,9 +104,9 @@ export function useAgentData() {
       }
 
       if (data) {
-        const systemLoad = typeof data.system_load === 'string' 
+        const system_load = typeof data.system_load === 'string' 
           ? JSON.parse(data.system_load)
-          : data.system_load || initialMetrics.systemLoad;
+          : data.system_load || initialMetrics.system_load;
 
         const networkMetrics = typeof data.network_metrics === 'string'
           ? JSON.parse(data.network_metrics)
@@ -123,7 +123,7 @@ export function useAgentData() {
           activeFlows: data.active_flows || 0,
           successRate: data.success_rate || 0,
           totalInteractions: data.total_interactions || 0,
-          systemLoad,
+          system_load,
           networkMetrics,
           performanceIndicators
         };

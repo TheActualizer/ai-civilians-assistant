@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Flask } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 
 export default function LabProjects() {
   return (
@@ -7,13 +7,13 @@ export default function LabProjects() {
       <Card className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-gray-800">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Flask className="h-6 w-6 text-pink-400" />
+            <Lightbulb className="h-6 w-6 text-pink-400" />
             <CardTitle className="text-2xl text-gray-100">Lab Projects</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-gray-400">
-            Experimental projects and prototypes.
+            Experimental projects and innovative research initiatives.
           </p>
         </CardContent>
       </Card>
