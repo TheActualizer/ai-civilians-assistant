@@ -21,6 +21,8 @@ Deno.serve(async (req) => {
       throw new Error('LightBox API key not configured')
     }
 
+    console.log('Using LightBox API key starting with:', LIGHTBOX_API_KEY.substring(0, 5))
+
     const { address, city, state, zip } = await req.json() as AddressRequest
     console.log('Received request for address:', { address, city, state, zip })
 
@@ -41,7 +43,6 @@ Deno.serve(async (req) => {
       }
 
       console.log('Calling LightBox API with payload:', JSON.stringify(requestPayload))
-      console.log('Using API key:', LIGHTBOX_API_KEY.substring(0, 5) + '...')
       
       const lightboxResponse = await fetch(lightboxUrl, {
         method: 'POST',
@@ -66,8 +67,31 @@ Deno.serve(async (req) => {
         throw new Error(`LightBox API error: ${lightboxResponse.status} - ${responseText}`)
       }
 
-      const lightboxData = JSON.parse(responseText)
+      let lightboxData
+      try {
+        lightboxData = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Error parsing LightBox response:', parseError)
+        throw new Error('Invalid JSON response from LightBox API')
+      }
+
       console.log('LightBox API successful response:', lightboxData)
+
+      // Format the response to match our LightBoxResponse type
+      const formattedResponse = {
+        parcelId: lightboxData.parcelId || null,
+        address: {
+          streetAddress: address,
+          city: city,
+          state: state,
+          zip: zip
+        },
+        propertyDetails: lightboxData.propertyDetails || {},
+        rawResponse: lightboxData,
+        timestamp: new Date().toISOString(),
+        lightbox_processed: true,
+        processed_at: new Date().toISOString()
+      }
 
       // Store the response in Supabase
       const supabaseClient = createClient(
@@ -90,7 +114,7 @@ Deno.serve(async (req) => {
       const { error: updateError } = await supabaseClient
         .from('property_requests')
         .update({
-          lightbox_data: lightboxData,
+          lightbox_data: formattedResponse,
           lightbox_processed_at: new Date().toISOString(),
           status: 'processed'
         })
@@ -102,7 +126,7 @@ Deno.serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify(lightboxData),
+        JSON.stringify(formattedResponse),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
 
