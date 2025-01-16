@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { SessionContextProvider } from '@supabase/auth-helpers-react';
+import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react';
 import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 
 function App() {
+  const session = useSession();
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [debugMessage, setDebugMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,12 +34,18 @@ function App() {
       const { error } = await supabase
         .from('chat_history')
         .insert({
+          user_id: session?.user?.id,
           message: action,
           context: { type: 'debug_panel', action }
         });
 
       if (error) {
         console.error('Error logging debug interaction:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to log interaction. Please try again.",
+        });
       }
     } catch (err) {
       console.error('Failed to log debug interaction:', err);
