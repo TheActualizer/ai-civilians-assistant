@@ -383,6 +383,89 @@ export type Database = {
         }
         Relationships: []
       }
+      architecture_blueprints: {
+        Row: {
+          category: string
+          complexity_level: number | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          complexity_level?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          complexity_level?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      architecture_components: {
+        Row: {
+          blueprint_id: string | null
+          component_name: string
+          component_type: string
+          created_at: string
+          dependencies: Json | null
+          description: string | null
+          id: string
+          integration_points: Json | null
+          technical_specs: Json | null
+          updated_at: string
+        }
+        Insert: {
+          blueprint_id?: string | null
+          component_name: string
+          component_type: string
+          created_at?: string
+          dependencies?: Json | null
+          description?: string | null
+          id?: string
+          integration_points?: Json | null
+          technical_specs?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          blueprint_id?: string | null
+          component_name?: string
+          component_type?: string
+          created_at?: string
+          dependencies?: Json | null
+          description?: string | null
+          id?: string
+          integration_points?: Json | null
+          technical_specs?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "architecture_components_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "architecture_blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auth_thread_connections: {
         Row: {
           connection_score: number | null
@@ -1009,6 +1092,50 @@ export type Database = {
         }
         Relationships: []
       }
+      evolution_tracking: {
+        Row: {
+          blueprint_id: string | null
+          complexity_score: number | null
+          created_at: string
+          evolution_stage: string
+          id: string
+          next_evolution_targets: Json | null
+          optimization_suggestions: Json | null
+          performance_metrics: Json | null
+          updated_at: string
+        }
+        Insert: {
+          blueprint_id?: string | null
+          complexity_score?: number | null
+          created_at?: string
+          evolution_stage: string
+          id?: string
+          next_evolution_targets?: Json | null
+          optimization_suggestions?: Json | null
+          performance_metrics?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          blueprint_id?: string | null
+          complexity_score?: number | null
+          created_at?: string
+          evolution_stage?: string
+          id?: string
+          next_evolution_targets?: Json | null
+          optimization_suggestions?: Json | null
+          performance_metrics?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_tracking_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "architecture_blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       functionality_test_logs: {
         Row: {
           component: string
@@ -1089,6 +1216,53 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      integration_mappings: {
+        Row: {
+          auth_method: string | null
+          component_id: string | null
+          created_at: string
+          endpoint_url: string | null
+          id: string
+          integration_type: string
+          rate_limits: Json | null
+          request_format: Json | null
+          response_format: Json | null
+          updated_at: string
+        }
+        Insert: {
+          auth_method?: string | null
+          component_id?: string | null
+          created_at?: string
+          endpoint_url?: string | null
+          id?: string
+          integration_type: string
+          rate_limits?: Json | null
+          request_format?: Json | null
+          response_format?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          auth_method?: string | null
+          component_id?: string | null
+          created_at?: string
+          endpoint_url?: string | null
+          id?: string
+          integration_type?: string
+          rate_limits?: Json | null
+          request_format?: Json | null
+          response_format?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_mappings_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "architecture_components"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       knowledge_base: {
         Row: {
@@ -2293,6 +2467,56 @@ export type Database = {
           severity?: string
         }
         Relationships: []
+      }
+      system_flows: {
+        Row: {
+          blueprint_id: string | null
+          created_at: string
+          dependencies: Json | null
+          entry_point: string
+          exit_point: string | null
+          flow_name: string
+          flow_type: string
+          id: string
+          steps: Json | null
+          triggers: Json | null
+          updated_at: string
+        }
+        Insert: {
+          blueprint_id?: string | null
+          created_at?: string
+          dependencies?: Json | null
+          entry_point: string
+          exit_point?: string | null
+          flow_name: string
+          flow_type: string
+          id?: string
+          steps?: Json | null
+          triggers?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          blueprint_id?: string | null
+          created_at?: string
+          dependencies?: Json | null
+          entry_point?: string
+          exit_point?: string | null
+          flow_name?: string
+          flow_type?: string
+          id?: string
+          steps?: Json | null
+          triggers?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_flows_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "architecture_blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_intelligence_logs: {
         Row: {
