@@ -19,7 +19,8 @@ const INITIAL_AGENTS: DifyAgent[] = [
     role: 'Processes input data and prepares for analysis',
     status: 'idle',
     backstory: 'A meticulous data scientist with years of experience in processing complex datasets.',
-    systemPrompt: 'You are a data processing expert. Your role is to clean, validate, and prepare data for analysis.'
+    systemPrompt: 'You are a data processing expert. Your role is to clean, validate, and prepare data for analysis.',
+    model: 'gemini'
   },
   {
     id: 'parcel-analysis',
@@ -27,7 +28,8 @@ const INITIAL_AGENTS: DifyAgent[] = [
     role: 'Analyzes property boundaries and geometry',
     status: 'idle',
     backstory: 'A veteran land surveyor who has mapped thousands of properties across the country.',
-    systemPrompt: 'You are an expert land surveyor. Your role is to analyze property boundaries and geometric characteristics.'
+    systemPrompt: 'You are an expert land surveyor. Your role is to analyze property boundaries and geometric characteristics.',
+    model: 'gemini-vision'
   },
   {
     id: 'setback-calculation',
@@ -35,7 +37,8 @@ const INITIAL_AGENTS: DifyAgent[] = [
     role: 'Calculates required setbacks and buffers',
     status: 'idle',
     backstory: 'A precise mathematician specializing in spatial calculations and zoning regulations.',
-    systemPrompt: 'You are a zoning expert. Your role is to calculate required setbacks and buffers for properties.'
+    systemPrompt: 'You are a zoning expert. Your role is to calculate required setbacks and buffers for properties.',
+    model: 'claude'
   },
   {
     id: 'environmental',
@@ -43,7 +46,8 @@ const INITIAL_AGENTS: DifyAgent[] = [
     role: 'Analyzes environmental constraints',
     status: 'idle',
     backstory: 'An environmental scientist passionate about balancing development with conservation.',
-    systemPrompt: 'You are an environmental scientist. Your role is to analyze environmental constraints for development.'
+    systemPrompt: 'You are an environmental scientist. Your role is to analyze environmental constraints for development.',
+    model: 'claude'
   },
   {
     id: 'buildable-envelope',
@@ -51,7 +55,8 @@ const INITIAL_AGENTS: DifyAgent[] = [
     role: 'Determines buildable area',
     status: 'idle',
     backstory: 'An architect with expertise in maximizing usable space while respecting constraints.',
-    systemPrompt: 'You are an architect. Your role is to determine the buildable area for properties.'
+    systemPrompt: 'You are an architect. Your role is to determine the buildable area for properties.',
+    model: 'claude'
   }
 ];
 
@@ -67,29 +72,47 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
   const [customInstructions, setCustomInstructions] = useState<string>('');
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const handleClaudeCompute = async (message: string, agent: DifyAgent) => {
+  const handleCompute = async (message: string, agent: DifyAgent) => {
     try {
-      console.log('Calling Claude compute for agent:', agent.name);
+      console.log(`Calling ${agent.model || 'claude'} compute for agent:`, agent.name);
       
-      const { data, error } = await supabase.functions.invoke('claude-compute', {
-        body: {
-          messages: [{ role: 'user', content: message }],
-          systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
+      if (agent.model === 'gemini' || agent.model === 'gemini-vision') {
+        const { data, error } = await supabase.functions.invoke('gemini-compute', {
+          body: {
+            messages: [{ role: 'user', content: message }],
+            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`,
+            multimodal: agent.model === 'gemini-vision'
+          }
+        });
+
+        if (error) {
+          console.error('Error calling Gemini compute:', error);
+          throw error;
         }
-      });
 
-      if (error) {
-        console.error('Error calling Claude compute:', error);
-        throw error;
+        console.log('Gemini compute response:', data);
+        return data.content;
+      } else {
+        const { data, error } = await supabase.functions.invoke('claude-compute', {
+          body: {
+            messages: [{ role: 'user', content: message }],
+            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
+          }
+        });
+
+        if (error) {
+          console.error('Error calling Claude compute:', error);
+          throw error;
+        }
+
+        console.log('Claude compute response:', data);
+        return data.content[0].text;
       }
-
-      console.log('Claude compute response:', data);
-      return data.content[0].text;
     } catch (error) {
-      console.error('Error in handleClaudeCompute:', error);
+      console.error('Error in handleCompute:', error);
       toast({
         title: "Error",
-        description: "Failed to process with Claude. Please try again.",
+        description: `Failed to process with ${agent.model || 'AI'}. Please try again.`,
         variant: "destructive"
       });
       throw error;
@@ -109,13 +132,9 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
     }));
 
     try {
-      // Process with Claude first
-      const claudeResponse = await handleClaudeCompute(customInstructions, selectedAgent);
-      
-      // Then send to parent component
-      await onMessage(claudeResponse, selectedAgent.name);
+      const response = await handleCompute(customInstructions, selectedAgent);
+      await onMessage(response, selectedAgent.name);
 
-      // Add action to history
       const newAction: AgentAction = {
         id: crypto.randomUUID(),
         description: `Processed instructions for ${selectedAgent.name}`,

@@ -8,6 +8,7 @@ export type DifyAgent = {
   backstory?: string;
   documents?: string[];
   systemPrompt?: string;
+  model?: 'claude' | 'gemini' | 'gemini-vision';
 };
 
 export type AgentAction = {
