@@ -74,94 +74,70 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
 
   const handleCompute = async (message: string, agent: DifyAgent) => {
     try {
-      console.log(`Calling ${agent.model || 'claude'} compute for agent:`, agent.name);
-      
-      if (agent.model === 'gemini' || agent.model === 'gemini-vision') {
-        const { data, error } = await supabase.functions.invoke('gemini-compute', {
-          body: {
-            messages: [{ role: 'user', content: message }],
-            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`,
-            multimodal: agent.model === 'gemini-vision'
-          }
-        });
+      // Initialize agent flow
+      const flowId = await initializeAgentFlow(agent, 'compute', { message });
+      console.log(`Initialized flow ${flowId} for agent:`, agent.name);
 
-        if (error) {
-          console.error('Error calling Gemini compute:', error);
-          throw error;
-        }
+      // Query relevant context
+      const context = await queryAgentContext(message);
+      console.log('Retrieved context for computation:', context);
 
-        console.log('Gemini compute response:', data);
-        return data.content;
-      } else if (agent.model === 'grok') {
-        const { data, error } = await supabase.functions.invoke('grok-compute', {
-          body: {
-            messages: [{ role: 'user', content: message }],
-            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
-          }
-        });
+      // Subscribe to agent updates
+      const unsubscribe = await subscribeToAgentUpdates(agent.id, (update) => {
+        console.log(`Received update for agent ${agent.name}:`, update);
+        // Update local state based on agent updates
+        setState(prev => ({
+          ...prev,
+          agents: prev.agents.map(a => 
+            a.id === agent.id 
+              ? { ...a, status: update.new.status }
+              : a
+          )
+        }));
+      });
 
-        if (error) {
-          console.error('Error calling Grok compute:', error);
-          throw error;
-        }
+      // Call the appropriate compute function based on the model
+      const response = await handleModelCompute(agent, message, context);
+      console.log(`Compute response from ${agent.model}:`, response);
 
-        console.log('Grok compute response:', data);
-        return data.content;
-      } else if (agent.model === 'perplexity') {
-        const { data, error } = await supabase.functions.invoke('perplexity-compute', {
-          body: {
-            messages: [{ role: 'user', content: message }],
-            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
-          }
-        });
+      // Clean up subscription
+      unsubscribe();
 
-        if (error) {
-          console.error('Error calling Perplexity compute:', error);
-          throw error;
-        }
-
-        console.log('Perplexity compute response:', data);
-        return data.choices[0].message.content;
-      } else if (agent.model === 'skyvern') {
-        const { data, error } = await supabase.functions.invoke('skyvern-compute', {
-          body: {
-            messages: [{ role: 'user', content: message }],
-            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
-          }
-        });
-
-        if (error) {
-          console.error('Error calling Skyvern compute:', error);
-          throw error;
-        }
-
-        console.log('Skyvern compute response:', data);
-        return data.choices[0].message.content;
-      } else {
-        const { data, error } = await supabase.functions.invoke('claude-compute', {
-          body: {
-            messages: [{ role: 'user', content: message }],
-            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
-          }
-        });
-
-        if (error) {
-          console.error('Error calling Claude compute:', error);
-          throw error;
-        }
-
-        console.log('Claude compute response:', data);
-        return data.content[0].text;
-      }
+      return response;
     } catch (error) {
       console.error('Error in handleCompute:', error);
-      toast({
-        title: "Error",
-        description: `Failed to process with ${agent.model || 'AI'}. Please try again.`,
-        variant: "destructive"
-      });
       throw error;
     }
+  };
+
+  const handleModelCompute = async (
+    agent: DifyAgent, 
+    message: string, 
+    context: any[]
+  ) => {
+    const systemPrompt = `${agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`}\n\nRelevant context:\n${
+      context.map(c => `${c.content} (${c.source})`).join('\n')
+    }`;
+
+    const functionName = `${agent.model || 'claude'}-compute`;
+    console.log(`Calling ${functionName} for agent:`, agent.name);
+
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body: {
+        messages: [{ role: 'user', content: message }],
+        systemPrompt,
+        multimodal: agent.model === 'gemini-vision'
+      }
+    });
+
+    if (error) {
+      console.error(`Error calling ${functionName}:`, error);
+      throw error;
+    }
+
+    return agent.model === 'perplexity' 
+      ? data.choices[0].message.content 
+      : data.content;
   };
 
   const handleCustomInstructions = async () => {
