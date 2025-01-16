@@ -22,3 +22,7 @@ export interface DebugPanelProps {
   onRetry: () => void;
   onMessageSubmit: (message: string) => void;
 }
+
+export interface VoiceControlsProps {
+  onSpeakingChange: (speaking: boolean) => void;
+}

@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Toggle } from "@/components/ui/toggle";
 import type { DebugPanelProps } from "./types";
+import { VoiceControls } from './VoiceControls';
 
 export function DebugPanel({
   isLoading,
@@ -33,6 +34,7 @@ export function DebugPanel({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [expandedFeatures, setExpandedFeatures] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -216,6 +218,7 @@ export function DebugPanel({
                 className="flex-1 bg-gray-800/50 border-gray-700 focus:border-primary/50 transition-colors pr-24"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <VoiceControls onSpeakingChange={setIsSpeaking} />
                 <label 
                   htmlFor="file-upload" 
                   className="cursor-pointer p-1.5 hover:bg-gray-700/50 rounded-md transition-colors"
@@ -230,7 +233,12 @@ export function DebugPanel({
                 </label>
               </div>
             </div>
-            <Button type="submit" variant="secondary" className="gap-2 bg-gray-800 hover:bg-gray-700 transition-colors">
+            <Button 
+              type="submit" 
+              variant="secondary" 
+              className="gap-2 bg-gray-800 hover:bg-gray-700 transition-colors"
+              disabled={isSpeaking}
+            >
               <Send className="h-4 w-4" />
               Send
             </Button>
