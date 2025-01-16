@@ -28,45 +28,47 @@ Deno.serve(async (req) => {
       throw new Error('Missing required address components')
     }
 
-    // Call the LightBox API
+    // Call the LightBox API with proper error handling
     try {
-      const lightboxUrl = 'https://api.lightbox.com/v1/property/search'
-      console.log('Calling LightBox API at:', lightboxUrl)
-      console.log('Request payload:', {
-        address: {
-          street: address,
-          city: city,
-          state: state,
-          zipCode: zip
+      // Updated LightBox API endpoint and request structure
+      const lightboxUrl = 'https://api.lightbox.com/api/v2/property/search'
+      const requestPayload = {
+        searchCriteria: {
+          address: {
+            streetAddress: address,
+            city: city,
+            state: state,
+            postalCode: zip
+          }
         }
-      })
+      }
+
+      console.log('Calling LightBox API with payload:', requestPayload)
       
       const lightboxResponse = await fetch(lightboxUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${LIGHTBOX_API_KEY}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          address: {
-            street: address,
-            city: city,
-            state: state,
-            zipCode: zip
-          }
-        })
+        body: JSON.stringify(requestPayload)
       })
 
       if (!lightboxResponse.ok) {
         const errorText = await lightboxResponse.text()
-        console.error('LightBox API error:', errorText)
-        throw new Error(`LightBox API returned status ${lightboxResponse.status}: ${errorText}`)
+        console.error('LightBox API error response:', {
+          status: lightboxResponse.status,
+          statusText: lightboxResponse.statusText,
+          body: errorText
+        })
+        throw new Error(`LightBox API error: ${lightboxResponse.status} - ${errorText}`)
       }
 
       const lightboxData = await lightboxResponse.json()
-      console.log('Raw LightBox API response:', lightboxData)
+      console.log('LightBox API successful response:', lightboxData)
 
-      // Store the raw response in Supabase
+      // Store the response in Supabase
       const supabaseClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -84,11 +86,10 @@ Deno.serve(async (req) => {
         throw new Error('Failed to fetch property request')
       }
 
-      // Store the raw response without transformation
       const { error: updateError } = await supabaseClient
         .from('property_requests')
         .update({
-          lightbox_data: lightboxData, // Store the raw response
+          lightbox_data: lightboxData,
           lightbox_processed_at: new Date().toISOString(),
           status: 'processed'
         })
@@ -99,19 +100,18 @@ Deno.serve(async (req) => {
         throw new Error('Failed to update property request with LightBox data')
       }
 
-      // Return the raw response
       return new Response(
         JSON.stringify(lightboxData),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
 
     } catch (apiError) {
-      console.error('Error calling LightBox API:', apiError)
+      console.error('LightBox API error details:', apiError)
       throw new Error(`Error calling LightBox API: ${apiError.message}`)
     }
 
   } catch (error) {
-    console.error('Error in lightbox-parcel function:', error)
+    console.error('Edge function error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
