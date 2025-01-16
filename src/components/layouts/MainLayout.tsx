@@ -19,8 +19,8 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     isAnalyzing: false,
     currentRoute: window.location.pathname,
     threadId: null as string | null,
-    isSidebarCollapsed: true, // Changed to true by default
-    isDebugPanelOpen: false // Changed to false by default
+    isSidebarCollapsed: true,
+    isDebugPanelOpen: false
   });
 
   useEffect(() => {
@@ -69,7 +69,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     initializeClaudeSystem();
   }, [session, toast]);
 
-  // Auto-collapse sidebar on mobile
   useEffect(() => {
     setSystemState(prev => ({
       ...prev,
@@ -93,10 +92,10 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary-light dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar session={session} />
       
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen w-full">
         <AnimatePresence mode="wait">
           {!systemState.isSidebarCollapsed && (
             <motion.div

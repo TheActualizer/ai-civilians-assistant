@@ -8,6 +8,7 @@ import Features from "@/components/Features";
 import { CoreFeatures } from "@/components/home/CoreFeatures";
 import { HubSection } from "@/components/home/HubSection";
 import { PageSelector } from "@/components/VersionManagement/PageSelector";
+import { VersionSwitcher } from "@/components/VersionSwitcher/VersionSwitcher";
 
 const Index = () => {
   useEffect(() => {
@@ -48,17 +49,35 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="mt-4 text-xl text-gray-400"
+            className="text-xl text-gray-400"
           >
             Revolutionizing property analysis with advanced AI
           </motion.p>
+        </div>
+
+        {/* Version Management Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <PageSelector />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <VersionSwitcher />
+          </motion.div>
         </div>
 
         {/* Main AI Assistant Button */}
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.8 }}
           className="text-center mb-16"
         >
           <Link to="/ai-civil-engineer">
@@ -98,17 +117,6 @@ const Index = () => {
 
         {/* Core Features Section */}
         <CoreFeatures />
-
-        {/* Page Selection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0 }}
-          className="mt-16"
-        >
-          <PageSelector />
-        </motion.div>
-
       </div>
     </div>
   );
