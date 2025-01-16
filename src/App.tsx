@@ -47,6 +47,9 @@ const LegacySharedComputer = lazy(() => import("./pages/legacy/SharedComputer"))
 const EnterpriseOverview = lazy(() => import("./pages/enterprise/Overview"));
 const ResourcePlanning = lazy(() => import("./pages/enterprise/ResourcePlanning"));
 const Analytics = lazy(() => import("./pages/enterprise/Analytics"));
+const SystemAnalytics = lazy(() => import("./pages/enterprise/SystemAnalytics"));
+const ThreadAnalysis = lazy(() => import("./pages/enterprise/ThreadAnalysis"));
+const AgentMetrics = lazy(() => import("./pages/enterprise/AgentMetrics"));
 
 // Infrastructure Hub
 const InfrastructureOverview = lazy(() => import("./pages/infrastructure/Overview"));
@@ -118,7 +121,10 @@ function App() {
                   routes: [
                     { index: true, component: EnterpriseOverview },
                     { path: "planning", component: ResourcePlanning },
-                    { path: "analytics", component: Analytics }
+                    { path: "analytics", component: Analytics },
+                    { path: "system-analytics", component: SystemAnalytics },
+                    { path: "thread-analysis", component: ThreadAnalysis },
+                    { path: "agent-metrics", component: AgentMetrics }
                   ]
                 },
                 {
