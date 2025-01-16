@@ -12,7 +12,7 @@ interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+export const MainLayout = ({ children }: MainLayoutProps) => {
   const session = useSession();
   const { toast } = useToast();
   const [systemState, setSystemState] = useState({
@@ -80,7 +80,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
         <div className="fixed right-0 top-20 bottom-0 w-96 bg-gray-900/50 border-l border-gray-700">
           <div className="h-full overflow-y-auto">
-            <DebugPanel />
+            <DebugPanel 
+              isLoading={false}
+              error={null}
+              requestId={null}
+              lightboxData={null}
+              apiError={null}
+              apiCallHistory={[]}
+              onRetry={() => {}}
+              onMessageSubmit={() => {}}
+            />
             {systemState.threadId && (
               <ClaudeAnalysis 
                 pageRoute={systemState.currentRoute}
@@ -102,5 +111,3 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     </div>
   );
 };
-
-export default MainLayout;
