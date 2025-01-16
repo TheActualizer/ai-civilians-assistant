@@ -1,5 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 interface AddressRequest {
   address: string;
@@ -9,6 +13,7 @@ interface AddressRequest {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -67,7 +72,6 @@ Deno.serve(async (req) => {
     }
 
     console.log('Calling LightBox API with payload:', JSON.stringify(requestPayload))
-    console.log('Using LightBox API key:', LIGHTBOX_API_KEY.substring(0, 5) + '...')
 
     try {
       // Add timeout to fetch request
@@ -116,7 +120,6 @@ Deno.serve(async (req) => {
           .from('property_requests')
           .update({
             'lightbox_endpoints': {
-              ...propertyRequest.lightbox_endpoints,
               'property_search': {
                 status: 'error',
                 last_updated: new Date().toISOString(),
@@ -148,8 +151,6 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         )
       }
-
-      console.log('LightBox API response received:', JSON.stringify(responseData))
 
       // Format the response
       const formattedResponse = {
@@ -245,7 +246,6 @@ Deno.serve(async (req) => {
         .from('property_requests')
         .update({
           'lightbox_endpoints': {
-            ...propertyRequest.lightbox_endpoints,
             'property_search': {
               status: 'error',
               last_updated: new Date().toISOString(),
