@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Terminal, Activity, AlertCircle, Settings } from 'lucide-react';
+import { Terminal, Activity, AlertCircle, Settings, Brain } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VoiceControls } from "@/components/DebugPanel/VoiceControls";
 import { MessageHistory } from "@/components/DebugPanel/MessageHistory";
 import { GamifiedMetrics } from "@/components/DebugPanel/GamifiedMetrics";
+import { AgentControl } from "@/components/DebugPanel/AgentControl";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { DebugPanelProps } from "./types";
@@ -155,45 +156,67 @@ export function DebugPanel({
           </div>
         </div>
 
-        <Tabs defaultValue="gamified" className="flex-1">
+        <Tabs defaultValue="agents" className="flex-1">
           <TabsList>
-            <TabsTrigger value="gamified">Debug Game</TabsTrigger>
+            <TabsTrigger value="agents">Agents</TabsTrigger>
+            <TabsTrigger value="control">Agent Control</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
+            <TabsTrigger value="metrics">Metrics</TabsTrigger>
             <TabsTrigger value="system">System</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="gamified" className="flex-1">
-            <GamifiedMetrics />
-          </TabsContent>
-
-          <TabsContent value="messages" className="flex-1">
-            <MessageHistory />
-          </TabsContent>
-
-          <TabsContent value="system">
-            <div className="space-y-4">
-              <Card className="bg-gray-800/50 border-gray-700">
+          <div className="mt-6 space-y-6">
+            <TabsContent value="agents">
+              <Card className="bg-gray-900/50 border-gray-700">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-sm">System Status</CardTitle>
+                    <Brain className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-gray-100">AI Agents</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Memory Usage</span>
-                      <span className="text-gray-200">64%</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">CPU Load</span>
-                      <span className="text-gray-200">45%</span>
-                    </div>
-                  </div>
+                  <GamifiedMetrics />
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
+            </TabsContent>
+
+            <TabsContent value="control">
+              <AgentControl />
+            </TabsContent>
+
+            <TabsContent value="messages">
+              <MessageHistory />
+            </TabsContent>
+
+            <TabsContent value="metrics">
+              <GamifiedMetrics />
+            </TabsContent>
+
+            <TabsContent value="system">
+              <div className="space-y-4">
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-sm">System Status</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Memory Usage</span>
+                        <span className="text-gray-200">64%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">CPU Load</span>
+                        <span className="text-gray-200">45%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </div>
         </Tabs>
 
         <form onSubmit={handleSubmit} className="flex gap-2">
