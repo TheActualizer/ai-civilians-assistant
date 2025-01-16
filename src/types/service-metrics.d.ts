@@ -12,6 +12,24 @@ export interface ServiceLocation {
   metrics: ServiceMetric[];
 }
 
+export interface SystemLoad {
+  cpu: number;
+  memory: number;
+  network: number;
+}
+
+export interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
+}
+
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+}
+
 export interface MapConfig {
   center: [number, number];
   zoom: number;
