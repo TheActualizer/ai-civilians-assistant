@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ChevronDown, Brain } from "lucide-react";
+import { ChevronDown, Brain, Building2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,14 @@ export const NavLinks = () => {
       >
         <Brain className="mr-2 h-5 w-5" />
         AI Civil Engineer
+      </Link>
+
+      <Link
+        to="/enterprise"
+        className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 rounded-md hover:bg-blue-50 border border-transparent hover:border-blue-200"
+      >
+        <Building2 className="mr-2 h-5 w-5" />
+        Enterprise
       </Link>
 
       <DropdownMenu>

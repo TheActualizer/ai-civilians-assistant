@@ -14,6 +14,12 @@ import AddressValidation from "./pages/AddressValidation";
 import AICivilEngineer from "./pages/AICivilEngineer";
 import Assessment from "./pages/Assessment";
 import AgentMonitoring from "./pages/AgentMonitoring";
+import Enterprise from "./pages/Enterprise";
+import Analytics from "./pages/Analytics";
+import ProjectManagement from "./pages/ProjectManagement";
+import ResourceAllocation from "./pages/ResourceAllocation";
+import ComplianceHub from "./pages/ComplianceHub";
+import StrategicPlanning from "./pages/StrategicPlanning";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,6 +42,12 @@ function App() {
             <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
             <Route path="/assessment" element={<Assessment />} />
             <Route path="/agent-monitoring" element={<AgentMonitoring />} />
+            <Route path="/enterprise" element={<Enterprise />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/project-management" element={<ProjectManagement />} />
+            <Route path="/resource-allocation" element={<ResourceAllocation />} />
+            <Route path="/compliance-hub" element={<ComplianceHub />} />
+            <Route path="/strategic-planning" element={<StrategicPlanning />} />
             <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
           </Routes>
           <Toaster />
