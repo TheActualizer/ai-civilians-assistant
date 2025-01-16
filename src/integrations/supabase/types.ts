@@ -530,6 +530,48 @@ export type Database = {
         }
         Relationships: []
       }
+      enterprise_api_metrics: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          error_count: number | null
+          id: string
+          performance_data: Json | null
+          response_time: number | null
+          service_name: string
+          success_rate: number | null
+          system_metrics: Json | null
+          total_requests: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          error_count?: number | null
+          id?: string
+          performance_data?: Json | null
+          response_time?: number | null
+          service_name: string
+          success_rate?: number | null
+          system_metrics?: Json | null
+          total_requests?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          error_count?: number | null
+          id?: string
+          performance_data?: Json | null
+          response_time?: number | null
+          service_name?: string
+          success_rate?: number | null
+          system_metrics?: Json | null
+          total_requests?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       knowledge_base: {
         Row: {
           category: string

@@ -11,6 +11,7 @@ import { AgentsPanel } from "@/components/Agents/AgentsPanel";
 import { AgentMetrics } from "@/components/Agents/AgentMetrics";
 import { AgentNetwork } from "@/components/Agents/AgentNetwork";
 import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
+import { ApiMetricsPanel } from "@/components/Enterprise/ApiMetricsPanel";
 import { ScreenshotButton } from "@/components/ScreenshotButton/ScreenshotButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -269,6 +270,14 @@ const AICivilEngineer = () => {
                 <AgentNetwork />
               </motion.div>
             </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
+              <ApiMetricsPanel />
+            </motion.div>
           </div>
           
           <motion.div 
