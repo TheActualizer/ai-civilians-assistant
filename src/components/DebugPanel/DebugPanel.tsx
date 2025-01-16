@@ -3,7 +3,7 @@ import {
   Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, 
   Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, 
   ArrowRight, ArrowDown, Rocket, CircuitBoard, Dna, Infinity,
-  Upload, Paperclip
+  Upload, Paperclip, Mic, MicOff
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
