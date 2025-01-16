@@ -9,6 +9,7 @@ import Index from './pages/Index';
 import { PageBuilder } from './components/PageBuilder/PageBuilder';
 import VideoSynthesis from './pages/VideoSynthesis';
 import { SharedComputerView } from './components/SharedComputer/SharedComputerView';
+import { IntegratedVideoView } from './components/VideoConference/IntegratedVideoView';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/page-builder" element={<PageBuilder />} />
                 <Route path="/video-synthesis" element={<VideoSynthesis />} />
                 <Route path="/shared-computer" element={<SharedComputerView />} />
+                <Route path="/integrated-view" element={<IntegratedVideoView />} />
               </Routes>
             </MainLayout>
           </BrowserRouter>
