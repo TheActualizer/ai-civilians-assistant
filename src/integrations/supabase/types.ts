@@ -303,6 +303,47 @@ export type Database = {
           },
         ]
       }
+      communication_logs: {
+        Row: {
+          connection_data: Json | null
+          created_at: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          session_id: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          connection_data?: Json | null
+          created_at?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          session_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          connection_data?: Json | null
+          created_at?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          session_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "communication_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_sessions: {
         Row: {
           created_at: string | null
@@ -780,6 +821,42 @@ export type Database = {
           success_rate?: number | null
           system_metrics?: Json | null
           total_requests?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      functionality_test_logs: {
+        Row: {
+          component: string
+          created_at: string | null
+          duration: number | null
+          error_details: Json | null
+          id: string
+          status: string
+          test_data: Json | null
+          test_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          component: string
+          created_at?: string | null
+          duration?: number | null
+          error_details?: Json | null
+          id?: string
+          status?: string
+          test_data?: Json | null
+          test_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          component?: string
+          created_at?: string | null
+          duration?: number | null
+          error_details?: Json | null
+          id?: string
+          status?: string
+          test_data?: Json | null
+          test_name?: string
           updated_at?: string | null
         }
         Relationships: []
