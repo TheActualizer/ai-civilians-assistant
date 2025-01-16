@@ -10,8 +10,8 @@ import { DynamicPage } from "./components/DynamicPage/DynamicPage";
 // Preserve direct imports for critical pages
 import LearnMore from "./pages/LearnMore";
 import AICivilEngineer from "./pages/AICivilEngineer";
+import AreaCalculations from "./pages/AreaCalculations";
 
-// Lazy load other pages
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
@@ -59,6 +59,7 @@ function App() {
               {/* Core Routes - Not Lazy Loaded */}
               <Route path="/learn-more" element={<LearnMore />} />
               <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
+              <Route path="/area-calculations" element={<AreaCalculations />} />
               
               {/* Dynamic Hub Routes */}
               <Route path="/:hubName">
@@ -66,7 +67,6 @@ function App() {
                 <Route path=":pagePath" element={<DynamicPage />} />
               </Route>
 
-              {/* Lazy Loaded Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/get-started" element={<GetStarted />} />
