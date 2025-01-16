@@ -30,22 +30,22 @@ export function DebugPanel({
   };
 
   return (
-    <Sidebar className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-[600px]'}`}>
-      <SidebarContent>
+    <Sidebar className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-[600px]'} border-r border-gray-700/50`}>
+      <SidebarContent className="bg-gray-900/95 backdrop-blur-sm">
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2"
+              className="p-2 text-gray-400 hover:text-gray-100"
             >
               {isCollapsed ? "→" : "←"}
             </Button>
             {!isCollapsed && (
               <div className="flex items-center gap-2">
-                <Terminal className="h-5 w-5 text-primary" />
-                <h2 className="font-semibold">Debug Console</h2>
+                <Terminal className="h-5 w-5 text-primary animate-pulse" />
+                <h2 className="font-semibold text-gray-100">Debug Console</h2>
                 {error && (
                   <Badge variant="destructive" className="animate-pulse">
                     <Bug className="w-4 h-4 mr-1" />
@@ -58,15 +58,15 @@ export function DebugPanel({
 
           {!isCollapsed && (
             <>
-              <div className="text-sm text-gray-500">
-                Request ID: {requestId || 'Not available'}
+              <div className="text-sm text-gray-400">
+                Request ID: <span className="font-mono">{requestId || 'Not available'}</span>
               </div>
 
               <div className="flex items-center gap-4">
                 <Button 
                   onClick={onRetry} 
                   variant="outline"
-                  className="gap-2"
+                  className="gap-2 border-gray-700 hover:border-primary/50 hover:bg-primary/10"
                   disabled={isLoading}
                 >
                   <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -78,9 +78,9 @@ export function DebugPanel({
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Debug message..."
-                    className="flex-1"
+                    className="flex-1 bg-gray-800/50 border-gray-700 focus:border-primary/50"
                   />
-                  <Button type="submit" variant="secondary" className="gap-2">
+                  <Button type="submit" variant="secondary" className="gap-2 bg-gray-800 hover:bg-gray-700">
                     <Send className="h-4 w-4" />
                     Send
                   </Button>
@@ -88,21 +88,21 @@ export function DebugPanel({
               </div>
 
               {apiError && (
-                <Card className="bg-red-50 border-red-200">
+                <Card className="bg-red-900/20 border-red-800/50">
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
-                      <XCircle className="h-5 w-5 text-red-500" />
-                      <CardTitle className="text-red-700">API Error</CardTitle>
-                      <Badge variant="outline" className="bg-red-100 text-red-700">
+                      <XCircle className="h-5 w-5 text-red-400" />
+                      <CardTitle className="text-red-300">API Error</CardTitle>
+                      <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700">
                         {new Date(apiError.timestamp).toLocaleTimeString()}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-red-700">{apiError.message}</p>
+                    <p className="text-red-300">{apiError.message}</p>
                     {apiError.details && (
-                      <ScrollArea className="h-[100px] mt-2 rounded-md border border-red-200 bg-red-50/50 p-4">
-                        <pre className="text-sm text-red-800">
+                      <ScrollArea className="h-[100px] mt-2 rounded-md border border-red-800/30 bg-red-900/10 p-4">
+                        <pre className="text-sm text-red-300">
                           {JSON.stringify(apiError.details, null, 2)}
                         </pre>
                       </ScrollArea>
@@ -111,9 +111,9 @@ export function DebugPanel({
                 </Card>
               )}
 
-              <Card>
+              <Card className="bg-gray-800/40 border-gray-700">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">API Call History</CardTitle>
+                  <CardTitle className="text-sm font-medium text-gray-300">API Call History</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[400px] pr-4">
@@ -123,21 +123,33 @@ export function DebugPanel({
                           key={index} 
                           className={`border-l-2 pl-4 py-2 ${
                             entry.event.includes('Error') 
-                              ? 'border-red-500 bg-red-50' 
-                              : 'border-blue-500'
+                              ? 'border-red-500 bg-red-900/20' 
+                              : 'border-primary bg-gray-800/40'
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={entry.event.includes('Error') ? 'bg-red-100' : ''}>
+                            <Badge 
+                              variant="outline" 
+                              className={entry.event.includes('Error') 
+                                ? 'bg-red-900/30 border-red-700' 
+                                : 'bg-primary/10 border-primary/50'
+                              }
+                            >
                               {new Date(entry.timestamp).toLocaleTimeString()}
                             </Badge>
-                            <span className={`font-medium ${entry.event.includes('Error') ? 'text-red-700' : ''}`}>
+                            <span className={`font-medium ${
+                              entry.event.includes('Error') 
+                                ? 'text-red-300' 
+                                : 'text-gray-300'
+                            }`}>
                               {entry.event}
                             </span>
                           </div>
                           {entry.details && (
-                            <pre className={`mt-2 text-sm p-2 rounded overflow-auto ${
-                              entry.event.includes('Error') ? 'bg-red-50' : 'bg-gray-50'
+                            <pre className={`mt-2 text-sm p-2 rounded-md font-mono ${
+                              entry.event.includes('Error') 
+                                ? 'bg-red-900/10 text-red-300' 
+                                : 'bg-gray-800/60 text-gray-300'
                             }`}>
                               {JSON.stringify(entry.details, null, 2)}
                             </pre>

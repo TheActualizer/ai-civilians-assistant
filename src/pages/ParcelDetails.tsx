@@ -98,7 +98,6 @@ const ParcelDetails = () => {
           console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
           addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
           
-          // First cast to unknown, then to LightBoxResponse to safely handle the type conversion
           const typedLightboxData = propertyRequest.lightbox_data as unknown as LightBoxResponse;
           setLightboxData(typedLightboxData);
         } else {
@@ -127,7 +126,6 @@ const ParcelDetails = () => {
               console.log('LightBox API response:', data);
               addToHistory("LightBox API call successful", data);
               
-              // First cast to unknown, then to LightBoxResponse
               const typedData = data as unknown as LightBoxResponse;
               setLightboxData(typedData);
               
@@ -217,10 +215,10 @@ const ParcelDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar session={session} />
       <SidebarProvider>
-        <div className="flex w-full">
+        <div className="flex w-full min-h-[calc(100vh-4rem)]">
           <DebugPanel
             isLoading={isLoading}
             error={error}
@@ -232,180 +230,197 @@ const ParcelDetails = () => {
             onMessageSubmit={handleMessageSubmit}
           />
           
-          <div className="flex-1 pt-24 px-4 pb-8">
-          <Tabs defaultValue="property" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="property">
-                <Building2 className="h-4 w-4 mr-2" />
-                Property
-              </TabsTrigger>
-              <TabsTrigger value="address">
-                <MapPin className="h-4 w-4 mr-2" />
-                Address
-              </TabsTrigger>
-              <TabsTrigger value="additional">
-                <Info className="h-4 w-4 mr-2" />
-                Additional
-              </TabsTrigger>
-              <TabsTrigger value="parsed">
-                <FileText className="h-4 w-4 mr-2" />
-                Parsed
-              </TabsTrigger>
-              <TabsTrigger value="raw">
-                <Database className="h-4 w-4 mr-2" />
-                Raw
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex-1 pt-16 px-6 pb-8">
+            <Tabs defaultValue="property" className="w-full">
+              <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-1">
+                <TabsTrigger 
+                  value="property"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Property
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="address"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Address
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="additional"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Info className="h-4 w-4 mr-2" />
+                  Additional
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="parsed"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Parsed
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="raw"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Database className="h-4 w-4 mr-2" />
+                  Raw
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="property">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-primary" />
-                    <CardTitle>Property Analysis</CardTitle>
-                  </div>
-                  <CardDescription>Comprehensive property details from LightBox</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {renderPropertyDetails()}
-                </CardContent>
-              </Card>
-            </TabsContent>
+              <div className="mt-6 space-y-6">
+                <TabsContent value="property">
+                  <Card className="bg-gray-800/40 border-gray-700 backdrop-blur-sm shadow-lg">
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-gray-100">Property Analysis</CardTitle>
+                      </div>
+                      <CardDescription className="text-gray-400">Comprehensive property details from LightBox</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {renderPropertyDetails()}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-            <TabsContent value="address">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <CardTitle>Address Details</CardTitle>
-                  </div>
-                  <CardDescription>Verified address information</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500">Street Address</h3>
-                        <p className="mt-1 text-lg">{lightboxData?.address?.streetAddress || 'Not available'}</p>
+                <TabsContent value="address">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <CardTitle>Address Details</CardTitle>
                       </div>
-                      <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500">City</h3>
-                        <p className="mt-1 text-lg">{lightboxData?.address?.city || 'Not available'}</p>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500">State</h3>
-                        <p className="mt-1 text-lg">{lightboxData?.address?.state || 'Not available'}</p>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500">ZIP Code</h3>
-                        <p className="mt-1 text-lg">{lightboxData?.address?.zip || 'Not available'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="additional">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Info className="h-5 w-5 text-primary" />
-                    <CardTitle>Additional Property Information</CardTitle>
-                  </div>
-                  <CardDescription>Extended property details from LightBox API</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {renderAdditionalDetails()}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="parsed">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <CardTitle>Parsed LightBox Data</CardTitle>
-                  </div>
-                  <CardDescription>Structured data from LightBox API</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Property Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-lg shadow-sm">
-                          <h4 className="text-sm font-medium text-gray-500">Parcel ID</h4>
-                          <p className="mt-1">{lightboxData?.parcelId || 'Not available'}</p>
-                        </div>
-                        {lightboxData?.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
-                          <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
-                            <h4 className="text-sm font-medium text-gray-500 capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </h4>
-                            <p className="mt-1">{value || 'Not available'}</p>
+                      <CardDescription>Verified address information</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 className="text-sm font-medium text-gray-500">Street Address</h3>
+                            <p className="mt-1 text-lg">{lightboxData?.address?.streetAddress || 'Not available'}</p>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Processing Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-lg shadow-sm">
-                          <h4 className="text-sm font-medium text-gray-500">Processing Status</h4>
-                          <Badge className="mt-2" variant={lightboxData?.lightbox_processed ? "default" : "secondary"}>
-                            {lightboxData?.lightbox_processed ? "Processed" : "Pending"}
-                          </Badge>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow-sm">
-                          <h4 className="text-sm font-medium text-gray-500">Processing Time</h4>
-                          <p className="mt-1">
-                            {lightboxData?.processed_at 
-                              ? new Date(lightboxData.processed_at).toLocaleString()
-                              : 'Not processed yet'}
-                          </p>
+                          <div className="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 className="text-sm font-medium text-gray-500">City</h3>
+                            <p className="mt-1 text-lg">{lightboxData?.address?.city || 'Not available'}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 className="text-sm font-medium text-gray-500">State</h3>
+                            <p className="mt-1 text-lg">{lightboxData?.address?.state || 'Not available'}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 className="text-sm font-medium text-gray-500">ZIP Code</h3>
+                            <p className="mt-1 text-lg">{lightboxData?.address?.zip || 'Not available'}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-            <TabsContent value="raw">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-primary" />
-                    <CardTitle>Raw API Response</CardTitle>
-                  </div>
-                  <CardDescription>Complete unmodified response from LightBox API</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[400px] w-full rounded-md border">
-                    <pre className="p-4 text-sm">
-                      {JSON.stringify(lightboxData?.rawResponse || {}, null, 2)}
-                    </pre>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                <TabsContent value="additional">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Info className="h-5 w-5 text-primary" />
+                        <CardTitle>Additional Property Information</CardTitle>
+                      </div>
+                      <CardDescription>Extended property details from LightBox API</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {renderAdditionalDetails()}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-            <div className="sticky bottom-8 flex justify-end mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
-              <Button
-                onClick={() => navigate('/assessment')}
-                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
-                size="lg"
-              >
-                Proceed to Assessment Data
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </div>
-          </Tabs>
+                <TabsContent value="parsed">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <CardTitle>Parsed LightBox Data</CardTitle>
+                      </div>
+                      <CardDescription>Structured data from LightBox API</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4">Property Information</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-lg shadow-sm">
+                              <h4 className="text-sm font-medium text-gray-500">Parcel ID</h4>
+                              <p className="mt-1">{lightboxData?.parcelId || 'Not available'}</p>
+                            </div>
+                            {lightboxData?.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
+                              <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 className="text-sm font-medium text-gray-500 capitalize">
+                                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                                </h4>
+                                <p className="mt-1">{value || 'Not available'}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4">Processing Information</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-lg shadow-sm">
+                              <h4 className="text-sm font-medium text-gray-500">Processing Status</h4>
+                              <Badge className="mt-2" variant={lightboxData?.lightbox_processed ? "default" : "secondary"}>
+                                {lightboxData?.lightbox_processed ? "Processed" : "Pending"}
+                              </Badge>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg shadow-sm">
+                              <h4 className="text-sm font-medium text-gray-500">Processing Time</h4>
+                              <p className="mt-1">
+                                {lightboxData?.processed_at 
+                                  ? new Date(lightboxData.processed_at).toLocaleString()
+                                  : 'Not processed yet'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="raw">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Database className="h-5 w-5 text-primary" />
+                        <CardTitle>Raw API Response</CardTitle>
+                      </div>
+                      <CardDescription>Complete unmodified response from LightBox API</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[400px] w-full rounded-md border">
+                        <pre className="p-4 text-sm">
+                          {JSON.stringify(lightboxData?.rawResponse || {}, null, 2)}
+                        </pre>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <div className="sticky bottom-8 flex justify-end mt-8">
+                  <Button
+                    onClick={() => navigate('/assessment')}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20"
+                    size="lg"
+                  >
+                    Proceed to Assessment Data
+                    <ArrowRight className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            </Tabs>
           </div>
         </div>
       </SidebarProvider>
