@@ -1,17 +1,19 @@
 import { useSession } from "@supabase/auth-helpers-react";
 import { motion } from "framer-motion";
-import { Brain, Sparkles, Zap, Terminal, Network, Cpu, Boxes, LayoutGrid, Workflow, Activity, Globe, Cloud, Lock, Shield, Database } from "lucide-react";
+import { Brain, Sparkles, Zap, Terminal, Network, Cpu, Boxes, LayoutGrid, Workflow, Activity, Globe, Cloud, Lock, Shield, Database, Monitor, Share2, Video, Mic, Camera } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
 import { ClaudeMetrics } from "@/components/Agents/ClaudeMetrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 const LearnMore = () => {
   const session = useSession();
   const [activeThreadId, setActiveThreadId] = useState<string>("");
+  const [isSharing, setIsSharing] = useState(false);
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
@@ -55,13 +57,78 @@ const LearnMore = () => {
           </div>
         </motion.div>
 
+        {/* Main Command Interface */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-12">
-          {/* Main Content Panel (3/4 width) */}
+          {/* Shared Computer View (3/4 width) */}
           <div className="xl:col-span-3 space-y-10">
+            <Card className="bg-gray-800/40 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+              <CardHeader className="border-b border-gray-700/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Monitor className="h-8 w-8 text-blue-400" />
+                    <CardTitle className="text-2xl text-gray-100">Shared Computer Interface</CardTitle>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Button 
+                      variant="outline" 
+                      className="bg-blue-500/10 border-blue-400/50 text-blue-400 hover:bg-blue-500/20"
+                      onClick={() => setIsSharing(!isSharing)}
+                    >
+                      <Share2 className="h-5 w-5 mr-2" />
+                      {isSharing ? 'Stop Sharing' : 'Start Sharing'}
+                    </Button>
+                    <Button variant="outline" className="bg-purple-500/10 border-purple-400/50 text-purple-400 hover:bg-purple-500/20">
+                      <Video className="h-5 w-5 mr-2" />
+                      Video Call
+                    </Button>
+                    <Button variant="outline" className="bg-green-500/10 border-green-400/50 text-green-400 hover:bg-green-500/20">
+                      <Mic className="h-5 w-5 mr-2" />
+                      Voice Chat
+                    </Button>
+                    <Button variant="outline" className="bg-orange-500/10 border-orange-400/50 text-orange-400 hover:bg-orange-500/20">
+                      <Camera className="h-5 w-5 mr-2" />
+                      Screen Record
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0 h-[800px] relative">
+                {/* Shared Computer View */}
+                <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm rounded-b-xl">
+                  <div className="h-full w-full flex items-center justify-center">
+                    <iframe 
+                      src="about:blank"
+                      className="w-full h-full rounded-b-xl"
+                      style={{ 
+                        backgroundColor: 'transparent',
+                        border: '1px solid rgba(59, 130, 246, 0.2)'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Overlay Controls */}
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 bg-gray-800/90 px-6 py-3 rounded-full border border-gray-700/50 backdrop-blur-xl">
+                  <Button variant="ghost" className="text-blue-400 hover:text-blue-300">
+                    <Terminal className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" className="text-purple-400 hover:text-purple-300">
+                    <Workflow className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" className="text-green-400 hover:text-green-300">
+                    <Activity className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" className="text-orange-400 hover:text-orange-300">
+                    <Shield className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Command Interface */}
             <Card className="bg-gray-800/40 backdrop-blur-xl border-gray-700/50 shadow-2xl">
               <CardContent className="p-12">
-                <Tabs defaultValue="command-center" className="h-full">
+                <Tabs defaultValue="command-center">
                   <TabsList className="grid w-full grid-cols-4 bg-gray-900/50 backdrop-blur-xl border border-gray-700 rounded-xl p-3">
                     <TabsTrigger value="command-center" className="text-xl py-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                       <Terminal className="w-7 h-7 mr-3" />
@@ -82,7 +149,7 @@ const LearnMore = () => {
                   </TabsList>
 
                   <div className="mt-12 min-h-[800px]">
-                    <TabsContent value="command-center" className="h-full space-y-8">
+                    <TabsContent value="command-center">
                       <ClaudeAnalysis 
                         pageRoute="/learn-more"
                         agentState={{
