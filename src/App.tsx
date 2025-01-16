@@ -27,7 +27,7 @@ function App() {
 
   const handleMessageSubmit = (message: string) => {
     console.log("Debug message submitted:", message);
-    // Add your debug message handling logic here
+    setDebugMessage(message);
   };
 
   const handleRetry = () => {
@@ -39,6 +39,8 @@ function App() {
     console.log("File uploaded:", e.target.files?.[0]);
     // Add your file upload logic here
   };
+
+  console.log("Debug panel state:", { isDebugOpen });
 
   return (
     <SessionContextProvider supabaseClient={supabase}>
@@ -73,8 +75,11 @@ function App() {
 
         {/* Floating Action Button */}
         <Button
-          onClick={() => setIsDebugOpen(!isDebugOpen)}
-          className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-white p-0 z-50"
+          onClick={() => {
+            console.log("Debug button clicked, toggling state");
+            setIsDebugOpen(!isDebugOpen);
+          }}
+          className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-white p-0 z-50 transition-transform hover:scale-105 active:scale-95"
           size="icon"
         >
           <MessageCircle className="h-6 w-6" />
