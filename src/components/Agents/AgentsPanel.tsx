@@ -47,7 +47,7 @@ const INITIAL_AGENTS: DifyAgent[] = [
     status: 'idle',
     backstory: 'An environmental scientist passionate about balancing development with conservation.',
     systemPrompt: 'You are an environmental scientist. Your role is to analyze environmental constraints for development.',
-    model: 'claude'
+    model: 'perplexity'
   },
   {
     id: 'buildable-envelope',
@@ -107,6 +107,21 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
 
         console.log('Grok compute response:', data);
         return data.content;
+      } else if (agent.model === 'perplexity') {
+        const { data, error } = await supabase.functions.invoke('perplexity-compute', {
+          body: {
+            messages: [{ role: 'user', content: message }],
+            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
+          }
+        });
+
+        if (error) {
+          console.error('Error calling Perplexity compute:', error);
+          throw error;
+        }
+
+        console.log('Perplexity compute response:', data);
+        return data.choices[0].message.content;
       } else {
         const { data, error } = await supabase.functions.invoke('claude-compute', {
           body: {

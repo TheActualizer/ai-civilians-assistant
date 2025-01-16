@@ -27,3 +27,11 @@ verify_jwt = false
 [[functions]]
 [functions.gemini-compute]
 verify_jwt = false
+
+[[functions]]
+[functions.grok-compute]
+verify_jwt = false
+
+[[functions]]
+[functions.perplexity-compute]
+verify_jwt = false
