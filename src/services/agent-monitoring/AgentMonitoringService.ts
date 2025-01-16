@@ -67,6 +67,23 @@ class AgentMonitoringService {
     }
   }
 
+  async logAgentAction(agentId: string, action: string, details: any = {}) {
+    try {
+      const { error } = await supabase
+        .from('agent_interactions')
+        .insert({
+          agent_id: agentId,
+          action,
+          details,
+          status: 'completed'
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error logging agent action:', error);
+    }
+  }
+
   getAgentStatus(agentId: string): 'idle' | 'processing' | 'completed' | 'error' {
     return this.agents.get(agentId)?.status || 'idle';
   }
