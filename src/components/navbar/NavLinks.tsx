@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ChevronDown, Brain, Building2, Network, Cpu, Settings, Sparkles } from "lucide-react";
+import { ChevronDown, Brain, Building2, Network, Cpu, Settings, Sparkles, Archive } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,29 @@ export const NavLinks = () => {
         <Brain className="mr-2 h-5 w-5" />
         AI Civil Engineer
       </Link>
+
+      {/* Legacy Pages Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
+          <Archive className="mr-2 h-5 w-5" />
+          Legacy Versions
+          <ChevronDown className="ml-1 h-4 w-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-72">
+          <DropdownMenuLabel>Previous Versions</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuItem>
+              <Link to="/legacy/parcel-analysis" className="w-full">Legacy Parcel Analysis</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link to="/legacy/property-details" className="w-full">Legacy Property Details</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link to="/legacy/assessment-view" className="w-full">Legacy Assessment View</Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">

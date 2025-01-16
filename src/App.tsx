@@ -12,6 +12,12 @@ import LearnMore from "./pages/LearnMore";
 import AICivilEngineer from "./pages/AICivilEngineer";
 import AreaCalculations from "./pages/AreaCalculations";
 
+// Legacy Pages
+import LegacyParcelAnalysis from "./pages/legacy/ParcelAnalysis";
+import LegacyPropertyDetails from "./pages/legacy/PropertyDetails";
+import LegacyAssessmentView from "./pages/legacy/AssessmentView";
+
+// Lazy loaded pages
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
@@ -60,6 +66,11 @@ function App() {
               <Route path="/learn-more" element={<LearnMore />} />
               <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
               <Route path="/area-calculations" element={<AreaCalculations />} />
+              
+              {/* Legacy Routes */}
+              <Route path="/legacy/parcel-analysis" element={<LegacyParcelAnalysis />} />
+              <Route path="/legacy/property-details" element={<LegacyPropertyDetails />} />
+              <Route path="/legacy/assessment-view" element={<LegacyAssessmentView />} />
               
               {/* Dynamic Hub Routes */}
               <Route path="/:hubName">
