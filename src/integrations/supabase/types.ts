@@ -2703,6 +2703,105 @@ export type Database = {
           },
         ]
       }
+      unity_agent_messages: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          message_type: string
+          payload: Json
+          processed_at: string | null
+          session_id: string
+          status: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          message_type: string
+          payload: Json
+          processed_at?: string | null
+          session_id: string
+          status?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          payload?: Json
+          processed_at?: string | null
+          session_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      unity_game_state: {
+        Row: {
+          created_at: string
+          game_state: Json
+          id: string
+          metrics: Json
+          player_data: Json
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          game_state?: Json
+          id?: string
+          metrics?: Json
+          player_data?: Json
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          game_state?: Json
+          id?: string
+          metrics?: Json
+          player_data?: Json
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      unity_optimization_metrics: {
+        Row: {
+          batch_count: number | null
+          draw_calls: number | null
+          frame_rate: number | null
+          id: string
+          memory_usage: number | null
+          metrics_data: Json
+          session_id: string
+          timestamp: string
+          vertex_count: number | null
+        }
+        Insert: {
+          batch_count?: number | null
+          draw_calls?: number | null
+          frame_rate?: number | null
+          id?: string
+          memory_usage?: number | null
+          metrics_data?: Json
+          session_id: string
+          timestamp?: string
+          vertex_count?: number | null
+        }
+        Update: {
+          batch_count?: number | null
+          draw_calls?: number | null
+          frame_rate?: number | null
+          id?: string
+          memory_usage?: number | null
+          metrics_data?: Json
+          session_id?: string
+          timestamp?: string
+          vertex_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       code_implementation_mapping: {
