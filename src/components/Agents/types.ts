@@ -7,6 +7,7 @@ export type DifyAgent = {
   lastAction?: string;
   backstory?: string;
   documents?: string[];
+  systemPrompt?: string;
 };
 
 export type AgentAction = {

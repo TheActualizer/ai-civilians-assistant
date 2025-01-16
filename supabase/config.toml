@@ -19,3 +19,7 @@ verify_jwt = false
 [[functions]]
 [functions.lightbox-parcel]
 verify_jwt = false
+
+[[functions]]
+[functions.claude-compute]
+verify_jwt = false

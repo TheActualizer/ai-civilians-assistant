@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { Brain, Activity, AlertCircle, Mic, MicOff, Settings, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Brain, Activity, AlertCircle, Settings, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { VoiceControls } from "@/components/DebugPanel/VoiceControls";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { DifyAgent, AgentAction, AgentState, AgentsPanelProps } from './types';
 
 const INITIAL_AGENTS: DifyAgent[] = [
@@ -17,35 +18,40 @@ const INITIAL_AGENTS: DifyAgent[] = [
     name: 'Data Ingestion Agent',
     role: 'Processes input data and prepares for analysis',
     status: 'idle',
-    backstory: 'A meticulous data scientist with years of experience in processing complex datasets.'
+    backstory: 'A meticulous data scientist with years of experience in processing complex datasets.',
+    systemPrompt: 'You are a data processing expert. Your role is to clean, validate, and prepare data for analysis.'
   },
   {
     id: 'parcel-analysis',
     name: 'Parcel Analysis Agent',
     role: 'Analyzes property boundaries and geometry',
     status: 'idle',
-    backstory: 'A veteran land surveyor who has mapped thousands of properties across the country.'
+    backstory: 'A veteran land surveyor who has mapped thousands of properties across the country.',
+    systemPrompt: 'You are an expert land surveyor. Your role is to analyze property boundaries and geometric characteristics.'
   },
   {
     id: 'setback-calculation',
     name: 'Setback Calculation Agent',
     role: 'Calculates required setbacks and buffers',
     status: 'idle',
-    backstory: 'A precise mathematician specializing in spatial calculations and zoning regulations.'
+    backstory: 'A precise mathematician specializing in spatial calculations and zoning regulations.',
+    systemPrompt: 'You are a zoning expert. Your role is to calculate required setbacks and buffers for properties.'
   },
   {
     id: 'environmental',
     name: 'Environmental Overlay Agent',
     role: 'Analyzes environmental constraints',
     status: 'idle',
-    backstory: 'An environmental scientist passionate about balancing development with conservation.'
+    backstory: 'An environmental scientist passionate about balancing development with conservation.',
+    systemPrompt: 'You are an environmental scientist. Your role is to analyze environmental constraints for development.'
   },
   {
     id: 'buildable-envelope',
     name: 'Buildable Envelope Agent',
     role: 'Determines buildable area',
     status: 'idle',
-    backstory: 'An architect with expertise in maximizing usable space while respecting constraints.'
+    backstory: 'An architect with expertise in maximizing usable space while respecting constraints.',
+    systemPrompt: 'You are an architect. Your role is to determine the buildable area for properties.'
   }
 ];
 
@@ -60,6 +66,91 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
   const [selectedAgent, setSelectedAgent] = useState<DifyAgent | null>(null);
   const [customInstructions, setCustomInstructions] = useState<string>('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const handleClaudeCompute = async (message: string, agent: DifyAgent) => {
+    try {
+      console.log('Calling Claude compute for agent:', agent.name);
+      
+      const { data, error } = await supabase.functions.invoke('claude-compute', {
+        body: {
+          messages: [{ role: 'user', content: message }],
+          systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
+        }
+      });
+
+      if (error) {
+        console.error('Error calling Claude compute:', error);
+        throw error;
+      }
+
+      console.log('Claude compute response:', data);
+      return data.content[0].text;
+    } catch (error) {
+      console.error('Error in handleClaudeCompute:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process with Claude. Please try again.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  const handleCustomInstructions = async () => {
+    if (!selectedAgent) return;
+    
+    setState(prev => ({
+      ...prev,
+      agents: prev.agents.map(agent => 
+        agent.id === selectedAgent.id 
+          ? { ...agent, status: 'processing' }
+          : agent
+      )
+    }));
+
+    try {
+      // Process with Claude first
+      const claudeResponse = await handleClaudeCompute(customInstructions, selectedAgent);
+      
+      // Then send to parent component
+      await onMessage(claudeResponse, selectedAgent.name);
+
+      // Add action to history
+      const newAction: AgentAction = {
+        id: crypto.randomUUID(),
+        description: `Processed instructions for ${selectedAgent.name}`,
+        timestamp: new Date().toISOString(),
+        agentId: selectedAgent.id,
+        status: 'success'
+      };
+
+      setState(prev => ({
+        ...prev,
+        actions: [newAction, ...prev.actions],
+        agents: prev.agents.map(agent => 
+          agent.id === selectedAgent.id 
+            ? { ...agent, status: 'completed' }
+            : agent
+        )
+      }));
+
+      toast({
+        title: "Instructions Processed",
+        description: `${selectedAgent.name} has processed the instructions.`,
+      });
+    } catch (error) {
+      console.error('Error processing instructions:', error);
+      
+      setState(prev => ({
+        ...prev,
+        agents: prev.agents.map(agent => 
+          agent.id === selectedAgent.id 
+            ? { ...agent, status: 'error' }
+            : agent
+        )
+      }));
+    }
+  };
 
   const getStatusColor = (status: DifyAgent['status']) => {
     switch (status) {
@@ -82,40 +173,6 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
         description: "Listening to agent response...",
       });
     }
-  };
-
-  const handleCustomInstructions = async () => {
-    if (!selectedAgent) return;
-    
-    setState(prev => ({
-      ...prev,
-      agents: prev.agents.map(agent => 
-        agent.id === selectedAgent.id 
-          ? { ...agent, status: 'processing' }
-          : agent
-      )
-    }));
-
-    // Send message to parent component
-    await onMessage(customInstructions, selectedAgent.name);
-
-    // Add action to history
-    const newAction: AgentAction = {
-      id: crypto.randomUUID(),
-      description: `Updated instructions for ${selectedAgent.name}`,
-      timestamp: new Date().toISOString(),
-      agentId: selectedAgent.id
-    };
-
-    setState(prev => ({
-      ...prev,
-      actions: [newAction, ...prev.actions]
-    }));
-
-    toast({
-      title: "Instructions Updated",
-      description: `${selectedAgent.name} has received new instructions.`,
-    });
   };
 
   const renderAgentCard = (agent: DifyAgent) => (
