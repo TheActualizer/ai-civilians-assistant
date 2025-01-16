@@ -20,13 +20,42 @@ export interface ThreadAnalysis {
   id: string;
   page_path: string;
   thread_type: string;
+  connection_status: string;
+  analysis_status: string;
+  analysis_data: any;
   system_load: SystemLoad;
   performance_metrics: PerformanceMetrics;
   network_stats: NetworkStats;
-  analysis_status: string;
+  agent_states: {
+    pro: string;
+    claude: string;
+    gemini: string;
+  };
   last_analysis_timestamp: string;
-  connection_status: string;
-  connection_score: number;
+}
+
+export interface AgentMetricsData {
+  system_load: {
+    cpu_threads: number[];
+    io_operations: number[];
+    memory_allocation: number[];
+  };
+  networkMetrics: {
+    bandwidth_usage: number[];
+    connection_pool: number[];
+    latency_history: number[];
+  };
+  performanceIndicators: {
+    error_rate: number[];
+    throughput: number[];
+    response_times: number[];
+  };
+  cpuUsage: number;
+  memoryUsage: number;
+  networkLatency: number;
+  activeFlows: number;
+  successRate: number;
+  totalInteractions: number;
 }
 
 export interface AgentMessage {
@@ -35,22 +64,11 @@ export interface AgentMessage {
   timestamp?: string;
 }
 
-export interface AgentMetrics {
-  cpu_usage: number;
-  memory_usage: number;
-  response_time: number;
-  success_rate: number;
-  error_rate: number;
-}
-
-export interface AgentMetricsData {
-  timestamp: string;
-  metrics: AgentMetrics;
-}
-
 export interface DifyAgent {
   id: string;
   name: string;
-  status: string;
-  type: string;
+  status: "idle" | "processing" | "completed" | "error";
+  capabilities: string[];
+  lastAction?: string;
+  metrics?: AgentMetricsData;
 }
