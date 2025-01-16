@@ -35,3 +35,7 @@ verify_jwt = false
 [[functions]]
 [functions.perplexity-compute]
 verify_jwt = false
+
+[[functions]]
+[functions.skyvern-compute]
+verify_jwt = false

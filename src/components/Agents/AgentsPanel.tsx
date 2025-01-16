@@ -56,7 +56,7 @@ const INITIAL_AGENTS: DifyAgent[] = [
     status: 'idle',
     backstory: 'An architect with expertise in maximizing usable space while respecting constraints.',
     systemPrompt: 'You are an architect. Your role is to determine the buildable area for properties.',
-    model: 'claude'
+    model: 'skyvern'
   }
 ];
 
@@ -121,6 +121,21 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
         }
 
         console.log('Perplexity compute response:', data);
+        return data.choices[0].message.content;
+      } else if (agent.model === 'skyvern') {
+        const { data, error } = await supabase.functions.invoke('skyvern-compute', {
+          body: {
+            messages: [{ role: 'user', content: message }],
+            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
+          }
+        });
+
+        if (error) {
+          console.error('Error calling Skyvern compute:', error);
+          throw error;
+        }
+
+        console.log('Skyvern compute response:', data);
         return data.choices[0].message.content;
       } else {
         const { data, error } = await supabase.functions.invoke('claude-compute', {
