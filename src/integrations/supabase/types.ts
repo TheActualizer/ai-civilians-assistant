@@ -428,6 +428,7 @@ export type Database = {
       debug_thread_analysis: {
         Row: {
           agent_feedback: Json | null
+          agent_states: Json | null
           analysis_data: Json | null
           analysis_frequency: number | null
           analysis_interval: number | null
@@ -441,13 +442,17 @@ export type Database = {
           id: string
           last_agent_sync: string | null
           last_analysis_timestamp: string | null
+          network_stats: Json | null
           page_path: string
+          performance_metrics: Json | null
           suggested_connections: Json[] | null
+          system_load: Json | null
           thread_type: string
           updated_at: string | null
         }
         Insert: {
           agent_feedback?: Json | null
+          agent_states?: Json | null
           analysis_data?: Json | null
           analysis_frequency?: number | null
           analysis_interval?: number | null
@@ -461,13 +466,17 @@ export type Database = {
           id?: string
           last_agent_sync?: string | null
           last_analysis_timestamp?: string | null
+          network_stats?: Json | null
           page_path: string
+          performance_metrics?: Json | null
           suggested_connections?: Json[] | null
+          system_load?: Json | null
           thread_type: string
           updated_at?: string | null
         }
         Update: {
           agent_feedback?: Json | null
+          agent_states?: Json | null
           analysis_data?: Json | null
           analysis_frequency?: number | null
           analysis_interval?: number | null
@@ -481,8 +490,11 @@ export type Database = {
           id?: string
           last_agent_sync?: string | null
           last_analysis_timestamp?: string | null
+          network_stats?: Json | null
           page_path?: string
+          performance_metrics?: Json | null
           suggested_connections?: Json[] | null
+          system_load?: Json | null
           thread_type?: string
           updated_at?: string | null
         }
@@ -936,6 +948,33 @@ export type Database = {
           id?: string
           related_agents?: string[] | null
           severity?: string
+        }
+        Relationships: []
+      }
+      system_metrics: {
+        Row: {
+          component: string
+          id: string
+          metadata: Json | null
+          metric_type: string
+          timestamp: string | null
+          value: number
+        }
+        Insert: {
+          component: string
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          timestamp?: string | null
+          value: number
+        }
+        Update: {
+          component?: string
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          timestamp?: string | null
+          value?: number
         }
         Relationships: []
       }

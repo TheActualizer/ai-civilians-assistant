@@ -12,9 +12,10 @@ import { ClaudeScreenAnalysis } from './ClaudeScreenAnalysis';
 interface ClaudeAnalysisProps {
   pageRoute: string;
   agentState: any;
+  onThreadCreated?: (threadId: string) => void;
 }
 
-export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
+export function ClaudeAnalysis({ pageRoute, agentState, onThreadCreated }: ClaudeAnalysisProps) {
   const { toast } = useToast();
   const [threadAnalysis, setThreadAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -206,6 +207,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           if (insertError) throw insertError;
           setThreadAnalysis(newAnalysis);
           setIsConnected(true);
+          onThreadCreated?.(newAnalysis.id);
           
           toast({
             title: "Claude System Initialized",
@@ -227,6 +229,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           if (updateError) throw updateError;
           setThreadAnalysis(updatedAnalysis);
           setIsConnected(true);
+          onThreadCreated?.(updatedAnalysis.id);
           
           toast({
             title: "Claude System Connected",
@@ -265,7 +268,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     };
 
     initSystem();
-  }, [pageRoute]);
+  }, [pageRoute, onThreadCreated]);
 
   useEffect(() => {
     if (autoAnalysis && !analysisInterval) {

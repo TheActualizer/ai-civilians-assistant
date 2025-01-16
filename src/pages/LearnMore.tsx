@@ -3,11 +3,14 @@ import { motion } from "framer-motion";
 import { Brain, Sparkles, Zap, Terminal, Network, Cpu } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
+import { ClaudeMetrics } from "@/components/Agents/ClaudeMetrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useState } from "react";
 
 const LearnMore = () => {
   const session = useSession();
+  const [activeThreadId, setActiveThreadId] = useState<string>("");
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -103,9 +106,18 @@ const LearnMore = () => {
                       agents: [],
                       actions: []
                     }}
+                    onThreadCreated={(threadId) => setActiveThreadId(threadId)}
                   />
                 </CardContent>
               </Card>
+              
+              {activeThreadId && (
+                <Card className="bg-gray-900/50 border-gray-700">
+                  <CardContent className="p-6">
+                    <ClaudeMetrics threadId={activeThreadId} />
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="system-analysis">
