@@ -104,6 +104,42 @@ export type Database = {
         }
         Relationships: []
       }
+      api_performance_metrics: {
+        Row: {
+          endpoint: string
+          error_count: number | null
+          id: string
+          metadata: Json | null
+          response_time: number | null
+          service_name: string
+          success_rate: number | null
+          timestamp: string | null
+          total_requests: number | null
+        }
+        Insert: {
+          endpoint: string
+          error_count?: number | null
+          id?: string
+          metadata?: Json | null
+          response_time?: number | null
+          service_name: string
+          success_rate?: number | null
+          timestamp?: string | null
+          total_requests?: number | null
+        }
+        Update: {
+          endpoint?: string
+          error_count?: number | null
+          id?: string
+          metadata?: Json | null
+          response_time?: number | null
+          service_name?: string
+          success_rate?: number | null
+          timestamp?: string | null
+          total_requests?: number | null
+        }
+        Relationships: []
+      }
       chat_history: {
         Row: {
           context: Json | null
@@ -563,6 +599,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_health_status: {
+        Row: {
+          alerts: Json | null
+          dependencies: Json | null
+          id: string
+          last_check: string | null
+          resource_usage: Json | null
+          service_name: string
+          status: string
+          uptime_percentage: number | null
+        }
+        Insert: {
+          alerts?: Json | null
+          dependencies?: Json | null
+          id?: string
+          last_check?: string | null
+          resource_usage?: Json | null
+          service_name: string
+          status?: string
+          uptime_percentage?: number | null
+        }
+        Update: {
+          alerts?: Json | null
+          dependencies?: Json | null
+          id?: string
+          last_check?: string | null
+          resource_usage?: Json | null
+          service_name?: string
+          status?: string
+          uptime_percentage?: number | null
+        }
+        Relationships: []
       }
       system_events: {
         Row: {
