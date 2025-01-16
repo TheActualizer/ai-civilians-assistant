@@ -1,8 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import GetStarted from "./pages/GetStarted";
 import LearnMore from "./pages/LearnMore";
@@ -16,7 +18,6 @@ import AddressValidation from "./pages/AddressValidation";
 import AICivilEngineer from "./pages/AICivilEngineer";
 import Assessment from "./pages/Assessment";
 import { Toaster } from "@/components/ui/toaster";
-import { supabase } from "@/integrations/supabase/client";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 
 function App() {
@@ -24,21 +25,56 @@ function App() {
   const [debugMessage, setDebugMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const handleMessageSubmit = (message: string) => {
-    console.log("Debug message submitted:", message);
-    setDebugMessage(message);
+  // Log debug panel interactions to Supabase
+  const logDebugInteraction = async (action: string) => {
+    try {
+      const { error } = await supabase
+        .from('chat_history')
+        .insert({
+          message: action,
+          context: { type: 'debug_panel', action }
+        });
+
+      if (error) {
+        console.error('Error logging debug interaction:', error);
+      }
+    } catch (err) {
+      console.error('Failed to log debug interaction:', err);
+    }
   };
 
-  const handleRetry = () => {
+  const handleMessageSubmit = async (message: string) => {
+    console.log("Debug message submitted:", message);
+    setDebugMessage(message);
+    await logDebugInteraction(`Message submitted: ${message}`);
+    toast({
+      title: "Message Received",
+      description: "Your message has been sent to the AI Civil Engineer",
+    });
+  };
+
+  const handleRetry = async () => {
     console.log("Retrying last action");
+    await logDebugInteraction('Retry requested');
     // Add your retry logic here
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("File uploaded:", e.target.files?.[0]);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    console.log("File uploaded:", file);
+    if (file) {
+      await logDebugInteraction(`File uploaded: ${file.name}`);
+    }
     // Add your file upload logic here
   };
+
+  useEffect(() => {
+    if (isDebugOpen) {
+      logDebugInteraction('Debug panel opened');
+    }
+  }, [isDebugOpen]);
 
   console.log("Debug panel state:", { isDebugOpen });
 
@@ -63,6 +99,7 @@ function App() {
 
         {/* Global Debug Panel */}
         <DebugPanel
+          isOpen={isDebugOpen}
           isLoading={isLoading}
           error={error}
           requestId={null}
@@ -78,6 +115,12 @@ function App() {
           onClick={() => {
             console.log("Debug button clicked, toggling state");
             setIsDebugOpen(!isDebugOpen);
+            toast({
+              title: isDebugOpen ? "AI Civil Engineer Closed" : "AI Civil Engineer Ready",
+              description: isDebugOpen ? 
+                "Debug panel has been closed" : 
+                "Ask me anything about civil engineering!",
+            });
           }}
           className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-white p-0 z-50 transition-transform hover:scale-105 active:scale-95"
           size="icon"
