@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Smartphone, Laptop } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,7 +10,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { LightBoxResponse } from "@/components/GetStarted/types";
+import { AgentsPanel } from "@/components/Agents/AgentsPanel";
 import { PropertyTab } from "@/components/ParcelDetails/PropertyTab";
 import { AddressTab } from "@/components/ParcelDetails/AddressTab";
 import { AdditionalTab } from "@/components/ParcelDetails/AdditionalTab";
@@ -18,7 +18,8 @@ import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
 import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AgentsPanel } from "@/components/Agents/AgentsPanel";
+import type { LightBoxResponse } from "@/components/GetStarted/types";
+import type { AgentMessage } from '@/types/agent';
 
 const AICivilEngineer = () => {
   const session = useSession();
@@ -38,39 +39,28 @@ const AICivilEngineer = () => {
     details?: any;
     timestamp: string;
   } | null>(null);
-
-  // New state for agent interactions
-  const [agentMessages, setAgentMessages] = useState<Array<{
-    agent: string;
-    message: string;
-    timestamp: string;
-  }>>([]);
+  const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
 
   const handleAgentMessage = async (message: string, agent: string) => {
     console.log(`Agent ${agent} received message:`, message);
     
-    // Add message to history
     setAgentMessages(prev => [...prev, {
       agent,
       message,
       timestamp: new Date().toISOString()
     }]);
 
-    // Show toast notification
     toast({
       title: `Message from ${agent}`,
       description: message,
     });
 
-    // Log the interaction
     addToHistory(`Agent interaction: ${agent}`, { message });
   };
 
   const handleVoiceInput = async (transcript: string) => {
     console.log('Voice input received:', transcript);
     addToHistory('Voice input received', { transcript });
-    
-    // Process voice input
     await handleAgentMessage(transcript, 'Civil Engineer');
   };
 
@@ -270,7 +260,6 @@ const AICivilEngineer = () => {
             apiError={apiError}
             onRetry={handleRetry}
             onMessageSubmit={handleMessageSubmit}
-            className={isMobile ? "order-last mt-4" : ""}
           />
           
           <div className="flex-1 pt-16 px-4 lg:px-6 pb-8">
@@ -281,14 +270,13 @@ const AICivilEngineer = () => {
                     onMessage={handleAgentMessage}
                     onVoiceInput={handleVoiceInput}
                     messages={agentMessages}
-                    className="w-full lg:w-auto"
                   />
                 </div>
                 <Button
                   onClick={() => navigate('/agent-monitoring')}
                   className="w-full lg:w-auto gap-2 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
                 >
-                  <span>Advanced Monitoring</span>
+                  <span>{isMobile ? 'Monitor' : 'Advanced Monitoring'}</span>
                   <ArrowRight className="h-5 w-5 animate-pulse" />
                 </Button>
               </div>
@@ -296,12 +284,12 @@ const AICivilEngineer = () => {
 
             <Tabs defaultValue="property" className="w-full">
               <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-1 overflow-x-auto">
-                <TabsTrigger value="property" className="whitespace-nowrap">Property</TabsTrigger>
-                <TabsTrigger value="address" className="whitespace-nowrap">Address</TabsTrigger>
-                <TabsTrigger value="additional" className="whitespace-nowrap">Additional</TabsTrigger>
-                <TabsTrigger value="parsed" className="whitespace-nowrap">Parsed</TabsTrigger>
-                <TabsTrigger value="raw" className="whitespace-nowrap">Raw</TabsTrigger>
-                <TabsTrigger value="documents" className="whitespace-nowrap">Documents</TabsTrigger>
+                <TabsTrigger value="property">Property</TabsTrigger>
+                <TabsTrigger value="address">Address</TabsTrigger>
+                <TabsTrigger value="additional">Additional</TabsTrigger>
+                <TabsTrigger value="parsed">Parsed</TabsTrigger>
+                <TabsTrigger value="raw">Raw</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
               </TabsList>
 
               <div className="mt-6 space-y-6">
