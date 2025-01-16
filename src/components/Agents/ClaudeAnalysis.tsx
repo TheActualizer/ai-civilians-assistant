@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause, Terminal, MousePointer, Send } from 'lucide-react';
+import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause, Terminal, MousePointer, Send, Power } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,98 +23,125 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const [commandInput, setCommandInput] = useState('');
   const [showInstructions, setShowInstructions] = useState(false);
   const [systemHealth, setSystemHealth] = useState({
-    claudeStatus: 'idle',
+    claudeStatus: 'connecting',
     geminiStatus: 'idle',
     proStatus: 'idle',
     syncStatus: 'pending'
   });
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    console.log('Initializing immediate analysis and continuous improvement...');
-    startClaudeAnalysis();
-    initializePageAnalysis();
-  }, []);
+    console.log('Initializing Claude system...');
+    let retryCount = 0;
+    const maxRetries = 3;
 
-  const initializePageAnalysis = async () => {
-    console.log('Setting up continuous page analysis for:', pageRoute);
-    try {
-      // First check if analysis exists
-      const { data: existingAnalysis, error: fetchError } = await supabase
-        .from('debug_thread_analysis')
-        .select('*')
-        .eq('page_path', pageRoute)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      if (!existingAnalysis) {
-        // Create new analysis if none exists
-        const { data: newAnalysis, error: insertError } = await supabase
+    const initSystem = async () => {
+      try {
+        setSystemHealth(prev => ({ ...prev, claudeStatus: 'connecting' }));
+        
+        const { data: existingAnalysis, error: fetchError } = await supabase
           .from('debug_thread_analysis')
-          .insert({
-            page_path: pageRoute,
-            thread_type: 'claude-analysis',
-            auto_analysis_enabled: true,
-            analysis_frequency: 20,
-            analysis_status: 'active',
-            analysis_data: {
-              continuous_improvement: true,
-              target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
-              improvement_focus: [
-                'UI/UX optimization',
-                'Component structure',
-                'Performance metrics',
-                'User engagement'
-              ]
-            }
-          })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        console.log('Created new page analysis:', newAnalysis);
-        setThreadAnalysis(newAnalysis);
-      } else {
-        // Update existing analysis
-        const { data: updatedAnalysis, error: updateError } = await supabase
-          .from('debug_thread_analysis')
-          .update({
-            auto_analysis_enabled: true,
-            analysis_frequency: 20,
-            analysis_status: 'active',
-            analysis_data: {
-              continuous_improvement: true,
-              target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
-              improvement_focus: [
-                'UI/UX optimization',
-                'Component structure',
-                'Performance metrics',
-                'User engagement'
-              ]
-            }
-          })
+          .select('*')
           .eq('page_path', pageRoute)
-          .select()
-          .single();
+          .maybeSingle();
 
-        if (updateError) throw updateError;
-        console.log('Updated existing page analysis:', updatedAnalysis);
-        setThreadAnalysis(updatedAnalysis);
+        if (fetchError) throw fetchError;
+
+        if (!existingAnalysis) {
+          console.log('No existing analysis found, creating new one...');
+          const { data: newAnalysis, error: insertError } = await supabase
+            .from('debug_thread_analysis')
+            .insert({
+              page_path: pageRoute,
+              thread_type: 'claude-analysis',
+              auto_analysis_enabled: true,
+              analysis_frequency: 20,
+              analysis_status: 'active',
+              analysis_data: {
+                continuous_improvement: true,
+                target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
+                improvement_focus: [
+                  'UI/UX optimization',
+                  'Component structure',
+                  'Performance metrics',
+                  'User engagement'
+                ]
+              }
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          setThreadAnalysis(newAnalysis);
+          setIsConnected(true);
+          
+          toast({
+            title: "Claude System Initialized",
+            description: "New analysis thread created successfully.",
+          });
+        } else {
+          console.log('Existing analysis found, updating...');
+          const { data: updatedAnalysis, error: updateError } = await supabase
+            .from('debug_thread_analysis')
+            .update({
+              auto_analysis_enabled: true,
+              analysis_frequency: 20,
+              analysis_status: 'active',
+              analysis_data: {
+                continuous_improvement: true,
+                target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
+                improvement_focus: [
+                  'UI/UX optimization',
+                  'Component structure',
+                  'Performance metrics',
+                  'User engagement'
+                ]
+              }
+            })
+            .eq('page_path', pageRoute)
+            .select()
+            .single();
+
+          if (updateError) throw updateError;
+          setThreadAnalysis(updatedAnalysis);
+          setIsConnected(true);
+          
+          toast({
+            title: "Claude System Connected",
+            description: "Analysis thread synchronized successfully.",
+          });
+        }
+
+        setSystemHealth(prev => ({
+          ...prev,
+          claudeStatus: 'active',
+          syncStatus: 'connected'
+        }));
+
+      } catch (error) {
+        console.error('Error initializing Claude system:', error);
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Retrying initialization (${retryCount}/${maxRetries})...`);
+          setTimeout(initSystem, 2000);
+        } else {
+          setSystemHealth(prev => ({
+            ...prev,
+            claudeStatus: 'error',
+            syncStatus: 'error'
+          }));
+          toast({
+            variant: "destructive",
+            title: "Connection Error",
+            description: "Failed to initialize Claude system. Please try again.",
+          });
+        }
       }
-      
-      toast({
-        title: "Command Center Activated",
-        description: "Claude is now ready to receive strategic directives.",
-      });
-    } catch (error) {
-      console.error('Error initializing page analysis:', error);
-      toast({
-        variant: "destructive",
-        title: "Initialization Error",
-        description: "Failed to setup command center. Retrying...",
-      });
-    }
-  };
+    };
+
+    initSystem();
+    startClaudeAnalysis();
+  }, [pageRoute]);
 
   useEffect(() => {
     console.log('Initializing thread analysis subscription...');
@@ -280,7 +307,15 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     <ScrollArea className="h-[500px]">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-200">System Command Center</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-200">System Command Center</h3>
+            <Badge 
+              variant={isConnected ? "success" : "destructive"}
+              className="animate-pulse"
+            >
+              {isConnected ? "Connected" : "Disconnected"}
+            </Badge>
+          </div>
           <div className="flex items-center gap-2">
             <Button 
               variant="outline"
@@ -299,6 +334,14 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
                 </>
               )}
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="bg-blue-500/20 border-blue-500"
+            >
+              <Power className="h-4 w-4 mr-2" />
+              Reconnect
+            </Button>
           </div>
         </div>
 
@@ -316,6 +359,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
                   onChange={(e) => setCommandInput(e.target.value)}
                   placeholder="Enter strategic directive for Claude..."
                   className="flex-1 pr-10"
+                  disabled={!isConnected}
                 />
                 {showInstructions && (
                   <div className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 p-3 rounded-md shadow-lg border border-gray-700 z-10">
@@ -332,7 +376,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
               </div>
               <Button 
                 onClick={handleCommandSubmit}
-                disabled={isAnalyzing}
+                disabled={isAnalyzing || !isConnected}
                 className="self-start relative group"
               >
                 {isAnalyzing ? (
