@@ -1,46 +1,37 @@
-import { useSession } from "@supabase/auth-helpers-react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from 'react';
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Brain, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Features } from "@/components/Features";
 import { CoreFeatures } from "@/components/home/CoreFeatures";
 import { HubSection } from "@/components/home/HubSection";
-import { 
-  Building2, 
-  Network, 
-  Cpu, 
-  Settings, 
-  Sparkles, 
-  BookOpen,
-  Brain,
-  ChevronRight,
-  Archive
-} from "lucide-react";
-import { motion } from "framer-motion";
 
 const Index = () => {
-  const session = useSession();
-  const navigate = useNavigate();
-
-  console.log("🔄 Index page rendering...", { isAuthenticated: !!session });
+  useEffect(() => {
+    console.log('Index page mounted');
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="container mx-auto px-4 pt-6 pb-12">
+      <div className="container mx-auto px-4 pt-20 pb-12">
         {/* Main Content */}
         <div className="text-center mb-12">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-gray-900 mb-4"
+            className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600"
           >
-            AI Civil Engineering Portal
+            AI Civil Engineer
           </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-gray-600 max-w-2xl mx-auto"
+            className="mt-4 text-xl text-gray-600"
           >
-            Your comprehensive hub for AI-powered civil engineering solutions and analysis
+            Revolutionizing property analysis with advanced AI
           </motion.p>
         </div>
 
@@ -50,93 +41,63 @@ const Index = () => {
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="grid gap-6 mb-12"
+          className="text-center mb-16"
         >
-          <Button
-            onClick={() => navigate("/ai-civil-engineer")}
-            className="w-full flex items-center justify-between p-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-lg h-auto shadow-lg hover:shadow-xl transition-all"
-          >
-            <div className="flex items-center">
-              <Brain className="h-6 w-6 mr-3" />
-              <span>AI Civil Engineer Assistant</span>
-            </div>
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+          <Link to="/ai-civil-engineer">
+            <Button 
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-6 rounded-xl text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+            >
+              <Brain className="mr-2 h-6 w-6" />
+              Launch AI Assistant
+            </Button>
+          </Link>
         </motion.div>
 
-        {/* Core Features Grid */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Core Features</h2>
-          <CoreFeatures />
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <Features />
         </div>
 
-        {/* Hub Sections */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12 bg-white p-6 rounded-lg shadow-md">
-          <HubSection
-            title="Enterprise Solutions"
-            icon={Building2}
-            routes={[
-              { path: "/enterprise", label: "Enterprise Overview" },
-              { path: "/enterprise/planning", label: "Resource Planning" },
-              { path: "/enterprise/analytics", label: "Analytics Dashboard" }
-            ]}
-          />
+        {/* Core Features Section */}
+        <CoreFeatures />
 
-          <HubSection
-            title="Infrastructure"
-            icon={Network}
-            routes={[
-              { path: "/infrastructure", label: "Infrastructure Overview" },
-              { path: "/infrastructure/network", label: "Network Management" },
-              { path: "/infrastructure/security", label: "Security Monitoring" }
-            ]}
-          />
-        </div>
+        {/* Hub Navigation Section */}
+        <HubSection />
 
-        {/* Technology & Operations */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12 bg-white p-6 rounded-lg shadow-md">
-          <HubSection
-            title="Technology"
-            icon={Cpu}
-            routes={[
-              { path: "/technology", label: "Technology Hub" },
-              { path: "/technology/innovation", label: "Innovation Lab" },
-              { path: "/technology/research", label: "Research Center" }
-            ]}
-          />
-
-          <HubSection
-            title="Operations"
-            icon={Settings}
-            routes={[
-              { path: "/operations", label: "Operations Hub" },
-              { path: "/operations/workflow", label: "Workflow Management" },
-              { path: "/operations/reporting", label: "Reports & Analytics" }
-            ]}
-          />
-        </div>
-
-        {/* Innovation & Resources */}
-        <div className="grid md:grid-cols-2 gap-8 bg-white p-6 rounded-lg shadow-md">
-          <HubSection
-            title="Innovation Center"
-            icon={Sparkles}
-            routes={[
-              { path: "/innovation", label: "Innovation Hub" },
-              { path: "/innovation/lab", label: "Lab Projects" },
-              { path: "/innovation/experiments", label: "Experiments" }
-            ]}
-          />
-
-          <HubSection
-            title="Additional Resources"
-            icon={BookOpen}
-            routes={[
-              { path: "/learn-more", label: "Learn More" },
-              { path: "/legacy/parcel-analysis", label: "Legacy Systems", icon: Archive }
-            ]}
-          />
-        </div>
+        {/* Enterprise Features */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-16"
+        >
+          <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 p-8">
+            <div className="text-center mb-8">
+              <Sparkles className="h-12 w-12 text-purple-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-white mb-4">Enterprise Features</h2>
+              <p className="text-gray-300">Advanced capabilities for professional users</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link to="/enterprise/overview" className="group">
+                <Card className="bg-gray-800/50 border-gray-700 p-6 hover:bg-gray-800 transition-all duration-300">
+                  <Brain className="h-8 w-8 text-purple-500 mb-4 group-hover:text-purple-400" />
+                  <h3 className="text-xl font-semibold text-white mb-2">AI Command Center</h3>
+                  <p className="text-gray-400">Centralized control for AI operations</p>
+                </Card>
+              </Link>
+              
+              <Link to="/enterprise/analytics" className="group">
+                <Card className="bg-gray-800/50 border-gray-700 p-6 hover:bg-gray-800 transition-all duration-300">
+                  <Zap className="h-8 w-8 text-blue-500 mb-4 group-hover:text-blue-400" />
+                  <h3 className="text-xl font-semibold text-white mb-2">Advanced Analytics</h3>
+                  <p className="text-gray-400">Deep insights and performance metrics</p>
+                </Card>
+              </Link>
+            </div>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
