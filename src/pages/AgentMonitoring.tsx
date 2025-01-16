@@ -1,7 +1,7 @@
 import { useSession } from "@supabase/auth-helpers-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Database, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,14 @@ import { agentMonitoringService } from "@/services/agent-monitoring/AgentMonitor
 import { debugVisualizationService } from "@/services/debug/DebugVisualizationService";
 import { analyticsService } from "@/services/analytics/AnalyticsService";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const AgentMonitoring = () => {
   const session = useSession();
@@ -25,6 +33,14 @@ const AgentMonitoring = () => {
     details?: any;
   }>>([]);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [verificationResults, setVerificationResults] = useState<Array<{
+    metric: string;
+    value: number;
+    timestamp: string;
+    isVerified: boolean;
+    source: string;
+  }>>([]);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     console.log('Initializing agent monitoring...');
@@ -146,25 +162,58 @@ const AgentMonitoring = () => {
     }
   };
 
-  if (isInitializing) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-        <Navbar session={session} />
-        <div className="container mx-auto px-4 py-8 pt-20">
-          <div className="flex items-center justify-center h-[60vh]">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center"
-            >
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4" />
-              <p className="text-gray-400">Initializing monitoring system...</p>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const verifyMetricsAgainstLogs = async () => {
+    setIsVerifying(true);
+    try {
+      // Fetch recent metrics from Supabase
+      const { data: metricsData, error: metricsError } = await supabase
+        .from('agent_metrics')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (metricsError) throw metricsError;
+
+      // Get displayed metrics from the DOM
+      const displayedMetrics = document.querySelectorAll('[data-metric-value]');
+      const results = [];
+
+      for (const element of displayedMetrics) {
+        const metricName = element.getAttribute('data-metric-name');
+        const displayedValue = parseFloat(element.getAttribute('data-metric-value') || '0');
+
+        // Find corresponding value in Supabase data
+        const matchingMetric = metricsData.find(m => {
+          const value = m[metricName as keyof typeof m];
+          return typeof value === 'number' && Math.abs(value - displayedValue) < 0.1;
+        });
+
+        results.push({
+          metric: metricName || 'unknown',
+          value: displayedValue,
+          timestamp: matchingMetric?.created_at || new Date().toISOString(),
+          isVerified: !!matchingMetric,
+          source: matchingMetric ? 'Supabase agent_metrics table' : 'UI Display'
+        });
+      }
+
+      setVerificationResults(results);
+      
+      toast({
+        title: "Verification Complete",
+        description: `Verified ${results.filter(r => r.isVerified).length} out of ${results.length} metrics`,
+      });
+    } catch (error) {
+      console.error('Error verifying metrics:', error);
+      toast({
+        variant: "destructive",
+        title: "Verification Failed",
+        description: "Could not verify metrics against database logs",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -192,6 +241,55 @@ const AgentMonitoring = () => {
               Back to AI Civil Engineer
             </Button>
             <h1 className="text-2xl font-bold text-white">Advanced Agent Monitoring</h1>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  onClick={verifyMetricsAgainstLogs}
+                  variant="outline"
+                  className="gap-2"
+                  disabled={isVerifying}
+                >
+                  <Database className="h-4 w-4" />
+                  {isVerifying ? 'Verifying...' : 'Verify Metrics'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px] bg-gray-900 text-gray-100">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" />
+                    Metrics Verification Results
+                  </DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="h-[400px] mt-4">
+                  <div className="space-y-4">
+                    {verificationResults.map((result, index) => (
+                      <div 
+                        key={index}
+                        className={`p-4 rounded-lg border ${
+                          result.isVerified 
+                            ? 'border-green-500/30 bg-green-500/10' 
+                            : 'border-red-500/30 bg-red-500/10'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{result.metric}</h4>
+                            <p className="text-sm text-gray-400">Value: {result.value}</p>
+                            <p className="text-sm text-gray-400">Source: {result.source}</p>
+                          </div>
+                          <span className={`text-sm ${
+                            result.isVerified ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            {result.isVerified ? 'Verified' : 'Unverified'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="grid grid-cols-1 gap-8">

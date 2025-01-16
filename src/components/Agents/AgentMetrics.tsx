@@ -212,6 +212,8 @@ export function AgentMetrics() {
                   initial={{ y: -10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   className="text-gray-400"
+                  data-metric-name="cpu_usage"
+                  data-metric-value={metrics.cpuUsage.toFixed(1)}
                 >
                   {metrics.cpuUsage.toFixed(1)}%
                 </motion.span>
@@ -233,6 +235,8 @@ export function AgentMetrics() {
                   initial={{ y: -10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   className="text-gray-400"
+                  data-metric-name="memory_usage"
+                  data-metric-value={metrics.memoryUsage.toFixed(1)}
                 >
                   {metrics.memoryUsage.toFixed(1)}%
                 </motion.span>
@@ -300,6 +304,8 @@ export function AgentMetrics() {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-lg font-semibold text-gray-200"
+                data-metric-name="network_latency"
+                data-metric-value={metrics.networkLatency.toFixed(0)}
               >
                 {metrics.networkLatency.toFixed(0)}ms
               </motion.span>
