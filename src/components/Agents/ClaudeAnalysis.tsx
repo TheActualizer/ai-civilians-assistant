@@ -37,7 +37,29 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     setIsAnalyzing(true);
     
     try {
-      const { data: analysisData, error } = await supabase.functions.invoke('claude-compute', {
+      // First, check if we can get an existing analysis
+      const { data: existingAnalysis, error: fetchError } = await supabase
+        .from('debug_thread_analysis')
+        .select('*')
+        .eq('page_path', pageRoute)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching existing analysis:', fetchError);
+        throw fetchError;
+      }
+
+      // Prepare the analysis context
+      const analysisContext = {
+        previousAnalysis: existingAnalysis?.analysis_data || {},
+        evolutionPhase: analysisCount + 1,
+        pageRoute,
+        systemHealth
+      };
+
+      console.log('Sending analysis request with context:', analysisContext);
+
+      const { data: claudeResponse, error: claudeError } = await supabase.functions.invoke('claude-compute', {
         body: {
           messages: [{ 
             role: 'user', 
@@ -45,21 +67,26 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           }],
           systemPrompt: `You are analyzing the system state for route: ${pageRoute}
                         Current evolution phase: ${analysisCount + 1}
-                        Previous insights: ${JSON.stringify(threadAnalysis?.analysis_data || {})}`
+                        Previous insights: ${JSON.stringify(existingAnalysis?.analysis_data || {})}`,
+          context: analysisContext
         }
       });
 
-      if (error) throw error;
+      if (claudeError) {
+        console.error('Claude compute error:', claudeError);
+        throw claudeError;
+      }
 
-      console.log('Claude analysis response:', analysisData);
+      console.log('Received Claude response:', claudeResponse);
 
+      // Update the thread analysis with new data
       const { data: threadUpdate, error: updateError } = await supabase
         .from('debug_thread_analysis')
         .upsert({
           page_path: pageRoute,
           thread_type: 'claude-analysis',
           analysis_data: {
-            ...analysisData,
+            ...claudeResponse,
             iteration: analysisCount + 1,
             timestamp: new Date().toISOString()
           },
@@ -69,8 +96,12 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         .select()
         .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating thread:', updateError);
+        throw updateError;
+      }
 
+      console.log('Thread analysis updated:', threadUpdate);
       setThreadAnalysis(threadUpdate);
       setAnalysisCount(prev => prev + 1);
       
@@ -355,13 +386,13 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-gray-200">System Command Center</h3>
             <Badge 
-              variant={getBadgeVariant(systemHealth.claudeStatus)}
+              variant={systemHealth.claudeStatus === 'active' ? 'outline' : 'destructive'}
               className={`${systemHealth.claudeStatus === 'active' ? 'animate-pulse' : ''}`}
             >
               Claude: {systemHealth.claudeStatus}
             </Badge>
             <Badge 
-              variant={getBadgeVariant(systemHealth.syncStatus)}
+              variant={systemHealth.syncStatus === 'synced' ? 'outline' : 'secondary'}
             >
               Sync: {systemHealth.syncStatus}
             </Badge>
@@ -402,23 +433,21 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             <h4 className="font-medium text-gray-300">Claude Activity Log</h4>
           </div>
           <ScrollArea className="h-[200px] border border-gray-700 rounded-md p-2">
-            {threadAnalysis?.analysis_data?.execution_time && (
+            {threadAnalysis?.analysis_data ? (
               <div className="text-sm text-gray-400">
                 <div className="flex items-center gap-2">
-                  <span>Start: {threadAnalysis.analysis_data.execution_time.start}</span>
-                  <span>End: {threadAnalysis.analysis_data.execution_time.end}</span>
+                  <span>Last Update: {new Date(threadAnalysis.last_analysis_timestamp).toLocaleString()}</span>
                 </div>
                 <div className="mt-2">
-                  Command: {threadAnalysis.analysis_data.command}
+                  Status: {threadAnalysis.analysis_status}
                 </div>
                 <pre className="mt-2 whitespace-pre-wrap">
                   {JSON.stringify(threadAnalysis.analysis_data, null, 2)}
                 </pre>
               </div>
-            )}
-            {!threadAnalysis?.analysis_data?.execution_time && (
+            ) : (
               <div className="text-center text-gray-500 py-4">
-                No Claude activity logged yet. Try sending a command.
+                No Claude activity logged yet. System initialization in progress...
               </div>
             )}
           </ScrollArea>
@@ -481,7 +510,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
                 )}
               </div>
               <Button 
-                onClick={handleCommandSubmit}
+                onClick={startClaudeAnalysis}
                 disabled={isAnalyzing || !isConnected}
                 className="self-start relative group"
               >
