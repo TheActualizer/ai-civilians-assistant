@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Brain, Zap, Crown } from 'lucide-react';
 import Navbar from "@/components/Navbar";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 import { VersionSwitcher } from "@/components/VersionSwitcher/VersionSwitcher";
@@ -20,6 +22,7 @@ const AICivilEngineer = () => {
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [connectionScore, setConnectionScore] = useState(0);
+  const [portalEnergy, setPortalEnergy] = useState(0);
   const [apiCallHistory, setApiCallHistory] = useState<Array<{
     timestamp: string;
     event: string;
@@ -28,13 +31,12 @@ const AICivilEngineer = () => {
   const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
 
   useEffect(() => {
-    console.log('AICivilEngineer: Component mounted, initializing thread connections...');
+    console.log('AICivilEngineer: Initializing portal connections...');
 
     const initializeThreadConnections = async () => {
       if (!session?.user?.id) return;
 
       try {
-        // Create initial thread connection
         const { data: connectionData, error: connectionError } = await supabase
           .from('auth_thread_connections')
           .insert({
@@ -42,8 +44,9 @@ const AICivilEngineer = () => {
             connection_type: 'ai_civil_engineer',
             connection_status: 'active',
             metadata: {
-              entry_point: 'ai_civil_engineer',
-              session_start: new Date().toISOString()
+              entry_point: 'portal_nexus',
+              session_start: new Date().toISOString(),
+              portal_state: 'initializing'
             }
           })
           .select()
@@ -51,8 +54,22 @@ const AICivilEngineer = () => {
 
         if (connectionError) throw connectionError;
 
-        console.log('Thread connection initialized:', connectionData);
+        console.log('Portal connection initialized:', connectionData);
         setConnectionScore(connectionData.connection_score || 0);
+        
+        // Start portal energy accumulation
+        const energyInterval = setInterval(() => {
+          setPortalEnergy(prev => {
+            const newEnergy = Math.min(prev + 0.5, 100);
+            if (newEnergy === 100) {
+              toast({
+                title: "Portal Energy Maximized! ⚡",
+                description: "Reality manipulation capabilities at peak performance",
+              });
+            }
+            return newEnergy;
+          });
+        }, 1000);
 
         // Subscribe to connection updates
         const channel = supabase
@@ -66,14 +83,13 @@ const AICivilEngineer = () => {
               filter: `user_id=eq.${session.user.id}`
             },
             (payload) => {
-              console.log('Connection update received:', payload);
+              console.log('Portal connection update:', payload);
               setConnectionScore(payload.new.connection_score);
               
-              // Show achievement toast for score milestones
               if (payload.new.connection_score % 5 === 0) {
                 toast({
-                  title: "Achievement Unlocked! 🎉",
-                  description: `Connection Level ${payload.new.connection_score} Reached!`,
+                  title: "Reality Branch Achievement! 🌟",
+                  description: `Portal Mastery Level ${payload.new.connection_score} Attained!`,
                 });
               }
             }
@@ -81,15 +97,15 @@ const AICivilEngineer = () => {
           .subscribe();
 
         return () => {
-          console.log('Cleaning up thread connection subscriptions');
+          clearInterval(energyInterval);
           supabase.removeChannel(channel);
         };
       } catch (error: any) {
-        console.error('Error initializing thread connections:', error);
+        console.error('Error initializing portal connections:', error);
         toast({
           variant: "destructive",
-          title: "Connection Error",
-          description: "Failed to initialize thread connections"
+          title: "Portal Disruption",
+          description: "Failed to establish quantum thread connections"
         });
       }
     };
@@ -141,7 +157,7 @@ const AICivilEngineer = () => {
   }, [session, toast]);
 
   const handleAgentMessage = async (message: string, agent: string) => {
-    console.log(`AICivilEngineer: Agent ${agent} received message:`, message);
+    console.log(`Portal: Agent ${agent} transmitted message:`, message);
     
     setAgentMessages(prev => [...prev, {
       agent,
@@ -149,15 +165,15 @@ const AICivilEngineer = () => {
       timestamp: new Date().toISOString()
     }]);
 
-    // Update connection status on agent interaction
     if (session?.user?.id) {
       await supabase
         .from('auth_thread_connections')
         .update({
-          connection_status: 'interacting',
+          connection_status: 'quantum_linked',
           metadata: {
             last_agent: agent,
-            last_interaction: new Date().toISOString()
+            last_interaction: new Date().toISOString(),
+            portal_state: 'active'
           }
         })
         .eq('user_id', session.user.id)
@@ -165,38 +181,83 @@ const AICivilEngineer = () => {
     }
 
     toast({
-      title: `Message from ${agent}`,
+      title: `Quantum Echo from ${agent}`,
       description: message,
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-800">
       <Navbar session={session} />
       <div className="container mx-auto px-4 py-8">
-        {connectionScore > 0 && (
-          <div className="mb-4 text-center">
-            <span className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold">
-              Connection Level: {connectionScore} 🌟
-            </span>
-          </div>
-        )}
+        <AnimatePresence>
+          {connectionScore > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-4 text-center"
+            >
+              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 text-white font-semibold">
+                <Crown className="h-5 w-5 text-yellow-300" />
+                <span>Portal Mastery Level: {connectionScore}</span>
+                <div className="ml-2 h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-blue-400 to-purple-400"
+                    style={{ width: `${portalEnergy}%` }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <VersionSelector />
-            <div className="mt-8">
+          <div className="lg:col-span-2 space-y-8">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <VersionSelector />
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
               <AgentsPanel
                 onMessage={handleAgentMessage}
-                onVoiceInput={(transcript) => handleAgentMessage(transcript, 'Voice Assistant')}
+                onVoiceInput={(transcript) => handleAgentMessage(transcript, 'Quantum Voice Interface')}
                 messages={agentMessages}
               />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-              <AgentMetrics />
-              <AgentNetwork />
+            </motion.div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <AgentMetrics />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <AgentNetwork />
+              </motion.div>
             </div>
           </div>
-          <div className="space-y-8">
+          
+          <motion.div 
+            className="space-y-8"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
             <VersionSwitcher />
             <DebugPanel
               isLoading={isLoading}
@@ -210,13 +271,13 @@ const AICivilEngineer = () => {
                 if (message.trim()) {
                   setApiCallHistory(prev => [...prev, {
                     timestamp: new Date().toISOString(),
-                    event: "User message",
+                    event: "Portal Message Transmission",
                     details: { message }
                   }]);
                 }
               }}
             />
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
