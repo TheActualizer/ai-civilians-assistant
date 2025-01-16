@@ -1,61 +1,59 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export interface VisualizationConfig {
-  type: 'network' | 'metrics' | 'flow';
-  mode: 'artistic' | 'technical';
-  theme: 'dark' | 'light';
-  animations: boolean;
+export interface VisualizationData {
+  id: string;
+  type: string;
+  data: Record<string, any>;
+  settings?: Record<string, any>;
 }
 
-class DebugVisualizationService {
-  private config: VisualizationConfig = {
-    type: 'network',
-    mode: 'technical',
-    theme: 'dark',
-    animations: true
-  };
+export class DebugVisualizationService {
+  private static instance: DebugVisualizationService;
 
-  async initialize(config?: Partial<VisualizationConfig>) {
-    console.log('Initializing Debug Visualization Service...');
-    if (config) {
-      this.config = { ...this.config, ...config };
+  private constructor() {}
+
+  static getInstance(): DebugVisualizationService {
+    if (!DebugVisualizationService.instance) {
+      DebugVisualizationService.instance = new DebugVisualizationService();
     }
+    return DebugVisualizationService.instance;
+  }
 
+  async createVisualization(data: Omit<VisualizationData, 'id'>): Promise<VisualizationData> {
+    const { data: newViz, error } = await supabase
+      .from('debug_visualizations')
+      .insert({
+        panel_type: data.type,
+        visualization_data: data.data,
+        settings: data.settings || {}
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: newViz.id,
+      type: newViz.panel_type,
+      data: newViz.visualization_data,
+      settings: newViz.settings
+    };
+  }
+
+  async getVisualization(id: string): Promise<VisualizationData | null> {
     const { data, error } = await supabase
       .from('debug_visualizations')
-      .select('*')
-      .limit(1);
+      .select()
+      .eq('id', id)
+      .single();
 
-    if (error) {
-      console.error('Error loading visualization config:', error);
-    } else if (data?.[0]) {
-      this.config = { ...this.config, ...data[0].settings };
-    }
+    if (error) return null;
 
-    return this;
-  }
-
-  async saveConfig(config: Partial<VisualizationConfig>) {
-    console.log('Saving visualization config:', config);
-    const { error } = await supabase
-      .from('debug_visualizations')
-      .upsert({
-        panel_type: 'main',
-        settings: config,
-        visualization_data: {}
-      });
-
-    if (error) {
-      console.error('Error saving visualization config:', error);
-      throw error;
-    }
-
-    this.config = { ...this.config, ...config };
-  }
-
-  getConfig(): VisualizationConfig {
-    return { ...this.config };
+    return {
+      id: data.id,
+      type: data.panel_type,
+      data: data.visualization_data,
+      settings: data.settings
+    };
   }
 }
-
-export const debugVisualizationService = new DebugVisualizationService();

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { AgentMetricsData, DifyAgent } from '@/types/agent';
+import { AgentMetricsData } from '@/types/agent';
 import { useToast } from "@/hooks/use-toast";
 
 const initialMetrics: AgentMetricsData = {
@@ -45,10 +45,22 @@ export function useAgentData() {
           schema: 'public',
           table: 'agent_metrics'
         },
-        (payload) => {
+        (payload: any) => {
           console.log('New metrics received:', payload);
           setLastUpdate(new Date().toISOString());
           
+          const systemLoad = typeof payload.new.system_load === 'string' 
+            ? JSON.parse(payload.new.system_load)
+            : payload.new.system_load || initialMetrics.systemLoad;
+
+          const networkMetrics = typeof payload.new.network_metrics === 'string'
+            ? JSON.parse(payload.new.network_metrics)
+            : payload.new.network_metrics || initialMetrics.networkMetrics;
+
+          const performanceIndicators = typeof payload.new.performance_indicators === 'string'
+            ? JSON.parse(payload.new.performance_indicators)
+            : payload.new.performance_indicators || initialMetrics.performanceIndicators;
+
           const newMetrics: AgentMetricsData = {
             cpuUsage: payload.new.cpu_usage || 0,
             memoryUsage: payload.new.memory_usage || 0,
@@ -56,9 +68,9 @@ export function useAgentData() {
             activeFlows: payload.new.active_flows || 0,
             successRate: payload.new.success_rate || 0,
             totalInteractions: payload.new.total_interactions || 0,
-            systemLoad: payload.new.system_load || initialMetrics.systemLoad,
-            networkMetrics: payload.new.network_metrics || initialMetrics.networkMetrics,
-            performanceIndicators: payload.new.performance_indicators || initialMetrics.performanceIndicators
+            systemLoad,
+            networkMetrics,
+            performanceIndicators
           };
 
           setMetrics(newMetrics);
@@ -92,6 +104,18 @@ export function useAgentData() {
       }
 
       if (data) {
+        const systemLoad = typeof data.system_load === 'string' 
+          ? JSON.parse(data.system_load)
+          : data.system_load || initialMetrics.systemLoad;
+
+        const networkMetrics = typeof data.network_metrics === 'string'
+          ? JSON.parse(data.network_metrics)
+          : data.network_metrics || initialMetrics.networkMetrics;
+
+        const performanceIndicators = typeof data.performance_indicators === 'string'
+          ? JSON.parse(data.performance_indicators)
+          : data.performance_indicators || initialMetrics.performanceIndicators;
+
         const initialData: AgentMetricsData = {
           cpuUsage: data.cpu_usage || 0,
           memoryUsage: data.memory_usage || 0,
@@ -99,9 +123,9 @@ export function useAgentData() {
           activeFlows: data.active_flows || 0,
           successRate: data.success_rate || 0,
           totalInteractions: data.total_interactions || 0,
-          systemLoad: data.system_load || initialMetrics.systemLoad,
-          networkMetrics: data.network_metrics || initialMetrics.networkMetrics,
-          performanceIndicators: data.performance_indicators || initialMetrics.performanceIndicators
+          systemLoad,
+          networkMetrics,
+          performanceIndicators
         };
         setMetrics(initialData);
       }
