@@ -55,6 +55,10 @@ export interface PropertyRequest {
   lightbox_data?: any;
   lightbox_processed_at?: string;
   lightbox_request_id?: string;
+  lightbox_endpoints: LightBoxEndpoints;
+  lightbox_raw_responses: Record<string, any>;
+  lightbox_parsed_data: Record<string, any>;
+  api_execution_logs: ApiExecutionLog[];
 }
 
 export interface AssessmentData {
@@ -107,4 +111,36 @@ export interface FunctionLog {
   function: string;
   status: 'success' | 'error' | 'info';
   message: string;
+}
+
+export interface LightBoxEndpoint {
+  status: string | null;
+  last_updated: string | null;
+  error: string | null;
+}
+
+export interface LightBoxEndpoints {
+  property_search: LightBoxEndpoint;
+  property_details: LightBoxEndpoint;
+  property_valuation: LightBoxEndpoint;
+  property_tax: LightBoxEndpoint;
+  property_ownership: LightBoxEndpoint;
+  property_liens: LightBoxEndpoint;
+  property_permits: LightBoxEndpoint;
+  property_zoning: LightBoxEndpoint;
+  property_flood: LightBoxEndpoint;
+  property_environmental: LightBoxEndpoint;
+  property_demographics: LightBoxEndpoint;
+  property_schools: LightBoxEndpoint;
+  property_crime: LightBoxEndpoint;
+  property_boundaries: LightBoxEndpoint;
+  property_aerial: LightBoxEndpoint;
+}
+
+export interface ApiExecutionLog {
+  timestamp: string;
+  endpoint: string;
+  status: string;
+  message: string;
+  details?: any;
 }

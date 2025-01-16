@@ -42,6 +42,7 @@ export type Database = {
       property_requests: {
         Row: {
           api_data: Json | null
+          api_execution_logs: Json[] | null
           api_progress: Json | null
           city: string
           coordinates: Json | null
@@ -50,7 +51,10 @@ export type Database = {
           email: string
           id: string
           lightbox_data: Json | null
+          lightbox_endpoints: Json | null
+          lightbox_parsed_data: Json | null
           lightbox_processed_at: string | null
+          lightbox_raw_responses: Json | null
           lightbox_request_id: string | null
           name: string
           processing_steps: Json | null
@@ -64,6 +68,7 @@ export type Database = {
         }
         Insert: {
           api_data?: Json | null
+          api_execution_logs?: Json[] | null
           api_progress?: Json | null
           city: string
           coordinates?: Json | null
@@ -72,7 +77,10 @@ export type Database = {
           email: string
           id?: string
           lightbox_data?: Json | null
+          lightbox_endpoints?: Json | null
+          lightbox_parsed_data?: Json | null
           lightbox_processed_at?: string | null
+          lightbox_raw_responses?: Json | null
           lightbox_request_id?: string | null
           name: string
           processing_steps?: Json | null
@@ -86,6 +94,7 @@ export type Database = {
         }
         Update: {
           api_data?: Json | null
+          api_execution_logs?: Json[] | null
           api_progress?: Json | null
           city?: string
           coordinates?: Json | null
@@ -94,7 +103,10 @@ export type Database = {
           email?: string
           id?: string
           lightbox_data?: Json | null
+          lightbox_endpoints?: Json | null
+          lightbox_parsed_data?: Json | null
           lightbox_processed_at?: string | null
+          lightbox_raw_responses?: Json | null
           lightbox_request_id?: string | null
           name?: string
           processing_steps?: Json | null
@@ -211,7 +223,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      log_api_execution: {
+        Args: {
+          request_id: string
+          endpoint: string
+          status: string
+          message: string
+          details?: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -9,7 +9,6 @@ interface AddressRequest {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -20,28 +19,42 @@ Deno.serve(async (req) => {
       console.error('LightBox API key not configured')
       return new Response(
         JSON.stringify({ error: 'LightBox API key not configured' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
-
-    console.log('Starting LightBox API request processing...')
 
     const { address, city, state, zip } = await req.json() as AddressRequest
-    console.log('Received address data:', { address, city, state, zip })
+    console.log('Processing address:', { address, city, state, zip })
 
-    if (!address || !city || !state || !zip) {
-      console.error('Missing required address components')
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Get the latest property request
+    const { data: propertyRequest, error: fetchError } = await supabaseClient
+      .from('property_requests')
+      .select('id')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (fetchError) {
+      console.error('Failed to fetch property request:', fetchError)
       return new Response(
-        JSON.stringify({ error: 'Missing required address components' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        JSON.stringify({ error: 'Failed to fetch property request' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
+
+    // Log the start of API call
+    await supabaseClient.rpc('log_api_execution', {
+      request_id: propertyRequest.id,
+      endpoint: 'property_search',
+      status: 'started',
+      message: 'Initiating LightBox property search API call',
+      details: { address, city, state, zip }
+    })
 
     const lightboxUrl = 'https://api-prod.lightboxre.com/api/v2/property/search'
     const requestPayload = {
@@ -53,7 +66,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log('Sending request to LightBox API:', JSON.stringify(requestPayload))
+    console.log('Calling LightBox API with payload:', JSON.stringify(requestPayload))
 
     const lightboxResponse = await fetch(lightboxUrl, {
       method: 'POST',
@@ -72,22 +85,29 @@ Deno.serve(async (req) => {
         statusText: lightboxResponse.statusText,
         error: errorText
       })
-      
+
+      // Log the API error
+      await supabaseClient.rpc('log_api_execution', {
+        request_id: propertyRequest.id,
+        endpoint: 'property_search',
+        status: 'error',
+        message: `API error: ${lightboxResponse.status} ${lightboxResponse.statusText}`,
+        details: { error: errorText }
+      })
+
       return new Response(
         JSON.stringify({ 
           error: 'LightBox API error',
           details: `${lightboxResponse.status}: ${errorText}`
         }),
-        { 
-          status: lightboxResponse.status,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: lightboxResponse.status }
       )
     }
 
     const responseData = await lightboxResponse.json()
-    console.log('Successfully received LightBox API response')
+    console.log('LightBox API response received:', JSON.stringify(responseData))
 
+    // Format the response
     const formattedResponse = {
       parcelId: responseData.parcelId || null,
       address: {
@@ -112,37 +132,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log('Storing response in Supabase...')
-
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const { data: propertyRequest, error: propertyError } = await supabaseClient
-      .from('property_requests')
-      .select('id')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (propertyError) {
-      console.error('Failed to fetch property request:', propertyError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch property request' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
+    // Update property request with results
     const { error: updateError } = await supabaseClient
       .from('property_requests')
       .update({
         lightbox_data: formattedResponse,
         lightbox_processed_at: new Date().toISOString(),
-        status: 'processed'
+        status: 'processed',
+        lightbox_raw_responses: {
+          property_search: responseData
+        },
+        lightbox_endpoints: {
+          property_search: {
+            status: 'completed',
+            last_updated: new Date().toISOString(),
+            error: null
+          }
+        }
       })
       .eq('id', propertyRequest.id)
 
@@ -150,14 +156,18 @@ Deno.serve(async (req) => {
       console.error('Failed to update property request:', updateError)
       return new Response(
         JSON.stringify({ error: 'Failed to update property request' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
 
-    console.log('Successfully processed and stored LightBox data')
+    // Log successful API call
+    await supabaseClient.rpc('log_api_execution', {
+      request_id: propertyRequest.id,
+      endpoint: 'property_search',
+      status: 'completed',
+      message: 'Successfully retrieved property data',
+      details: formattedResponse
+    })
 
     return new Response(
       JSON.stringify(formattedResponse),
@@ -171,10 +181,7 @@ Deno.serve(async (req) => {
         error: 'Internal server error',
         details: error.message 
       }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
 })
