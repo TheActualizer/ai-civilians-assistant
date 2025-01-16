@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
-import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import Navbar from "../Navbar";
 import { NavigationControls } from "../navigation/NavigationControls";
 import { DebugPanel } from "../DebugPanel/DebugPanel";
@@ -69,15 +68,19 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      {/* Single Navbar instance */}
       <Navbar session={session} />
       
       <div className="flex min-h-screen">
+        {/* Side Navigation */}
         <NavigationControls />
         
+        {/* Main Content */}
         <main className="flex-1 px-4 py-20">
           {children}
         </main>
 
+        {/* Debug Panel */}
         <div className="fixed right-0 top-20 bottom-0 w-96 bg-gray-900/50 border-l border-gray-700">
           <div className="h-full overflow-y-auto">
             <DebugPanel 
