@@ -5,6 +5,7 @@ export interface SystemLoad {
 }
 
 export interface AgentMetricsData {
+  id: string;
   timestamp: string;
   cpu_usage: number;
   memory_usage: number;
@@ -12,17 +13,15 @@ export interface AgentMetricsData {
   active_flows: number;
   success_rate: number;
   total_interactions: number;
-  system_load: {
-    cpu_threads: number[];
-    io_operations: number[];
-    memory_allocation: number[];
-  };
-  networkMetrics: {
+  metrics_data: Record<string, any>;
+  created_at: string;
+  system_load: SystemLoad;
+  network_metrics: {
     bandwidth_usage: number[];
     connection_pool: number[];
     latency_history: number[];
   };
-  performanceIndicators: {
+  performance_indicators: {
     error_rate: number[];
     throughput: number[];
     response_times: number[];
@@ -46,9 +45,9 @@ export interface ThreadAnalysis {
   analysis_data: Record<string, any>;
   system_load: SystemLoad;
   performance_metrics: {
-    response_time: number[];
-    success_rate: number[];
     error_rate: number[];
+    success_rate: number[];
+    response_time: number[];
   };
   network_stats: {
     latency: number[];
@@ -100,6 +99,12 @@ export interface SharedComputerState {
   };
   active_users: string[];
   system_metrics: SystemLoad;
+  browser_state?: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
+  };
 }
 
 export interface PerformanceMetrics {
