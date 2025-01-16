@@ -81,12 +81,17 @@ export interface LightBoxResponse {
     city: string;
     state: string;
     zip: string;
+    county?: string;
   };
   propertyDetails?: {
     landUse?: string;
     lotSize?: string;
     zoning?: string;
     yearBuilt?: string;
+  };
+  coordinates?: {
+    lat: number | null;
+    lng: number | null;
   };
   rawResponse?: any;
   timestamp?: string;

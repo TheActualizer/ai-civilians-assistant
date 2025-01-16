@@ -69,7 +69,12 @@ export function AddressTab({ lightboxData, isLoading, error }: AddressTabProps) 
   const detailedFields = [
     { label: "County", value: lightboxData.address.county },
     { label: "Country", value: "United States" },
-    { label: "Coordinates", value: `${lightboxData.coordinates?.lat}, ${lightboxData.coordinates?.lng}` },
+    { 
+      label: "Coordinates", 
+      value: lightboxData.coordinates 
+        ? `${lightboxData.coordinates.lat}, ${lightboxData.coordinates.lng}`
+        : undefined 
+    },
   ];
 
   return (
