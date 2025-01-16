@@ -1,304 +1,294 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Brain, Zap, Crown } from 'lucide-react';
+import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
-import { VersionSwitcher } from "@/components/VersionSwitcher/VersionSwitcher";
-import { VersionSelector } from "@/components/VersionManagement/VersionSelector";
-import { AgentsPanel } from "@/components/Agents/AgentsPanel";
-import { AgentMetrics } from "@/components/Agents/AgentMetrics";
-import { AgentNetwork } from "@/components/Agents/AgentNetwork";
-import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
-import { ScreenshotButton } from "@/components/ScreenshotButton/ScreenshotButton";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
-import type { AgentMessage } from '@/types/agent';
-
-// ... keep existing code (imports and type definitions)
+import { useToast } from "@/hooks/use-toast";
+import { LightBoxResponse } from "@/components/GetStarted/types";
+import { PropertyTab } from "@/components/ParcelDetails/PropertyTab";
+import { AddressTab } from "@/components/ParcelDetails/AddressTab";
+import { AdditionalTab } from "@/components/ParcelDetails/AdditionalTab";
+import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
+import { RawTab } from "@/components/ParcelDetails/RawTab";
+import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
+import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AICivilEngineer = () => {
   const session = useSession();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [lightboxData, setLightboxData] = useState<LightBoxResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
-  const [connectionScore, setConnectionScore] = useState(0);
-  const [portalEnergy, setPortalEnergy] = useState(0);
   const [apiCallHistory, setApiCallHistory] = useState<Array<{
     timestamp: string;
     event: string;
     details?: any;
   }>>([]);
-  const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
+  const [apiError, setApiError] = useState<{
+    message: string;
+    details?: any;
+    timestamp: string;
+  } | null>(null);
 
-  useEffect(() => {
-    console.log('AICivilEngineer: Initializing portal connections...');
+  const addToHistory = (event: string, details?: any) => {
+    console.log(`API Event: ${event}`, details);
+    setApiCallHistory(prev => [...prev, {
+      timestamp: new Date().toISOString(),
+      event,
+      details
+    }]);
+  };
 
-    const initializeThreadConnections = async () => {
-      if (!session?.user?.id) return;
+  const handleRetry = async () => {
+    setIsLoading(true);
+    setError(null);
+    addToHistory("Retrying API call");
+    await fetchLatestRequest();
+  };
 
-      try {
-        const { data: connectionData, error: connectionError } = await supabase
-          .from('auth_thread_connections')
-          .insert({
-            user_id: session.user.id,
-            connection_type: 'ai_civil_engineer',
-            connection_status: 'active',
-            metadata: {
-              entry_point: 'portal_nexus',
-              session_start: new Date().toISOString(),
-              portal_state: 'initializing'
-            }
-          })
-          .select()
-          .single();
+  const handleMessageSubmit = (message: string) => {
+    if (message.trim()) {
+      addToHistory("User message", { message });
+      toast({
+        title: "Message sent",
+        description: "Your message has been logged for debugging purposes",
+      });
+    }
+  };
 
-        if (connectionError) throw connectionError;
+  const fetchLatestRequest = async () => {
+    addToHistory("Starting to fetch latest property request");
+    console.log("Fetching latest property request...");
+    
+    try {
+      const { data: propertyRequest, error: fetchError } = await supabase
+        .from('property_requests')
+        .select('*, lightbox_data, status_details')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-        console.log('Portal connection initialized:', connectionData);
-        setConnectionScore(connectionData.connection_score || 0);
-        
-        // Start portal energy accumulation
-        const energyInterval = setInterval(() => {
-          setPortalEnergy(prev => {
-            const newEnergy = Math.min(prev + 0.5, 100);
-            if (newEnergy === 100) {
-              toast({
-                title: "Portal Energy Maximized! ⚡",
-                description: "Reality manipulation capabilities at peak performance",
-              });
-            }
-            return newEnergy;
-          });
-        }, 1000);
-
-        // Subscribe to connection updates
-        const channel = supabase
-          .channel('thread-connections')
-          .on(
-            'postgres_changes',
-            {
-              event: 'UPDATE',
-              schema: 'public',
-              table: 'auth_thread_connections',
-              filter: `user_id=eq.${session.user.id}`
-            },
-            (payload) => {
-              console.log('Portal connection update:', payload);
-              setConnectionScore(payload.new.connection_score);
-              
-              if (payload.new.connection_score % 5 === 0) {
-                toast({
-                  title: "Reality Branch Achievement! 🌟",
-                  description: `Portal Mastery Level ${payload.new.connection_score} Attained!`,
-                });
-              }
-            }
-          )
-          .subscribe();
-
-        return () => {
-          clearInterval(energyInterval);
-          supabase.removeChannel(channel);
-        };
-      } catch (error: any) {
-        console.error('Error initializing portal connections:', error);
-        toast({
-          variant: "destructive",
-          title: "Portal Disruption",
-          description: "Failed to establish quantum thread connections"
-        });
-      }
-    };
-
-    const fetchInitialData = async () => {
-      try {
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        const { data, error } = await supabase
-          .from('property_assessments')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (data) {
-          setRequestId(data.id);
-          // Update connection metadata with property context
-          if (session?.user?.id) {
-            await supabase
-              .from('auth_thread_connections')
-              .update({
-                metadata: {
-                  property_context: data.id,
-                  last_activity: new Date().toISOString()
-                }
-              })
-              .eq('user_id', session.user.id)
-              .eq('connection_type', 'ai_civil_engineer');
-          }
-        }
-      } catch (error: any) {
-        console.error('Error in fetchInitialData:', error);
-        setError(error.message);
+      if (fetchError) {
+        console.error('Error fetching request:', fetchError);
+        addToHistory("Error fetching property request", fetchError);
+        setError('Failed to fetch property request');
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load initial data"
+          description: "Failed to fetch property request data"
         });
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
 
-    initializeThreadConnections();
-    fetchInitialData();
-  }, [session, toast]);
+      if (!propertyRequest) {
+        console.log('No property requests found');
+        addToHistory("No property requests found");
+        setError('No property requests found');
+        toast({
+          variant: "destructive",
+          title: "No Data",
+          description: "No property requests found. Please create a new request."
+        });
+        return;
+      }
 
-  const handleAgentMessage = async (message: string, agent: string) => {
-    console.log(`Portal: Agent ${agent} transmitted message:`, message);
-    
-    setAgentMessages(prev => [...prev, {
-      agent,
-      message,
-      timestamp: new Date().toISOString()
-    }]);
+      console.log('Latest request found:', propertyRequest);
+      addToHistory("Latest property request found", {
+        id: propertyRequest.id,
+        address: `${propertyRequest.street_address}, ${propertyRequest.city}, ${propertyRequest.state} ${propertyRequest.zip_code}`
+      });
+      
+      setRequestId(propertyRequest.id);
+      
+      // Increment view count
+      const { error: updateError } = await supabase
+        .from('property_requests')
+        .update({ view_count: (propertyRequest.view_count || 0) + 1 })
+        .eq('id', propertyRequest.id);
 
-    if (session?.user?.id) {
-      await supabase
-        .from('auth_thread_connections')
-        .update({
-          connection_status: 'quantum_linked',
-          metadata: {
-            last_agent: agent,
-            last_interaction: new Date().toISOString(),
-            portal_state: 'active'
+      if (updateError) {
+        console.error('Error updating view count:', updateError);
+        addToHistory("Error updating view count", updateError);
+      }
+      
+      if (propertyRequest.lightbox_data) {
+        console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
+        addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
+        
+        const typedLightboxData = propertyRequest.lightbox_data as unknown as LightBoxResponse;
+        setLightboxData(typedLightboxData);
+      } else {
+        try {
+          const address = propertyRequest.street_address;
+          const city = propertyRequest.city;
+          const state = propertyRequest.state;
+          const zip = propertyRequest.zip_code;
+
+          console.log('Calling LightBox API with address:', { address, city, state, zip });
+          addToHistory("Initiating LightBox API call", { address, city, state, zip });
+          
+          const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
+            body: { address, city, state, zip }
+          });
+
+          if (apiError) {
+            console.error('LightBox API call error:', apiError);
+            setApiError({
+              message: apiError.message || 'Error calling LightBox API',
+              details: apiError,
+              timestamp: new Date().toISOString()
+            });
+            addToHistory("LightBox API call failed", apiError);
+          } else {
+            console.log('LightBox API response:', data);
+            addToHistory("LightBox API call successful", data);
+            
+            const typedData = data as unknown as LightBoxResponse;
+            setLightboxData(typedData);
+            
+            toast({
+              title: "Success",
+              description: "LightBox data fetched successfully"
+            });
           }
-        })
-        .eq('user_id', session.user.id)
-        .eq('connection_type', 'ai_civil_engineer');
+        } catch (apiError: any) {
+          console.error('Error calling LightBox API:', apiError);
+          setApiError({
+            message: apiError.message || 'Error calling LightBox API',
+            details: apiError,
+            timestamp: new Date().toISOString()
+          });
+          addToHistory("Error in LightBox API call", apiError);
+        }
+      }
+    } catch (error: any) {
+      console.error('Unexpected error:', error);
+      addToHistory("Unexpected error occurred", error);
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
-
-    toast({
-      title: `Quantum Echo from ${agent}`,
-      description: message,
-    });
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-800">
-      <Navbar session={session} />
-      <div className="container mx-auto px-4 py-8">
-        <AnimatePresence>
-          {connectionScore > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-4 text-center"
-            >
-              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 text-white font-semibold">
-                <Crown className="h-5 w-5 text-yellow-300" />
-                <span>Portal Mastery Level: {connectionScore}</span>
-                <div className="ml-2 h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-blue-400 to-purple-400"
-                    style={{ width: `${portalEnergy}%` }}
-                  />
-                </div>
-                <ScreenshotButton />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <VersionSelector />
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <ClaudeAnalysis 
-                pageRoute={window.location.pathname}
-                agentState={{
-                  agents: agentMessages,
-                  actions: apiCallHistory
-                }}
-              />
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <AgentsPanel
-                onMessage={handleAgentMessage}
-                onVoiceInput={(transcript) => handleAgentMessage(transcript, 'Quantum Voice Interface')}
-                messages={agentMessages}
-              />
-            </motion.div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-              >
-                <AgentMetrics />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-              >
-                <AgentNetwork />
-              </motion.div>
-            </div>
+  useEffect(() => {
+    fetchLatestRequest();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+        <Navbar session={session} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full" />
           </div>
-          
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-          >
-            <VersionSwitcher />
-            <DebugPanel
-              isLoading={isLoading}
-              error={error}
-              requestId={requestId}
-              lightboxData={null}
-              apiError={null}
-              apiCallHistory={apiCallHistory}
-              onRetry={() => setIsLoading(true)}
-              onMessageSubmit={(message) => {
-                if (message.trim()) {
-                  setApiCallHistory(prev => [...prev, {
-                    timestamp: new Date().toISOString(),
-                    event: "Portal Message Transmission",
-                    details: { message }
-                  }]);
-                }
-              }}
-            />
-          </motion.div>
         </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+        <Navbar session={session} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h3 className="text-red-800 font-medium">Error</h3>
+            <p className="text-red-600 mt-1">{error}</p>
+            <Button
+              onClick={handleRetry}
+              variant="outline"
+              className="mt-4"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <Navbar session={session} />
+      <SidebarProvider>
+        <div className="flex w-full min-h-[calc(100vh-4rem)]">
+          <DebugPanel
+            isLoading={isLoading}
+            error={error}
+            requestId={requestId}
+            lightboxData={lightboxData}
+            apiCallHistory={apiCallHistory}
+            apiError={apiError}
+            onRetry={handleRetry}
+            onMessageSubmit={handleMessageSubmit}
+          />
+          
+          <div className="flex-1 pt-16 px-6 pb-8">
+            <div className="mb-8">
+              <ProjectOverview />
+            </div>
+
+            <Tabs defaultValue="property" className="w-full">
+              <TabsList className="grid w-full grid-cols-6 bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-1">
+                <TabsTrigger value="property">Property</TabsTrigger>
+                <TabsTrigger value="address">Address</TabsTrigger>
+                <TabsTrigger value="additional">Additional</TabsTrigger>
+                <TabsTrigger value="parsed">Parsed</TabsTrigger>
+                <TabsTrigger value="raw">Raw</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+              </TabsList>
+
+              <div className="mt-6 space-y-6">
+                <TabsContent value="property">
+                  <PropertyTab lightboxData={lightboxData} />
+                </TabsContent>
+
+                <TabsContent value="address">
+                  <AddressTab lightboxData={lightboxData} />
+                </TabsContent>
+
+                <TabsContent value="additional">
+                  <AdditionalTab lightboxData={lightboxData} />
+                </TabsContent>
+
+                <TabsContent value="parsed">
+                  <ParsedTab lightboxData={lightboxData} />
+                </TabsContent>
+
+                <TabsContent value="raw">
+                  <RawTab lightboxData={lightboxData} />
+                </TabsContent>
+
+                <TabsContent value="documents">
+                  <DocumentUpload />
+                </TabsContent>
+
+                <div className="sticky bottom-8 flex justify-end mt-8">
+                  <Button
+                    onClick={() => navigate('/assessment')}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20"
+                    size="lg"
+                  >
+                    Proceed to Assessment Data
+                    <ArrowRight className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            </Tabs>
+          </div>
+        </div>
+      </SidebarProvider>
     </div>
   );
 };
