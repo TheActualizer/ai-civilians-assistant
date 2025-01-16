@@ -15,6 +15,7 @@ import { AddressTab } from "@/components/ParcelDetails/AddressTab";
 import { AdditionalTab } from "@/components/ParcelDetails/AdditionalTab";
 import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
 import { RawTab } from "@/components/ParcelDetails/RawTab";
+import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -175,6 +176,10 @@ const ParcelDetails = () => {
           />
           
           <div className="flex-1 pt-16 px-6 pb-8">
+            <div className="mb-8">
+              <ProjectOverview />
+            </div>
+
             <Tabs defaultValue="property" className="w-full">
               <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-1">
                 <TabsTrigger value="property">Property</TabsTrigger>
