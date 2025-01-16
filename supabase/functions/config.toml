@@ -1,0 +1,4 @@
+project_id = "aocjoukjdsoynvbuzvas"
+
+[functions.crewai-architect]
+verify_jwt = true
