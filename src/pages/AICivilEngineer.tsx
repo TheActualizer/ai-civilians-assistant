@@ -5,24 +5,33 @@ import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LightBoxResponse } from "@/components/GetStarted/types";
+import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
+import { AgentsPanel } from "@/components/Agents/AgentsPanel";
 import { PropertyTab } from "@/components/ParcelDetails/PropertyTab";
 import { AddressTab } from "@/components/ParcelDetails/AddressTab";
 import { AdditionalTab } from "@/components/ParcelDetails/AdditionalTab";
 import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
 import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AgentsPanel } from "@/components/Agents/AgentsPanel";
-import { useDebug } from "@/lib/debug-panel/context/DebugContext";
 
 const AICivilEngineer = () => {
   const session = useSession();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [messages, setMessages] = useState<Array<{
+    agent: string;
+    message: string;
+    timestamp: string;
+  }>>([]);
+  const [userInput, setUserInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const [lightboxData, setLightboxData] = useState<LightBoxResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,174 +54,73 @@ const AICivilEngineer = () => {
     timestamp: string;
   }>>([]);
 
-  const debug = useDebug();
-
   const addToHistory = (event: string, details?: any) => {
     console.log(`API Event: ${event}`, details);
-    debug.addToHistory(event, details);
   };
 
   const handleAgentMessage = async (message: string, agent: string) => {
     console.log(`Agent ${agent} received message:`, message);
     
-    // Add message to history
-    setAgentMessages(prev => [...prev, {
+    setMessages(prev => [...prev, {
       agent,
       message,
       timestamp: new Date().toISOString()
     }]);
 
-    // Show toast notification
-    toast({
-      title: `Message from ${agent}`,
-      description: message,
-    });
+    // Store message in chat history
+    try {
+      const { error } = await supabase
+        .from('chat_history')
+        .insert([{
+          message: userInput,
+          response: message,
+          context: { agent }
+        }]);
 
-    // Log the interaction
-    addToHistory(`Agent interaction: ${agent}`, { message });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error storing chat message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to store chat message"
+      });
+    }
   };
 
   const handleVoiceInput = async (transcript: string) => {
     console.log('Voice input received:', transcript);
-    addToHistory('Voice input received', { transcript });
+    setUserInput(transcript);
+    await handleSubmit(transcript);
+  };
+
+  const handleSubmit = async (input: string = userInput) => {
+    if (!input.trim()) return;
     
-    // Process voice input
-    await handleAgentMessage(transcript, 'Civil Engineer');
-  };
+    setIsProcessing(true);
+    setMessages(prev => [...prev, {
+      agent: 'user',
+      message: input,
+      timestamp: new Date().toISOString()
+    }]);
 
-  const handleRetry = async () => {
-    setIsLoading(true);
-    setError(null);
-    addToHistory("Retrying API call");
-    await fetchLatestRequest();
-  };
-
-  const handleMessageSubmit = (message: string) => {
-    if (message.trim()) {
-      addToHistory("User message", { message });
-      toast({
-        title: "Message sent",
-        description: "Your message has been logged for debugging purposes",
-      });
-    }
-  };
-
-  const fetchLatestRequest = async () => {
-    addToHistory("Starting to fetch latest property request");
-    console.log("Fetching latest property request...");
-    
     try {
-      const { data: propertyRequest, error: fetchError } = await supabase
-        .from('property_requests')
-        .select('*, lightbox_data, status_details')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error('Error fetching request:', fetchError);
-        addToHistory("Error fetching property request", fetchError);
-        setError('Failed to fetch property request');
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch property request data"
-        });
-        return;
-      }
-
-      if (!propertyRequest) {
-        console.log('No property requests found');
-        addToHistory("No property requests found");
-        setError('No property requests found');
-        toast({
-          variant: "destructive",
-          title: "No Data",
-          description: "No property requests found. Please create a new request."
-        });
-        return;
-      }
-
-      console.log('Latest request found:', propertyRequest);
-      addToHistory("Latest property request found", {
-        id: propertyRequest.id,
-        address: `${propertyRequest.street_address}, ${propertyRequest.city}, ${propertyRequest.state} ${propertyRequest.zip_code}`
+      // Clear input after sending
+      setUserInput('');
+    } catch (error) {
+      console.error('Error processing message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process message"
       });
-      
-      setRequestId(propertyRequest.id);
-      
-      // Increment view count
-      const { error: updateError } = await supabase
-        .from('property_requests')
-        .update({ view_count: (propertyRequest.view_count || 0) + 1 })
-        .eq('id', propertyRequest.id);
-
-      if (updateError) {
-        console.error('Error updating view count:', updateError);
-        addToHistory("Error updating view count", updateError);
-      }
-      
-      if (propertyRequest.lightbox_data) {
-        console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
-        addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
-        
-        const typedLightboxData = propertyRequest.lightbox_data as unknown as LightBoxResponse;
-        setLightboxData(typedLightboxData);
-      } else {
-        try {
-          const address = propertyRequest.street_address;
-          const city = propertyRequest.city;
-          const state = propertyRequest.state;
-          const zip = propertyRequest.zip_code;
-
-          console.log('Calling LightBox API with address:', { address, city, state, zip });
-          addToHistory("Initiating LightBox API call", { address, city, state, zip });
-          
-          const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
-            body: { address, city, state, zip }
-          });
-
-          if (apiError) {
-            console.error('LightBox API call error:', apiError);
-            setApiError({
-              message: apiError.message || 'Error calling LightBox API',
-              details: apiError,
-              timestamp: new Date().toISOString()
-            });
-            addToHistory("LightBox API call failed", apiError);
-          } else {
-            console.log('LightBox API response:', data);
-            addToHistory("LightBox API call successful", data);
-            
-            const typedData = data as unknown as LightBoxResponse;
-            setLightboxData(typedData);
-            
-            toast({
-              title: "Success",
-              description: "LightBox data fetched successfully"
-            });
-          }
-        } catch (apiError: any) {
-          console.error('Error calling LightBox API:', apiError);
-          setApiError({
-            message: apiError.message || 'Error calling LightBox API',
-            details: apiError,
-            timestamp: new Date().toISOString()
-          });
-          addToHistory("Error in LightBox API call", apiError);
-        }
-      }
-    } catch (error: any) {
-      console.error('Unexpected error:', error);
-      addToHistory("Unexpected error occurred", error);
-      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   useEffect(() => {
-    fetchLatestRequest();
+    // Fetch latest property request logic here
   }, []);
 
   if (isLoading) {
@@ -258,20 +166,11 @@ const AICivilEngineer = () => {
         <div className="flex w-full min-h-[calc(100vh-4rem)]">
           <div className="flex-1 pt-16 px-6 pb-8">
             <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <AgentsPanel 
-                  onMessage={handleAgentMessage}
-                  onVoiceInput={handleVoiceInput}
-                  messages={agentMessages}
-                />
-                <Button
-                  onClick={() => navigate('/agent-monitoring')}
-                  className="ml-4 gap-2 bg-primary hover:bg-primary/90"
-                >
-                  Advanced Monitoring
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <AgentsPanel 
+                onMessage={handleAgentMessage}
+                onVoiceInput={handleVoiceInput}
+                messages={agentMessages}
+              />
             </div>
 
             <Tabs defaultValue="property" className="w-full">
@@ -321,9 +220,65 @@ const AICivilEngineer = () => {
                 </div>
               </div>
             </Tabs>
+
+            {/* Chat Interface */}
+            <Card className="mt-8 bg-gray-900/50 border-gray-700">
+              <ScrollArea className="h-[300px] p-4">
+                <div className="space-y-4">
+                  {messages.map((msg, index) => (
+                    <div
+                      key={index}
+                      className={`flex ${
+                        msg.agent === 'user' ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-3 rounded-lg ${
+                          msg.agent === 'user'
+                            ? 'bg-primary/10 text-primary-foreground'
+                            : 'bg-gray-800 text-gray-100'
+                        }`}
+                      >
+                        <div className="text-sm font-medium mb-1">
+                          {msg.agent === 'user' ? 'You' : msg.agent}
+                        </div>
+                        <div className="text-sm">{msg.message}</div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <div className="p-4 border-t border-gray-700">
+                <div className="flex gap-2">
+                  <Textarea
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    placeholder="Type your message..."
+                    className="min-h-[60px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={() => handleSubmit()}
+                    disabled={isProcessing}
+                    className="px-8"
+                  >
+                    Send
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </SidebarProvider>
+      <DebugPanel />
     </div>
   );
 };
