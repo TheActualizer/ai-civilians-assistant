@@ -3,7 +3,7 @@ import {
   Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, 
   Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, 
   ArrowRight, ArrowDown, Rocket, CircuitBoard, Dna, Infinity,
-  Upload, Paperclip, GripVertical
+  Upload, Paperclip, GripVertical, Move
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Toggle } from "@/components/ui/toggle";
-import type { DebugPanelProps, PanelPosition } from "./types";
+import type { DebugPanelProps, PanelPosition, DragState } from "./types";
 
 const MIN_WIDTH = 400;
 const MAX_WIDTH = 800;
 const DEFAULT_WIDTH = 600;
+const THROW_VELOCITY_THRESHOLD = 1.5;
 
 export function DebugPanel({
   isLoading,
@@ -36,22 +37,140 @@ export function DebugPanel({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
-  const [expandedFeatures, setExpandedFeatures] = useState(false);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
-  
-  const resizeRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const startWidth = useRef(0);
+  const [dragState, setDragState] = useState<DragState>({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    velocity: { x: 0, y: 0 }
+  });
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('File selected:', file.name);
-      // Here you can handle the file upload
-      // For now we'll just log it
-    }
+  const panelRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number>();
+  const lastTimeRef = useRef<number>(0);
+  const lastPositionRef = useRef({ x: 0, y: 0 });
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    if (isFullscreen) return;
+    
+    const rect = panelRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    setPosition("floating");
+    setDragState(prev => ({
+      ...prev,
+      isDragging: true,
+      startX: e.clientX - rect.left,
+      startY: e.clientY - rect.top,
+      currentX: rect.left,
+      currentY: rect.top
+    }));
+
+    lastPositionRef.current = { x: rect.left, y: rect.top };
+    lastTimeRef.current = performance.now();
   };
+
+  const handleDrag = useCallback((e: MouseEvent) => {
+    if (!dragState.isDragging) return;
+
+    const currentTime = performance.now();
+    const deltaTime = currentTime - lastTimeRef.current;
+    
+    const newX = e.clientX - dragState.startX;
+    const newY = e.clientY - dragState.startY;
+    
+    // Calculate velocity (pixels per millisecond)
+    const velocityX = (newX - lastPositionRef.current.x) / deltaTime;
+    const velocityY = (newY - lastPositionRef.current.y) / deltaTime;
+
+    setDragState(prev => ({
+      ...prev,
+      currentX: newX,
+      currentY: newY,
+      velocity: { x: velocityX, y: velocityY }
+    }));
+
+    lastPositionRef.current = { x: newX, y: newY };
+    lastTimeRef.current = currentTime;
+  }, [dragState]);
+
+  const handleDragEnd = useCallback(() => {
+    if (!dragState.isDragging) return;
+
+    const { velocity } = dragState;
+    const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+
+    if (speed > THROW_VELOCITY_THRESHOLD) {
+      // Animate the throw
+      let currentX = dragState.currentX;
+      let currentY = dragState.currentY;
+      let velocityX = velocity.x * 100; // Scale up for more visible effect
+      let velocityY = velocity.y * 100;
+      
+      const animate = () => {
+        velocityX *= 0.95; // Decay factor
+        velocityY *= 0.95;
+        
+        currentX += velocityX;
+        currentY += velocityY;
+
+        // Bounce off viewport boundaries
+        const rect = panelRef.current?.getBoundingClientRect();
+        if (rect) {
+          if (currentX < 0) {
+            currentX = 0;
+            velocityX = -velocityX * 0.5;
+          } else if (currentX + rect.width > window.innerWidth) {
+            currentX = window.innerWidth - rect.width;
+            velocityX = -velocityX * 0.5;
+          }
+
+          if (currentY < 0) {
+            currentY = 0;
+            velocityY = -velocityY * 0.5;
+          } else if (currentY + rect.height > window.innerHeight) {
+            currentY = window.innerHeight - rect.height;
+            velocityY = -velocityY * 0.5;
+          }
+        }
+
+        setDragState(prev => ({
+          ...prev,
+          currentX,
+          currentY,
+          velocity: { x: velocityX, y: velocityY }
+        }));
+
+        if (Math.abs(velocityX) > 0.01 || Math.abs(velocityY) > 0.01) {
+          animationFrameRef.current = requestAnimationFrame(animate);
+        }
+      };
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    }
+
+    setDragState(prev => ({
+      ...prev,
+      isDragging: false
+    }));
+  }, [dragState]);
+
+  useEffect(() => {
+    if (dragState.isDragging) {
+      document.addEventListener('mousemove', handleDrag);
+      document.addEventListener('mouseup', handleDragEnd);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleDrag);
+      document.removeEventListener('mouseup', handleDragEnd);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [dragState.isDragging, handleDrag, handleDragEnd]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,86 +188,27 @@ export function DebugPanel({
     );
   };
 
-  const startResize = (e: React.MouseEvent) => {
-    isDragging.current = true;
-    startX.current = e.clientX;
-    startWidth.current = width;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', stopResize);
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging.current) return;
-    
-    const delta = position === 'right' 
-      ? startX.current - e.clientX 
-      : e.clientX - startX.current;
-    
-    const newWidth = Math.min(
-      Math.max(startWidth.current + delta, MIN_WIDTH),
-      MAX_WIDTH
-    );
-    
-    setWidth(newWidth);
-  }, [position]);
-
-  const stopResize = useCallback(() => {
-    isDragging.current = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', stopResize);
-  }, [handleMouseMove]);
-
-  useEffect(() => {
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', stopResize);
-    };
-  }, [handleMouseMove, stopResize]);
-
   const getPositionClasses = () => {
     const baseClasses = "fixed transition-all duration-300 ease-in-out bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50";
     
     if (isFullscreen) return `${baseClasses} inset-0 w-full h-full`;
-    
     if (isMinimized) return `${baseClasses} ${position === 'right' ? 'right-0' : position === 'left' ? 'left-0' : 'bottom-0'} h-12`;
     
+    if (position === "floating") {
+      return `${baseClasses} ${isCollapsed ? 'w-16' : `w-[${width}px]`} h-[600px] cursor-move`;
+    }
+
     switch (position) {
       case "left":
         return `${baseClasses} left-0 h-screen border-r ${isCollapsed ? 'w-16' : `w-[${width}px]`}`;
       case "right":
-        return `${baseClasses} right-0 h-screen border-l ${isCollapsed ? 'w-16' : `w-[${width}px]`}`;
+        return `${baseClasses} right-0 h-screen border-r ${isCollapsed ? 'w-16' : `w-[${width}px]`}`;
       case "bottom":
         return `${baseClasses} bottom-0 w-full h-[300px] border-t`;
       default:
         return `${baseClasses} right-0`;
     }
   };
-
-  const cyclePosition = () => {
-    const positions: PanelPosition[] = ["right", "left", "bottom"];
-    const currentIndex = positions.indexOf(position);
-    const nextIndex = (currentIndex + 1) % positions.length;
-    setPosition(positions[nextIndex]);
-  };
-
-  const getPositionIcon = () => {
-    switch (position) {
-      case "left":
-        return <ArrowLeft className="h-4 w-4" />;
-      case "right":
-        return <ArrowRight className="h-4 w-4" />;
-      case "bottom":
-        return <ArrowDown className="h-4 w-4" />;
-    }
-  };
-
-  const handleFullscreenToggle = useCallback(() => {
-    setIsFullscreen(prev => !prev);
-    if (!isFullscreen) {
-      setExpandedFeatures(true);
-      setActiveTab('advanced');
-    }
-  }, [isFullscreen]);
 
   const renderAdvancedControls = () => (
     <div className="grid grid-cols-2 gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
@@ -371,65 +431,64 @@ export function DebugPanel({
   };
 
   return (
-    <>
-      <div className={getPositionClasses()}>
-        {!isMinimized && (position === 'left' || position === 'right') && !isFullscreen && (
-          <div
-            ref={resizeRef}
-            className={`absolute top-0 ${position === 'left' ? 'right-0' : 'left-0'} h-full w-1 cursor-col-resize group`}
-            onMouseDown={startResize}
-          >
-            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full bg-gray-700/50 opacity-0 group-hover:opacity-100 transition-opacity">
-              <GripVertical className="h-4 w-4 text-gray-400" />
-            </div>
+    <div
+      ref={panelRef}
+      className={getPositionClasses()}
+      style={position === "floating" ? {
+        transform: `translate(${dragState.currentX}px, ${dragState.currentY}px)`,
+        transition: dragState.isDragging ? 'none' : 'transform 0.3s ease-out'
+      } : undefined}
+      onMouseDown={handleDragStart}
+    >
+      <div className="p-4 space-y-4 h-full flex flex-col">
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+            >
+              {isCollapsed ? <Layout className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+            </Button>
+            {!isCollapsed && (
+              <>
+                <Terminal className="h-5 w-5 text-primary animate-pulse" />
+                <h2 className="font-semibold text-gray-100">Advanced Debug Console</h2>
+                {error && (
+                  <Badge variant="destructive" className="animate-pulse">
+                    <Bug className="w-4 h-4 mr-1" />
+                    Error
+                  </Badge>
+                )}
+              </>
+            )}
           </div>
-        )}
-        <div className="p-4 space-y-4 h-full flex flex-col">
-          <div className="flex justify-between items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
-              >
-                {isCollapsed ? <Layout className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-              </Button>
-              {!isCollapsed && (
-                <>
-                  <Terminal className="h-5 w-5 text-primary animate-pulse" />
-                  <h2 className="font-semibold text-gray-100">Advanced Debug Console</h2>
-                  {error && (
-                    <Badge variant="destructive" className="animate-pulse">
-                      <Bug className="w-4 h-4 mr-1" />
-                      Error
-                    </Badge>
-                  )}
-                </>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPosition(prev => 
+                prev === "right" ? "left" : 
+                prev === "left" ? "bottom" : 
+                prev === "bottom" ? "floating" : "right"
               )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={cyclePosition}
-                className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
-              >
-                {getPositionIcon()}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMinimized(!isMinimized)}
-                className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
-              >
-                {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-              </Button>
-            </div>
+              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+            >
+              <Move className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+            >
+              {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+            </Button>
           </div>
-          {renderContent()}
         </div>
+        {renderContent()}
       </div>
-    </>
+    </div>
   );
 }

@@ -23,4 +23,16 @@ export interface DebugPanelProps {
   onMessageSubmit: (message: string) => void;
 }
 
-export type PanelPosition = "right" | "left" | "bottom";
+export type PanelPosition = "right" | "left" | "bottom" | "floating";
+
+export interface DragState {
+  isDragging: boolean;
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number;
+  velocity: {
+    x: number;
+    y: number;
+  };
+}
