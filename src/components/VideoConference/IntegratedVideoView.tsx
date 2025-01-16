@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from '@supabase/auth-helpers-react';
-import { Video, Map, Activity, Zap, Server } from 'lucide-react';
+import { Video, Map, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -11,8 +11,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface ServiceMetric {
   name: string;
-  status: 'healthy' | 'degraded' | 'critical';
   value: number;
+  status: 'healthy' | 'degraded' | 'critical';
 }
 
 export function IntegratedVideoView() {
@@ -25,7 +25,7 @@ export function IntegratedVideoView() {
 
   useEffect(() => {
     console.log('Initializing integrated view...');
-
+    
     // Initialize map
     if (mapContainer.current) {
       mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -66,10 +66,10 @@ export function IntegratedVideoView() {
 
   const updateMetrics = (data: any) => {
     const newMetrics: ServiceMetric[] = [
-      { name: 'Video Latency', status: 'healthy', value: 98 },
-      { name: 'Network Speed', status: 'healthy', value: 95 },
-      { name: 'CPU Usage', status: data?.performance_metrics?.cpu || 45, status: 'healthy' },
-      { name: 'Memory', status: data?.performance_metrics?.memory || 60, status: 'healthy' }
+      { name: 'Video Latency', value: 98, status: 'healthy' },
+      { name: 'Network Speed', value: 95, status: 'healthy' },
+      { name: 'CPU Usage', value: data?.performance_metrics?.cpu || 45, status: 'healthy' },
+      { name: 'Memory', value: data?.performance_metrics?.memory || 60, status: 'healthy' }
     ];
     setMetrics(newMetrics);
   };
