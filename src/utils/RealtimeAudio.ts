@@ -1,183 +1,68 @@
-import { supabase } from "@/integrations/supabase/client";
-
-export class AudioRecorder {
-  private stream: MediaStream | null = null;
-  private audioContext: AudioContext | null = null;
-  private processor: ScriptProcessorNode | null = null;
-  private source: MediaStreamAudioSourceNode | null = null;
-
-  constructor(private onAudioData: (audioData: Float32Array) => void) {}
-
-  async start() {
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
-      
-      this.audioContext = new AudioContext({
-        sampleRate: 24000,
-      });
-      
-      this.source = this.audioContext.createMediaStreamSource(this.stream);
-      this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
-      
-      this.processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        this.onAudioData(new Float32Array(inputData));
-      };
-      
-      this.source.connect(this.processor);
-      this.processor.connect(this.audioContext.destination);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      throw error;
-    }
-  }
-
-  stop() {
-    if (this.source) {
-      this.source.disconnect();
-      this.source = null;
-    }
-    if (this.processor) {
-      this.processor.disconnect();
-      this.processor = null;
-    }
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
-    }
-    if (this.audioContext) {
-      this.audioContext.close();
-      this.audioContext = null;
-    }
-  }
-}
-
 export class RealtimeChat {
-  private pc: RTCPeerConnection | null = null;
-  private dc: RTCDataChannel | null = null;
-  private audioEl: HTMLAudioElement;
-  private recorder: AudioRecorder | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private onMessageCallback: (event: any) => void;
 
-  constructor(private onMessage: (message: any) => void) {
-    this.audioEl = document.createElement("audio");
-    this.audioEl.autoplay = true;
+  constructor(onMessage: (event: any) => void) {
+    this.onMessageCallback = onMessage;
   }
 
   async init() {
     try {
-      const tokenResponse = await supabase.functions.invoke("get-realtime-token");
-      const data = await tokenResponse.data;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaRecorder = new MediaRecorder(stream);
       
-      if (!data?.client_secret?.value) {
-        throw new Error("Failed to get ephemeral token");
-      }
-
-      const EPHEMERAL_KEY = data.client_secret.value;
-
-      this.pc = new RTCPeerConnection();
-      this.pc.ontrack = e => this.audioEl.srcObject = e.streams[0];
-
-      const ms = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.pc.addTrack(ms.getTracks()[0]);
-
-      this.dc = this.pc.createDataChannel("oai-events");
-      this.dc.addEventListener("message", (e) => {
-        const event = JSON.parse(e.data);
-        console.log("Received event:", event);
-        this.onMessage(event);
-      });
-
-      const offer = await this.pc.createOffer();
-      await this.pc.setLocalDescription(offer);
-
-      const baseUrl = "https://api.openai.com/v1/realtime";
-      const model = "gpt-4o-realtime-preview-2024-12-17";
-      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
-        method: "POST",
-        body: offer.sdp,
-        headers: {
-          Authorization: `Bearer ${EPHEMERAL_KEY}`,
-          "Content-Type": "application/sdp"
-        },
-      });
-
-      const answer = {
-        type: "answer" as RTCSdpType,
-        sdp: await sdpResponse.text(),
-      };
-      
-      await this.pc.setRemoteDescription(answer);
-      console.log("WebRTC connection established");
-
-      this.recorder = new AudioRecorder((audioData) => {
-        if (this.dc?.readyState === 'open') {
-          this.dc.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: this.encodeAudioData(audioData)
-          }));
+      this.mediaRecorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64Audio = (reader.result as string).split(',')[1];
+            await this.processAudio(base64Audio);
+          };
+          reader.readAsDataURL(event.data);
         }
-      });
-      await this.recorder.start();
+      };
 
+      this.mediaRecorder.start(1000); // Capture in 1-second chunks
+      console.log('Voice chat initialized');
     } catch (error) {
-      console.error("Error initializing chat:", error);
+      console.error('Error initializing voice chat:', error);
       throw error;
     }
   }
 
-  private encodeAudioData(float32Array: Float32Array): string {
-    const int16Array = new Int16Array(float32Array.length);
-    for (let i = 0; i < float32Array.length; i++) {
-      const s = Math.max(-1, Math.min(1, float32Array[i]));
-      int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    
-    const uint8Array = new Uint8Array(int16Array.buffer);
-    let binary = '';
-    const chunkSize = 0x8000;
-    
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    
-    return btoa(binary);
-  }
+  private async processAudio(base64Audio: string) {
+    try {
+      const response = await fetch('/api/voice-to-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audio: base64Audio }),
+      });
 
-  async sendMessage(text: string) {
-    if (!this.dc || this.dc.readyState !== 'open') {
-      throw new Error('Data channel not ready');
-    }
-
-    const event = {
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'user',
-        content: [
-          {
-            type: 'input_text',
-            text
-          }
-        ]
+      if (!response.ok) {
+        throw new Error('Failed to process audio');
       }
-    };
 
-    this.dc.send(JSON.stringify(event));
-    this.dc.send(JSON.stringify({type: 'response.create'}));
+      const data = await response.json();
+      this.onMessageCallback({
+        type: 'response.audio.delta',
+        content: data.text,
+      });
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      this.onMessageCallback({
+        type: 'response.audio.error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   disconnect() {
-    this.recorder?.stop();
-    this.dc?.close();
-    this.pc?.close();
+    if (this.mediaRecorder) {
+      this.mediaRecorder.stop();
+      const tracks = this.mediaRecorder.stream.getTracks();
+      tracks.forEach(track => track.stop());
+      this.mediaRecorder = null;
+      console.log('Voice chat disconnected');
+    }
   }
 }
