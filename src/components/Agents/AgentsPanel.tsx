@@ -45,23 +45,14 @@ const INITIAL_AGENTS: DifyAgent[] = [
     model: 'grok'
   },
   {
-    id: 'environmental',
-    name: 'Environmental Overlay Agent',
-    role: 'Analyzes environmental constraints',
+    id: 'computer-assistant',
+    name: 'Computer Assistant Agent',
+    role: 'Assists with computer-related tasks and automation',
     status: 'idle',
-    backstory: 'An environmental scientist passionate about balancing development with conservation.',
-    systemPrompt: 'You are an environmental scientist. Your role is to analyze environmental constraints for development.',
-    model: 'perplexity'
+    backstory: 'An AI assistant with deep knowledge of computer systems and automation capabilities.',
+    systemPrompt: 'You are a computer expert. Your role is to assist with computer-related tasks and automation.',
+    model: 'claude'
   },
-  {
-    id: 'buildable-envelope',
-    name: 'Buildable Envelope Agent',
-    role: 'Determines buildable area',
-    status: 'idle',
-    backstory: 'An architect with expertise in maximizing usable space while respecting constraints.',
-    systemPrompt: 'You are an architect. Your role is to determine the buildable area for properties.',
-    model: 'skyvern'
-  }
 ];
 
 export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelProps) {
@@ -104,7 +95,6 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
       // Subscribe to agent updates
       const unsubscribe = await subscribeToAgentUpdates(agent.id, (update) => {
         console.log(`Received update for agent ${agent.name}:`, update);
-        // Update local state based on agent updates
         setState(prev => ({
           ...prev,
           agents: prev.agents.map(a => 
@@ -137,6 +127,23 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
     const systemPrompt = `${agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`}\n\nRelevant context:\n${
       context.map(c => `${c.content} (${c.source})`).join('\n')
     }`;
+
+    if (agent.model === 'claude') {
+      console.log('Calling claude-compute for agent:', agent.name);
+      const { data, error } = await supabase.functions.invoke('claude-compute', {
+        body: {
+          messages: [{ role: 'user', content: message }],
+          systemPrompt
+        }
+      });
+
+      if (error) {
+        console.error('Error calling claude-compute:', error);
+        throw error;
+      }
+
+      return data.content;
+    }
 
     const functionName = `${agent.model || 'claude'}-compute`;
     console.log(`Calling ${functionName} for agent:`, agent.name);
