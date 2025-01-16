@@ -127,3 +127,33 @@ export interface ServiceHealth {
   alerts: any[];
   dependencies: string[];
 }
+
+export interface MainLayoutProps {
+  children: React.ReactNode;
+  showNavigation?: boolean;
+}
+
+export interface SharedComputerState {
+  id?: string;
+  session_id?: string;
+  screen_sharing: {
+    active: boolean;
+    userId: string | null;
+  };
+  voice_chat: {
+    active: boolean;
+    participants: string[];
+  };
+  video_chat: {
+    active: boolean;
+    participants: string[];
+  };
+  active_users: string[];
+  system_metrics: SystemLoad;
+  browser_state?: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
+  };
+}
