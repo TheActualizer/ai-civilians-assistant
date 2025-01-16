@@ -1164,6 +1164,54 @@ export type Database = {
         }
         Relationships: []
       }
+      page_templates: {
+        Row: {
+          category: string
+          claude_analysis: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          integration_points: Json | null
+          metadata: Json | null
+          microservices_config: Json | null
+          name: string
+          status: string | null
+          template_data: Json | null
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          category: string
+          claude_analysis?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          integration_points?: Json | null
+          metadata?: Json | null
+          microservices_config?: Json | null
+          name: string
+          status?: string | null
+          template_data?: Json | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          category?: string
+          claude_analysis?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          integration_points?: Json | null
+          metadata?: Json | null
+          microservices_config?: Json | null
+          name?: string
+          status?: string | null
+          template_data?: Json | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1936,6 +1984,210 @@ export type Database = {
           metric_type?: string
           timestamp?: string | null
           value?: number
+        }
+        Relationships: []
+      }
+      template_integrations: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          id: string
+          integration_type: string
+          metrics: Json | null
+          provider: string
+          status: string | null
+          template_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          integration_type: string
+          metrics?: Json | null
+          provider: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          integration_type?: string
+          metrics?: Json | null
+          provider?: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_integrations_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "page_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_microservices: {
+        Row: {
+          api_config: Json | null
+          created_at: string | null
+          endpoint_url: string | null
+          health_status: string | null
+          id: string
+          performance_metrics: Json | null
+          service_name: string
+          service_type: string
+          template_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_config?: Json | null
+          created_at?: string | null
+          endpoint_url?: string | null
+          health_status?: string | null
+          id?: string
+          performance_metrics?: Json | null
+          service_name: string
+          service_type: string
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_config?: Json | null
+          created_at?: string | null
+          endpoint_url?: string | null
+          health_status?: string | null
+          id?: string
+          performance_metrics?: Json | null
+          service_name?: string
+          service_type?: string
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_microservices_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "page_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_versions: {
+        Row: {
+          changes: Json | null
+          claude_feedback: Json | null
+          created_at: string | null
+          id: string
+          status: string | null
+          template_id: string | null
+          updated_at: string | null
+          version_number: number
+        }
+        Insert: {
+          changes?: Json | null
+          claude_feedback?: Json | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          version_number: number
+        }
+        Update: {
+          changes?: Json | null
+          claude_feedback?: Json | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "page_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      touch_interactions: {
+        Row: {
+          coordinates: Json | null
+          created_at: string | null
+          device_metadata: Json | null
+          device_type: string
+          gesture_data: Json | null
+          id: string
+          interaction_type: string
+          optimization_data: Json | null
+          performance_metrics: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          coordinates?: Json | null
+          created_at?: string | null
+          device_metadata?: Json | null
+          device_type: string
+          gesture_data?: Json | null
+          id?: string
+          interaction_type: string
+          optimization_data?: Json | null
+          performance_metrics?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          coordinates?: Json | null
+          created_at?: string | null
+          device_metadata?: Json | null
+          device_type?: string
+          gesture_data?: Json | null
+          id?: string
+          interaction_type?: string
+          optimization_data?: Json | null
+          performance_metrics?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      touch_optimization_settings: {
+        Row: {
+          active_version: number | null
+          calibration_data: Json | null
+          created_at: string | null
+          device_category: string
+          id: string
+          optimization_rules: Json | null
+          sensitivity_profile: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_version?: number | null
+          calibration_data?: Json | null
+          created_at?: string | null
+          device_category: string
+          id?: string
+          optimization_rules?: Json | null
+          sensitivity_profile?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_version?: number | null
+          calibration_data?: Json | null
+          created_at?: string | null
+          device_category?: string
+          id?: string
+          optimization_rules?: Json | null
+          sensitivity_profile?: Json | null
+          updated_at?: string | null
         }
         Relationships: []
       }
