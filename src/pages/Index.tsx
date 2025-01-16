@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Brain, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Features } from "@/components/Features";
+import Features from "@/components/Features";
 import { CoreFeatures } from "@/components/home/CoreFeatures";
 import { HubSection } from "@/components/home/HubSection";
 
