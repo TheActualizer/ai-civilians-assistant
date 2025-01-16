@@ -30,11 +30,16 @@ function App() {
 
   // Log debug panel interactions to Supabase
   const logDebugInteraction = async (action: string) => {
+    if (!session?.user?.id) {
+      console.log('No user ID available for logging');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('chat_history')
         .insert({
-          user_id: session?.user?.id,
+          user_id: session.user.id,
           message: action,
           context: { type: 'debug_panel', action }
         });
@@ -66,15 +71,6 @@ function App() {
     console.log("Retrying last action");
     await logDebugInteraction('Retry requested');
     // Add your retry logic here
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    console.log("File uploaded:", file);
-    if (file) {
-      await logDebugInteraction(`File uploaded: ${file.name}`);
-    }
-    // Add your file upload logic here
   };
 
   useEffect(() => {

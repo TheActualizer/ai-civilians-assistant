@@ -15,6 +15,7 @@ const MIN_HEIGHT = 400;
 const MAX_HEIGHT = 800;
 
 export function DebugPanel({
+  isOpen,
   isLoading,
   error,
   requestId,
@@ -30,7 +31,7 @@ export function DebugPanel({
   const [viewMode, setViewMode] = useState<"detailed" | "compact">("detailed");
   const [activeViews, setActiveViews] = useState<string[]>(["history", "error", "request"]);
   const [position, setPosition] = useState<PanelPosition>("right");
-  const [isMinimized, setIsMinimized] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const toggleView = useCallback((view: string) => {
@@ -47,109 +48,112 @@ export function DebugPanel({
     }
   }, [apiCallHistory]);
 
+  // Only render if isOpen is true
+  if (!isOpen) {
+    return null;
+  }
+
   return (
     <AnimatePresence>
-      {!isMinimized && (
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ 
-            opacity: 1, 
-            y: 0, 
-            scale: 1,
-            transition: {
-              type: "spring",
-              stiffness: 300,
-              damping: 30
-            }
-          }}
-          exit={{ 
-            opacity: 0, 
-            y: 20, 
-            scale: 0.95,
-            transition: {
-              duration: 0.2
-            }
-          }}
-          className="fixed bottom-20 right-6 w-[400px] max-w-[calc(100vw-3rem)] bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg z-40 overflow-hidden"
-          style={{
-            maxHeight: `${MAX_HEIGHT}px`,
-            minHeight: `${MIN_HEIGHT}px`,
-          }}
-        >
-          <div className="flex flex-col h-full">
-            <DebugHeader 
-              isCollapsed={isCollapsed}
-              isMinimized={isMinimized}
-              onCollapse={() => setIsCollapsed(!isCollapsed)}
-              onMinimize={() => setIsMinimized(!isMinimized)}
-              onPositionChange={() => {}}
-              error={error}
-            />
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ 
+          opacity: 1, 
+          y: 0, 
+          scale: 1,
+          transition: {
+            type: "spring",
+            stiffness: 300,
+            damping: 30
+          }
+        }}
+        exit={{ 
+          opacity: 0, 
+          y: 20, 
+          scale: 0.95,
+          transition: {
+            duration: 0.2
+          }
+        }}
+        className="fixed bottom-20 right-6 w-[400px] max-w-[calc(100vw-3rem)] bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg z-40 overflow-hidden"
+        style={{
+          maxHeight: `${MAX_HEIGHT}px`,
+          minHeight: `${MIN_HEIGHT}px`,
+        }}
+      >
+        <div className="flex flex-col h-full">
+          <DebugHeader 
+            isCollapsed={isCollapsed}
+            isMinimized={isMinimized}
+            onCollapse={() => setIsCollapsed(!isCollapsed)}
+            onMinimize={() => setIsMinimized(!isMinimized)}
+            onPositionChange={() => {}}
+            error={error}
+          />
 
-            <ScrollArea className="flex-1 p-4">
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="space-y-4"
+          <ScrollArea className="flex-1 p-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="space-y-4"
+            >
+              <ToggleGroup 
+                type="single" 
+                value={viewMode}
+                onValueChange={(value) => setViewMode(value as "detailed" | "compact")}
+                className="border rounded-lg p-1 bg-background/50"
               >
-                <ToggleGroup 
-                  type="single" 
-                  value={viewMode}
-                  onValueChange={(value) => setViewMode(value as "detailed" | "compact")}
-                  className="border rounded-lg p-1 bg-background/50"
+                <ToggleGroupItem value="detailed">Detailed</ToggleGroupItem>
+                <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
+              </ToggleGroup>
+
+              <div className="flex flex-wrap gap-2">
+                <Toggle 
+                  pressed={activeViews.includes('history')} 
+                  onPressedChange={() => toggleView('history')}
+                  className="data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
                 >
-                  <ToggleGroupItem value="detailed">Detailed</ToggleGroupItem>
-                  <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
-                </ToggleGroup>
+                  History
+                </Toggle>
+                <Toggle 
+                  pressed={activeViews.includes('error')} 
+                  onPressedChange={() => toggleView('error')}
+                  className="data-[state=on]:bg-red-500/20 data-[state=on]:text-red-400"
+                >
+                  Errors
+                </Toggle>
+                <Toggle 
+                  pressed={activeViews.includes('request')} 
+                  onPressedChange={() => toggleView('request')}
+                  className="data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400"
+                >
+                  Request
+                </Toggle>
+              </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <Toggle 
-                    pressed={activeViews.includes('history')} 
-                    onPressedChange={() => toggleView('history')}
-                    className="data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
-                  >
-                    History
-                  </Toggle>
-                  <Toggle 
-                    pressed={activeViews.includes('error')} 
-                    onPressedChange={() => toggleView('error')}
-                    className="data-[state=on]:bg-red-500/20 data-[state=on]:text-red-400"
-                  >
-                    Errors
-                  </Toggle>
-                  <Toggle 
-                    pressed={activeViews.includes('request')} 
-                    onPressedChange={() => toggleView('request')}
-                    className="data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400"
-                  >
-                    Request
-                  </Toggle>
-                </div>
-
-                <DebugContent 
-                  activeViews={activeViews}
-                  viewMode={viewMode}
-                  apiError={apiError}
-                  error={error}
-                  apiCallHistory={apiCallHistory}
-                />
-              </motion.div>
-            </ScrollArea>
-
-            <div className="p-4 border-t bg-background/50">
-              <DebugControls 
-                message={message}
-                isLoading={isLoading}
-                onMessageChange={setMessage}
-                onMessageSubmit={onMessageSubmit}
-                onRetry={onRetry}
-                onFileUpload={() => {}}
+              <DebugContent 
+                activeViews={activeViews}
+                viewMode={viewMode}
+                apiError={apiError}
+                error={error}
+                apiCallHistory={apiCallHistory}
               />
-            </div>
+            </motion.div>
+          </ScrollArea>
+
+          <div className="p-4 border-t bg-background/50">
+            <DebugControls 
+              message={message}
+              isLoading={isLoading}
+              onMessageChange={setMessage}
+              onMessageSubmit={onMessageSubmit}
+              onRetry={onRetry}
+              onFileUpload={() => {}}
+            />
           </div>
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
     </AnimatePresence>
   );
 }
