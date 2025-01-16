@@ -2,6 +2,8 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { CoreFeatures } from "@/components/home/CoreFeatures";
+import { HubSection } from "@/components/home/HubSection";
 import { 
   Building2, 
   Network, 
@@ -11,14 +13,7 @@ import {
   Archive, 
   Brain,
   BookOpen,
-  ChevronRight,
-  Calculator,
-  MapPin,
-  UserCheck,
-  FileText,
-  ShoppingCart,
-  LayoutGrid,
-  FileBarChart
+  ChevronRight
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -57,259 +52,74 @@ const Index = () => {
         </div>
 
         {/* Core Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <Button
-            onClick={() => navigate("/calculations")}
-            variant="outline"
-            className="h-auto p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <Calculator className="h-5 w-5 mr-2" />
-              <span>Calculations</span>
-            </div>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Button
-            onClick={() => navigate("/area-calculations")}
-            variant="outline"
-            className="h-auto p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <LayoutGrid className="h-5 w-5 mr-2" />
-              <span>Area Calculations</span>
-            </div>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Button
-            onClick={() => navigate("/address-validation")}
-            variant="outline"
-            className="h-auto p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <MapPin className="h-5 w-5 mr-2" />
-              <span>Address Validation</span>
-            </div>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Button
-            onClick={() => navigate("/agent-monitoring")}
-            variant="outline"
-            className="h-auto p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <UserCheck className="h-5 w-5 mr-2" />
-              <span>Agent Monitoring</span>
-            </div>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Button
-            onClick={() => navigate("/new-report")}
-            variant="outline"
-            className="h-auto p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <FileText className="h-5 w-5 mr-2" />
-              <span>New Report</span>
-            </div>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Button
-            onClick={() => navigate("/assessment")}
-            variant="outline"
-            className="h-auto p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <FileBarChart className="h-5 w-5 mr-2" />
-              <span>Assessment</span>
-            </div>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Button
-            onClick={() => navigate("/marketplace")}
-            variant="outline"
-            className="h-auto p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              <span>Marketplace</span>
-            </div>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <CoreFeatures />
 
         {/* Hub Sections */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Enterprise Solutions</h2>
-            <Button
-              onClick={() => navigate("/enterprise")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <Building2 className="mr-2 h-5 w-5" />
-              Enterprise Overview
-            </Button>
-            <Button
-              onClick={() => navigate("/enterprise/planning")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Resource Planning
-            </Button>
-            <Button
-              onClick={() => navigate("/enterprise/analytics")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Analytics Dashboard
-            </Button>
-          </div>
+          <HubSection
+            title="Enterprise Solutions"
+            icon={Building2}
+            routes={[
+              { path: "/enterprise", label: "Enterprise Overview" },
+              { path: "/enterprise/planning", label: "Resource Planning" },
+              { path: "/enterprise/analytics", label: "Analytics Dashboard" }
+            ]}
+          />
 
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Infrastructure</h2>
-            <Button
-              onClick={() => navigate("/infrastructure")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <Network className="mr-2 h-5 w-5" />
-              Infrastructure Overview
-            </Button>
-            <Button
-              onClick={() => navigate("/infrastructure/network")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Network Management
-            </Button>
-            <Button
-              onClick={() => navigate("/infrastructure/security")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Security Monitoring
-            </Button>
-          </div>
+          <HubSection
+            title="Infrastructure"
+            icon={Network}
+            routes={[
+              { path: "/infrastructure", label: "Infrastructure Overview" },
+              { path: "/infrastructure/network", label: "Network Management" },
+              { path: "/infrastructure/security", label: "Security Monitoring" }
+            ]}
+          />
         </div>
 
         {/* Technology & Operations */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Technology</h2>
-            <Button
-              onClick={() => navigate("/technology")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <Cpu className="mr-2 h-5 w-5" />
-              Technology Hub
-            </Button>
-            <Button
-              onClick={() => navigate("/technology/innovation")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Innovation Lab
-            </Button>
-            <Button
-              onClick={() => navigate("/technology/research")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Research Center
-            </Button>
-          </div>
+          <HubSection
+            title="Technology"
+            icon={Cpu}
+            routes={[
+              { path: "/technology", label: "Technology Hub" },
+              { path: "/technology/innovation", label: "Innovation Lab" },
+              { path: "/technology/research", label: "Research Center" }
+            ]}
+          />
 
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Operations</h2>
-            <Button
-              onClick={() => navigate("/operations")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <Settings className="mr-2 h-5 w-5" />
-              Operations Hub
-            </Button>
-            <Button
-              onClick={() => navigate("/operations/workflow")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Workflow Management
-            </Button>
-            <Button
-              onClick={() => navigate("/operations/reporting")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Reports & Analytics
-            </Button>
-          </div>
+          <HubSection
+            title="Operations"
+            icon={Settings}
+            routes={[
+              { path: "/operations", label: "Operations Hub" },
+              { path: "/operations/workflow", label: "Workflow Management" },
+              { path: "/operations/reporting", label: "Reports & Analytics" }
+            ]}
+          />
         </div>
 
         {/* Innovation & Resources */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Innovation Center</h2>
-            <Button
-              onClick={() => navigate("/innovation")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <Sparkles className="mr-2 h-5 w-5" />
-              Innovation Hub
-            </Button>
-            <Button
-              onClick={() => navigate("/innovation/lab")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Lab Projects
-            </Button>
-            <Button
-              onClick={() => navigate("/innovation/experiments")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              Experiments
-            </Button>
-          </div>
+          <HubSection
+            title="Innovation Center"
+            icon={Sparkles}
+            routes={[
+              { path: "/innovation", label: "Innovation Hub" },
+              { path: "/innovation/lab", label: "Lab Projects" },
+              { path: "/innovation/experiments", label: "Experiments" }
+            ]}
+          />
 
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Additional Resources</h2>
-            <Button
-              onClick={() => navigate("/learn-more")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <BookOpen className="mr-2 h-5 w-5" />
-              Learn More
-            </Button>
-            <Button
-              onClick={() => navigate("/legacy/parcel-analysis")}
-              variant="outline"
-              className="w-full justify-start text-left h-auto p-4"
-            >
-              <Archive className="mr-2 h-5 w-5" />
-              Legacy Systems
-            </Button>
-          </div>
+          <HubSection
+            title="Additional Resources"
+            icon={BookOpen}
+            routes={[
+              { path: "/learn-more", label: "Learn More" },
+              { path: "/legacy/parcel-analysis", label: "Legacy Systems", icon: Archive }
+            ]}
+          />
         </div>
       </div>
     </div>
