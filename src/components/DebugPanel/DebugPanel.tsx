@@ -51,9 +51,25 @@ export function DebugPanel({
     <AnimatePresence>
       {!isMinimized && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0, 
+            scale: 1,
+            transition: {
+              type: "spring",
+              stiffness: 300,
+              damping: 30
+            }
+          }}
+          exit={{ 
+            opacity: 0, 
+            y: 20, 
+            scale: 0.95,
+            transition: {
+              duration: 0.2
+            }
+          }}
           className="fixed bottom-20 right-6 w-[400px] max-w-[calc(100vw-3rem)] bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg z-40 overflow-hidden"
           style={{
             maxHeight: `${MAX_HEIGHT}px`,
@@ -71,7 +87,12 @@ export function DebugPanel({
             />
 
             <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="space-y-4"
+              >
                 <ToggleGroup 
                   type="single" 
                   value={viewMode}
@@ -113,7 +134,7 @@ export function DebugPanel({
                   error={error}
                   apiCallHistory={apiCallHistory}
                 />
-              </div>
+              </motion.div>
             </ScrollArea>
 
             <div className="p-4 border-t bg-background/50">
