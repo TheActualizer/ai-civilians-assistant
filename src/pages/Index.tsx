@@ -11,77 +11,60 @@ import { LazyLoadedSection } from "@/components/home/LazyLoadedSection";
 const MicroserviceCard = ({ icon: Icon, title, description, className = "" }) => (
   <motion.div
     whileHover={{ scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    className="w-full"
+    className={`bg-white/5 p-6 rounded-lg border border-white/10 hover:border-primary/50 transition-colors ${className}`}
   >
-    <Card className={`h-full glass-morphism hover:shadow-lg transition-all duration-300 ${className}`}>
-      <CardContent className="p-6 flex flex-col items-center text-center">
-        <div className="rounded-full p-3 bg-gradient-to-br from-primary/20 to-accent/20 mb-4">
-          <Icon className="h-6 w-6 text-primary" />
-        </div>
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
-      </CardContent>
-    </Card>
+    <Icon className="h-8 w-8 text-primary mb-4" />
+    <h3 className="text-lg font-semibold text-gray-100 mb-2">{title}</h3>
+    <p className="text-gray-400">{description}</p>
   </motion.div>
 );
 
-export default function Index() {
+const Index = () => {
   const { logSystemEvent } = useSystemLogger();
   const { toast } = useToast();
 
   useEffect(() => {
-    logSystemEvent({
-      level: 'info',
-      message: 'User accessed microservices dashboard',
-      context: {
-        component: 'Index',
-        route: '/',
-        metrics: {
-          executionTime: performance.now(),
-          memoryUsage: window.performance?.memory?.usedJSHeapSize,
-          apiLatency: 0
-        }
+    logSystemEvent("User accessed microservices dashboard", {
+      component: 'Index',
+      route: '/',
+      metrics: {
+        executionTime: performance.now(),
+        memoryUsage: window.performance?.memory?.usedJSHeapSize || 0,
+        apiLatency: 0
       }
     });
-  }, []);
+  }, [logSystemEvent]);
 
   const microservices = [
     {
       icon: Database,
-      title: "API Gateway",
-      description: "Centralized access point for all microservices",
-      className: "bg-blue-500/10 hover:bg-blue-500/20"
+      title: "Data Management",
+      description: "Manage and analyze your data efficiently."
     },
     {
       icon: Cloud,
-      title: "Cloud Infrastructure",
-      description: "Scalable cloud-native architecture",
-      className: "bg-purple-500/10 hover:bg-purple-500/20"
-    },
-    {
-      icon: Shield,
-      title: "Security Layer",
-      description: "Advanced security and authentication",
-      className: "bg-red-500/10 hover:bg-red-500/20"
+      title: "Cloud Services",
+      description: "Leverage cloud computing for scalability."
     },
     {
       icon: Workflow,
-      title: "Workflow Engine",
-      description: "Automated process orchestration",
-      className: "bg-green-500/10 hover:bg-green-500/20"
+      title: "Workflow Automation",
+      description: "Automate your workflows for better productivity."
+    },
+    {
+      icon: Shield,
+      title: "Security Services",
+      description: "Ensure the security of your applications."
     },
     {
       icon: Brain,
       title: "AI Services",
-      description: "Intelligent processing and analysis",
-      className: "bg-yellow-500/10 hover:bg-yellow-500/20"
+      description: "Integrate AI capabilities into your applications."
     },
     {
       icon: Network,
-      title: "Service Mesh",
-      description: "Service discovery and communication",
-      className: "bg-indigo-500/10 hover:bg-indigo-500/20"
+      title: "Network Management",
+      description: "Monitor and manage your network infrastructure."
     }
   ];
 
@@ -123,4 +106,6 @@ export default function Index() {
       </motion.div>
     </div>
   );
-}
+};
+
+export default Index;
