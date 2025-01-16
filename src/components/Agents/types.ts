@@ -23,3 +23,13 @@ export type AgentState = {
   currentPhase: string;
   isProcessing: boolean;
 };
+
+export interface AgentsPanelProps {
+  onMessage: (message: string, agent: string) => Promise<void>;
+  onVoiceInput: (transcript: string) => Promise<void>;
+  messages: Array<{
+    agent: string;
+    message: string;
+    timestamp: string;
+  }>;
+}

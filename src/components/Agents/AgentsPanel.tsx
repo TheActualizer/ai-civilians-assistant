@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { VoiceControls } from "@/components/DebugPanel/VoiceControls";
 import { useToast } from "@/hooks/use-toast";
-import type { DifyAgent, AgentAction, AgentState } from './types';
+import type { DifyAgent, AgentAction, AgentState, AgentsPanelProps } from './types';
 
 const INITIAL_AGENTS: DifyAgent[] = [
   {
@@ -49,7 +49,7 @@ const INITIAL_AGENTS: DifyAgent[] = [
   }
 ];
 
-export function AgentsPanel() {
+export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelProps) {
   const { toast } = useToast();
   const [state, setState] = useState<AgentState>({
     agents: INITIAL_AGENTS,
@@ -95,6 +95,9 @@ export function AgentsPanel() {
           : agent
       )
     }));
+
+    // Send message to parent component
+    await onMessage(customInstructions, selectedAgent.name);
 
     // Add action to history
     const newAction: AgentAction = {
