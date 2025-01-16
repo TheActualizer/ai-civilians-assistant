@@ -6,6 +6,7 @@ import { ToolbarStyleProvider } from './contexts/ToolbarStyleContext';
 import { MainLayout } from './components/layouts/MainLayout';
 import { Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
+import { PageBuilder } from './components/PageBuilder/PageBuilder';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/page-builder" element={<PageBuilder />} />
               </Routes>
             </MainLayout>
           </BrowserRouter>

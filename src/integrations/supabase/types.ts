@@ -918,9 +918,13 @@ export type Database = {
         Row: {
           created_at: string | null
           error_message: string | null
+          flagged_components: Json[] | null
           id: string
           rebuild_config: Json | null
+          rebuild_logs: Json[] | null
           rebuild_metrics: Json | null
+          rebuild_priority: number | null
+          rebuild_source: string | null
           rebuild_type: string
           status: string
           updated_at: string | null
@@ -929,9 +933,13 @@ export type Database = {
         Insert: {
           created_at?: string | null
           error_message?: string | null
+          flagged_components?: Json[] | null
           id?: string
           rebuild_config?: Json | null
+          rebuild_logs?: Json[] | null
           rebuild_metrics?: Json | null
+          rebuild_priority?: number | null
+          rebuild_source?: string | null
           rebuild_type: string
           status?: string
           updated_at?: string | null
@@ -940,9 +948,13 @@ export type Database = {
         Update: {
           created_at?: string | null
           error_message?: string | null
+          flagged_components?: Json[] | null
           id?: string
           rebuild_config?: Json | null
+          rebuild_logs?: Json[] | null
           rebuild_metrics?: Json | null
+          rebuild_priority?: number | null
+          rebuild_source?: string | null
           rebuild_type?: string
           status?: string
           updated_at?: string | null
