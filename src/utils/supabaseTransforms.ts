@@ -1,4 +1,10 @@
-import type { SystemLoad, NetworkStats, PerformanceMetrics, ThreadAnalysis, ApiMetric, ServiceHealth } from '@/types/agent';
+import type { 
+  SystemLoad, 
+  NetworkStats, 
+  PerformanceMetrics, 
+  ThreadAnalysis, 
+  ApiMetric 
+} from '@/types/agent';
 
 export function transformSystemLoad(data: any): SystemLoad {
   return {
@@ -55,31 +61,12 @@ export function transformThreadAnalysis(data: any): ThreadAnalysis {
 export function transformApiMetric(data: any): ApiMetric {
   return {
     endpoint: data.endpoint,
-    responseTime: Number(data.response_time) || 0,
-    successRate: Number(data.success_rate) || 0,
-    errorCount: Number(data.error_count) || 0,
-    timestamp: data.created_at || new Date().toISOString(),
     service_name: data.service_name,
-    system_metrics: data.system_metrics ? {
-      cpu: Number(data.system_metrics.cpu) || 0,
-      memory: Number(data.system_metrics.memory) || 0,
-      network: Number(data.system_metrics.network) || 0
-    } : undefined
-  };
-}
-
-export function transformServiceHealth(data: any): ServiceHealth {
-  return {
-    service_name: data.service_name,
-    status: data.status as 'healthy' | 'degraded' | 'down',
-    uptime_percentage: Number(data.uptime_percentage) || 0,
-    resource_usage: {
-      cpu: Number(data.resource_usage?.cpu) || 0,
-      memory: Number(data.resource_usage?.memory) || 0,
-      network: Number(data.resource_usage?.network) || 0
-    },
-    last_check: new Date(data.last_check),
-    alerts: Array.isArray(data.alerts) ? data.alerts : [],
-    dependencies: Array.isArray(data.dependencies) ? data.dependencies : []
+    response_time: Number(data.response_time) || 0,
+    success_rate: Number(data.success_rate) || 0,
+    error_count: Number(data.error_count) || 0,
+    total_requests: Number(data.total_requests) || 0,
+    system_metrics: transformSystemLoad(data.system_metrics),
+    timestamp: data.created_at || new Date().toISOString()
   };
 }

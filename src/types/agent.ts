@@ -1,3 +1,31 @@
+// Base types for metrics and stats
+export interface SystemLoad {
+  cpu: number;
+  memory: number;
+  network: number;
+  cpu_threads?: number[];
+  io_operations?: number[];
+  memory_allocation?: number[];
+}
+
+export interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
+  bandwidth_usage?: number[];
+  connection_pool?: number[];
+  latency_history?: number[];
+}
+
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+  throughput?: number[];
+  response_times?: number[];
+}
+
+// Agent-related interfaces
 export interface DifyAgent {
   id: string;
   name: string;
@@ -29,57 +57,19 @@ export interface AgentState {
 export interface AgentMessage {
   role: string;
   content: string;
-  agent?: string;
-  message?: string;
   timestamp: string;
 }
 
-export interface EngineersPanelProps {
-  onMessage: (message: string, agent: string) => Promise<void>;
-  onVoiceInput: (transcript: string) => Promise<void>;
-  messages: AgentMessage[];
-}
-
-export interface SystemLoad {
-  cpu: number;
-  memory: number;
-  network: number;
-  cpu_threads?: number[];
-  io_operations?: number[];
-  memory_allocation?: number[];
-}
-
-export interface NetworkStats {
-  latency: number[];
-  bandwidth: number[];
-  connections: number[];
-  bandwidth_usage?: number[];
-  connection_pool?: number[];
-  latency_history?: number[];
-}
-
-export interface PerformanceMetrics {
-  response_time: number[];
-  success_rate: number[];
-  error_rate: number[];
-  throughput?: number[];
-  response_times?: number[];
-}
-
-export interface AgentMetricsData {
-  cpuUsage: number;
-  memoryUsage: number;
-  networkLatency: number;
-  activeFlows: number;
-  successRate: number;
-  totalInteractions: number;
-  system_load: SystemLoad;
-  networkMetrics: NetworkStats;
-  performanceIndicators: {
-    error_rate: number[];
-    throughput: number[];
-    response_times: number[];
-  };
+// Metrics and Analysis interfaces
+export interface ApiMetric {
+  endpoint: string;
+  service_name: string;
+  response_time: number;
+  success_rate: number;
+  error_count: number;
+  total_requests: number;
+  system_metrics: SystemLoad;
+  timestamp: string;
 }
 
 export interface ThreadAnalysis {
@@ -100,14 +90,6 @@ export interface ThreadAnalysis {
   analysis_interval?: number;
 }
 
-export interface ApiMetric {
-  endpoint: string;
-  responseTime: number;
-  successRate: number;
-  errorCount: number;
-  timestamp: string;
-}
-
 export interface ServiceMetrics {
   id: string;
   name: string;
@@ -124,77 +106,20 @@ export interface ServiceMetrics {
   };
 }
 
-export interface SiteStructurePage {
-  id: string;
-  path: string;
-  title: string;
-  sections: any[];
-  features: string[];
-  integrations: string[];
-}
-
-export interface MainLayoutProps {
-  children: React.ReactNode;
-  showNavigation?: boolean;
-}
-
-export interface SharedComputerState {
-  id?: string;
-  session_id?: string;
-  screen_sharing: {
-    active: boolean;
-    userId: string | null;
+export interface AgentMetricsData {
+  cpuUsage: number;
+  memoryUsage: number;
+  networkLatency: number;
+  activeFlows: number;
+  successRate: number;
+  totalInteractions: number;
+  system_load: SystemLoad;
+  networkMetrics: NetworkStats;
+  performanceIndicators: {
+    error_rate: number[];
+    throughput: number[];
+    response_times: number[];
   };
-  voice_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  video_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  active_users: string[];
-  system_metrics: SystemLoad;
-  browser_state?: {
-    url: string;
-    title: string;
-    isClaudeActive: boolean;
-    lastInteraction: string;
-  };
-}
-
-export interface SystemAnalysis {
-  metrics: Record<string, any>;
-  patterns: Record<string, any>;
-  insights: string[];
-  correlations: any[];
-  predictions: any[];
-  recommendations: any[];
-}
-
-export interface UIVersion {
-  id: string;
-  name: string;
-  route: string;
-  component_data: Record<string, any>;
-  version_type: string;
-  version_tags: string[];
-  performance_metrics: {
-    api_latency: number[];
-    render_time: number[];
-    memory_usage: number[];
-  };
-  integration_data: {
-    connected_services: string[];
-    api_dependencies: string[];
-    data_flow: string[];
-  };
-  created_at: string;
-  is_active?: boolean;
-  description?: string;
-  metadata?: Record<string, any>;
-  created_by?: string;
-  parent_version_id?: string;
 }
 
 export interface EngineerMessage {
@@ -215,4 +140,16 @@ export interface EngineerMessage {
     current_mission: string;
     badges_earned: string[];
   };
+}
+
+export interface SiteStructurePage {
+  id: string;
+  path: string;
+  title: string;
+  description?: string;
+  component_data?: Record<string, any>;
+  metadata?: Record<string, any>;
+  sections?: any[];
+  features?: string[];
+  integrations?: string[];
 }
