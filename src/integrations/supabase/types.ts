@@ -384,12 +384,15 @@ export type Database = {
       debug_thread_analysis: {
         Row: {
           analysis_data: Json | null
+          analysis_frequency: number | null
+          analysis_status: string | null
           claude_feedback: string | null
           connection_score: number | null
           connection_status: string | null
           created_at: string | null
           element_identifier: string | null
           id: string
+          last_analysis_timestamp: string | null
           page_path: string
           suggested_connections: Json[] | null
           thread_type: string
@@ -397,12 +400,15 @@ export type Database = {
         }
         Insert: {
           analysis_data?: Json | null
+          analysis_frequency?: number | null
+          analysis_status?: string | null
           claude_feedback?: string | null
           connection_score?: number | null
           connection_status?: string | null
           created_at?: string | null
           element_identifier?: string | null
           id?: string
+          last_analysis_timestamp?: string | null
           page_path: string
           suggested_connections?: Json[] | null
           thread_type: string
@@ -410,12 +416,15 @@ export type Database = {
         }
         Update: {
           analysis_data?: Json | null
+          analysis_frequency?: number | null
+          analysis_status?: string | null
           claude_feedback?: string | null
           connection_score?: number | null
           connection_status?: string | null
           created_at?: string | null
           element_identifier?: string | null
           id?: string
+          last_analysis_timestamp?: string | null
           page_path?: string
           suggested_connections?: Json[] | null
           thread_type?: string
