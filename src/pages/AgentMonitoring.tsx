@@ -9,6 +9,7 @@ import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 import { AgentMetrics } from "@/components/Agents/AgentMetrics";
 import { AgentNetwork } from "@/components/Agents/AgentNetwork";
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
+import { supabase } from "@/integrations/supabase/client";
 import { agentMonitoringService } from "@/services/agent-monitoring/AgentMonitoringService";
 import { debugVisualizationService } from "@/services/debug/DebugVisualizationService";
 import { analyticsService } from "@/services/analytics/AnalyticsService";
@@ -23,22 +24,65 @@ const AgentMonitoring = () => {
     event: string;
     details?: any;
   }>>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    console.log('Initializing services...');
+    console.log('Initializing agent monitoring...');
     
     const initializeServices = async () => {
       try {
-        // Initialize all services
-        await Promise.all([
-          agentMonitoringService.initialize(),
-          debugVisualizationService.initialize({
-            type: 'network',
-            mode: 'artistic',
-            theme: 'dark',
-            animations: true
-          }),
-        ]);
+        setIsInitializing(true);
+        
+        // Initialize monitoring channels
+        const agentChannel = supabase
+          .channel('agent-monitoring')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'agent_interactions'
+            },
+            (payload) => {
+              console.log('Agent interaction update:', payload);
+              logSystemEvent('agent_interaction', payload);
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'debug_agent_monitoring'
+            },
+            (payload) => {
+              console.log('Agent monitoring update:', payload);
+              logSystemEvent('agent_monitoring', payload);
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'system_events'
+            },
+            (payload) => {
+              console.log('System event:', payload);
+              logSystemEvent('system_event', payload);
+            }
+          )
+          .subscribe(status => {
+            console.log('Agent monitoring subscription status:', status);
+          });
+
+        // Initialize visualization service
+        await debugVisualizationService.initialize({
+          type: 'network',
+          mode: 'artistic',
+          theme: 'dark',
+          animations: true
+        });
 
         // Track page view
         await analyticsService.trackMetric({
@@ -48,8 +92,8 @@ const AgentMonitoring = () => {
         });
 
         toast({
-          title: "Services Initialized",
-          description: "All monitoring services are now active",
+          title: "Monitoring Active",
+          description: "Real-time agent monitoring system initialized",
         });
       } catch (error) {
         console.error('Error initializing services:', error);
@@ -58,16 +102,31 @@ const AgentMonitoring = () => {
           title: "Initialization Error",
           description: "Failed to initialize monitoring services",
         });
+      } finally {
+        setIsInitializing(false);
       }
     };
 
     initializeServices();
 
     return () => {
-      console.log('Cleaning up services...');
-      agentMonitoringService.cleanup();
+      console.log('Cleaning up agent monitoring...');
+      supabase.removeAllChannels();
     };
   }, [toast]);
+
+  const logSystemEvent = async (type: string, details: any) => {
+    try {
+      await agentMonitoringService.logAgentAction('system', type, details);
+      setApiCallHistory(prev => [...prev, {
+        timestamp: new Date().toISOString(),
+        event: `System event: ${type}`,
+        details
+      }]);
+    } catch (error) {
+      console.error('Error logging system event:', error);
+    }
+  };
 
   const handleMessageSubmit = async (message: string) => {
     try {
@@ -86,6 +145,26 @@ const AgentMonitoring = () => {
       });
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+        <Navbar session={session} />
+        <div className="container mx-auto px-4 py-8 pt-20">
+          <div className="flex items-center justify-center h-[60vh]">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center"
+            >
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4" />
+              <p className="text-gray-400">Initializing monitoring system...</p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">

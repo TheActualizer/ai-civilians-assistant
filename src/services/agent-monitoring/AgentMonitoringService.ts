@@ -77,11 +77,15 @@ class AgentMonitoringService {
       .from('debug_agent_monitoring')
       .select('*')
       .eq('agent_id', agentId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching agent status:', error);
       throw error;
+    }
+
+    if (!data) {
+      throw new Error(`No status found for agent ${agentId}`);
     }
 
     return {
