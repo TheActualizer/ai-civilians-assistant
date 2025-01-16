@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { supabase } from './integrations/supabase/client';
 import { ToolbarStyleProvider } from './contexts/ToolbarStyleContext';
 import { MainLayout } from './components/layouts/MainLayout';
+import { Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -21,7 +23,11 @@ function App() {
       <SessionContextProvider supabaseClient={supabase}>
         <ToolbarStyleProvider>
           <BrowserRouter>
-            <MainLayout />
+            <MainLayout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+              </Routes>
+            </MainLayout>
           </BrowserRouter>
         </ToolbarStyleProvider>
       </SessionContextProvider>
