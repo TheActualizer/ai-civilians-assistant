@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Cpu, Network, Database } from 'lucide-react';
+import { Activity, Cpu, Network, Database, Info } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type MetricsData = {
   cpuUsage: number;
@@ -58,11 +59,11 @@ const initialMetrics: MetricsData = {
 export function AgentMetrics() {
   const [metrics, setMetrics] = useState<MetricsData>(initialMetrics);
   const [historicalData, setHistoricalData] = useState<any[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
 
   useEffect(() => {
     console.log('Initializing metrics subscription...');
     
-    // Subscribe to real-time metrics updates
     const channel = supabase
       .channel('agent-metrics')
       .on(
@@ -74,6 +75,7 @@ export function AgentMetrics() {
         },
         (payload) => {
           console.log('New metrics received:', payload);
+          setLastUpdate(new Date().toISOString());
           const { 
             cpu_usage, 
             memory_usage, 
@@ -148,6 +150,25 @@ export function AgentMetrics() {
     };
   }, []);
 
+  const MetricSource = ({ metric, value, timestamp }: { metric: string; value: number; timestamp: string }) => (
+    <TooltipProvider>
+      <UITooltip>
+        <TooltipTrigger asChild>
+          <Info className="h-4 w-4 text-gray-400 hover:text-primary cursor-help inline-block ml-2" />
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Data Source: agent_metrics table</p>
+            <p className="text-xs text-gray-500">Last updated: {new Date(timestamp).toLocaleTimeString()}</p>
+            <p className="text-xs text-gray-500">Current value: {value.toFixed(2)}</p>
+            <p className="text-xs text-gray-500">Table: public.agent_metrics</p>
+            <p className="text-xs text-gray-500">Column: {metric}</p>
+          </div>
+        </TooltipContent>
+      </UITooltip>
+    </TooltipProvider>
+  );
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="bg-gray-800/50 border-gray-700">
@@ -155,6 +176,11 @@ export function AgentMetrics() {
           <CardTitle className="text-sm font-medium text-gray-200">
             <Cpu className="h-4 w-4 text-primary inline mr-2" />
             System Load
+            <MetricSource 
+              metric="cpu_usage" 
+              value={metrics.cpuUsage} 
+              timestamp={lastUpdate}
+            />
           </CardTitle>
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -173,7 +199,14 @@ export function AgentMetrics() {
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-400">CPU Usage</span>
+                <span className="text-gray-400">
+                  CPU Usage
+                  <MetricSource 
+                    metric="cpu_usage" 
+                    value={metrics.cpuUsage} 
+                    timestamp={lastUpdate}
+                  />
+                </span>
                 <motion.span 
                   key={metrics.cpuUsage}
                   initial={{ y: -10, opacity: 0 }}
@@ -187,7 +220,14 @@ export function AgentMetrics() {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-400">Memory</span>
+                <span className="text-gray-400">
+                  Memory
+                  <MetricSource 
+                    metric="memory_usage" 
+                    value={metrics.memoryUsage} 
+                    timestamp={lastUpdate}
+                  />
+                </span>
                 <motion.span
                   key={metrics.memoryUsage}
                   initial={{ y: -10, opacity: 0 }}
@@ -225,6 +265,11 @@ export function AgentMetrics() {
           <CardTitle className="text-sm font-medium text-gray-200">
             <Network className="h-4 w-4 text-primary inline mr-2" />
             Network Status
+            <MetricSource 
+              metric="network_latency" 
+              value={metrics.networkLatency} 
+              timestamp={lastUpdate}
+            />
           </CardTitle>
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -242,7 +287,14 @@ export function AgentMetrics() {
         <CardContent>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Latency</span>
+              <span className="text-sm text-gray-400">
+                Latency
+                <MetricSource 
+                  metric="network_latency" 
+                  value={metrics.networkLatency} 
+                  timestamp={lastUpdate}
+                />
+              </span>
               <motion.span
                 key={metrics.networkLatency}
                 initial={{ scale: 0.95, opacity: 0 }}
