@@ -28,3 +28,29 @@ export interface ThreadAnalysis {
   connection_status: string;
   connection_score: number;
 }
+
+export interface AgentMessage {
+  role: string;
+  content: string;
+  timestamp?: string;
+}
+
+export interface AgentMetrics {
+  cpu_usage: number;
+  memory_usage: number;
+  response_time: number;
+  success_rate: number;
+  error_rate: number;
+}
+
+export interface AgentMetricsData {
+  timestamp: string;
+  metrics: AgentMetrics;
+}
+
+export interface DifyAgent {
+  id: string;
+  name: string;
+  status: string;
+  type: string;
+}
