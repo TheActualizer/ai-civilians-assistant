@@ -27,17 +27,24 @@ const AICivilEngineer = () => {
   const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
 
   useEffect(() => {
+    console.log('Initializing AI Civil Engineer page...');
     const fetchInitialData = async () => {
       try {
-        const { data: assessmentData, error: fetchError } = await supabase
+        const { data, error } = await supabase
           .from('property_assessments')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+          .maybeSingle();
 
-        if (fetchError) throw fetchError;
-        setRequestId(assessmentData.id);
+        if (error) {
+          console.error('Error fetching property assessment:', error);
+          throw error;
+        }
+
+        if (data) {
+          console.log('Fetched property assessment:', data);
+          setRequestId(data.id);
+        }
         
       } catch (error: any) {
         console.error('Error in fetchInitialData:', error);
@@ -67,6 +74,7 @@ const AICivilEngineer = () => {
 
   const handleMessageSubmit = async (message: string) => {
     if (message.trim()) {
+      console.log('Submitting message:', message);
       setApiCallHistory(prev => [...prev, {
         timestamp: new Date().toISOString(),
         event: "User message",
