@@ -75,3 +75,23 @@ export interface DifyAgent {
   progress?: number;
   documents?: boolean;
 }
+
+export interface SiteStructurePage {
+  id: string;
+  page_path: string;
+  title: string;
+  description: string;
+  hub_name: string;
+  parent_path: string;
+  is_active: boolean;
+  requires_auth: boolean;
+  page_type: string;
+  metadata: Record<string, any>;
+  component_data: {
+    sections: any[];
+    features: any[];
+    integrations: any[];
+  };
+  created_at: string;
+  updated_at: string;
+}
