@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle, Bug } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle, Bug, CheckCircle2 } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -40,6 +40,109 @@ const ParcelDetails = () => {
       event,
       details
     }]);
+  };
+
+  const renderPropertyDetails = () => {
+    if (!lightboxData) {
+      return (
+        <div className="text-center py-8">
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">No property data available yet</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {lightboxData.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
+            <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500 capitalize">
+                {key.replace(/([A-Z])/g, ' $1').trim()}
+              </h3>
+              <p className="mt-1 text-lg">{value || 'Not available'}</p>
+            </div>
+          ))}
+        </div>
+
+        {lightboxData.parcelId && (
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500">Parcel ID</h3>
+            <p className="mt-1 text-lg">{lightboxData.parcelId}</p>
+          </div>
+        )}
+
+        {lightboxData.status && (
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500">Processing Status</h3>
+            <Badge className="mt-2" variant={lightboxData.status === 'completed' ? 'default' : 'secondary'}>
+              {lightboxData.status}
+            </Badge>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderAdditionalDetails = () => {
+    if (!lightboxData) {
+      return (
+        <div className="text-center py-8">
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">No additional data available yet</p>
+        </div>
+      );
+    }
+
+    const additionalInfo = [
+      { label: 'Processing Status', value: lightboxData.status || 'Pending' },
+      { label: 'Last Updated', value: lightboxData.lightbox_processed_at ? new Date(lightboxData.lightbox_processed_at).toLocaleString() : 'Not processed yet' },
+      { label: 'Request ID', value: lightboxData.lightbox_request_id || 'Not available' },
+    ];
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {additionalInfo.map((info, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500">{info.label}</h3>
+              {info.label === 'Processing Status' ? (
+                <Badge className="mt-2" variant={info.value === 'completed' ? 'default' : 'secondary'}>
+                  {info.value}
+                </Badge>
+              ) : (
+                <p className="mt-1 text-lg">{info.value}</p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {lightboxData.api_progress && (
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4">API Progress</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(lightboxData.api_progress).map(([key, value]) => (
+                <div key={key} className="flex items-center gap-2 bg-white p-4 rounded-lg shadow-sm">
+                  {value ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                  )}
+                  <div>
+                    <h4 className="text-sm font-medium capitalize">
+                      {key.replace(/_/g, ' ')}
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      {value ? 'Completed' : 'Pending'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   useEffect(() => {
