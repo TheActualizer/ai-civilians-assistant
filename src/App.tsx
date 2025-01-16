@@ -20,6 +20,22 @@ import ProjectManagement from "./pages/ProjectManagement";
 import ResourceAllocation from "./pages/ResourceAllocation";
 import ComplianceHub from "./pages/ComplianceHub";
 import StrategicPlanning from "./pages/StrategicPlanning";
+import DataCenter from "./pages/DataCenter";
+import SecurityOperations from "./pages/SecurityOperations";
+import NetworkInfrastructure from "./pages/NetworkInfrastructure";
+import CloudServices from "./pages/CloudServices";
+import APIGateway from "./pages/APIGateway";
+import MachineLearning from "./pages/MachineLearning";
+import DevOps from "./pages/DevOps";
+import Automation from "./pages/Automation";
+import BusinessIntelligence from "./pages/BusinessIntelligence";
+import CustomerSuccess from "./pages/CustomerSuccess";
+import FinancialServices from "./pages/FinancialServices";
+import HumanResources from "./pages/HumanResources";
+import SupplyChain from "./pages/SupplyChain";
+import QualityAssurance from "./pages/QualityAssurance";
+import Research from "./pages/Research";
+import Innovation from "./pages/Innovation";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -48,6 +64,22 @@ function App() {
             <Route path="/resource-allocation" element={<ResourceAllocation />} />
             <Route path="/compliance-hub" element={<ComplianceHub />} />
             <Route path="/strategic-planning" element={<StrategicPlanning />} />
+            <Route path="/data-center" element={<DataCenter />} />
+            <Route path="/security-operations" element={<SecurityOperations />} />
+            <Route path="/network-infrastructure" element={<NetworkInfrastructure />} />
+            <Route path="/cloud-services" element={<CloudServices />} />
+            <Route path="/api-gateway" element={<APIGateway />} />
+            <Route path="/machine-learning" element={<MachineLearning />} />
+            <Route path="/devops" element={<DevOps />} />
+            <Route path="/automation" element={<Automation />} />
+            <Route path="/business-intelligence" element={<BusinessIntelligence />} />
+            <Route path="/customer-success" element={<CustomerSuccess />} />
+            <Route path="/financial-services" element={<FinancialServices />} />
+            <Route path="/human-resources" element={<HumanResources />} />
+            <Route path="/supply-chain" element={<SupplyChain />} />
+            <Route path="/quality-assurance" element={<QualityAssurance />} />
+            <Route path="/research" element={<Research />} />
+            <Route path="/innovation" element={<Innovation />} />
             <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
           </Routes>
           <Toaster />
