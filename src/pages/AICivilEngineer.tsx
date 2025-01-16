@@ -10,6 +10,7 @@ import { VersionSelector } from "@/components/VersionManagement/VersionSelector"
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
 import { AgentMetrics } from "@/components/Agents/AgentMetrics";
 import { AgentNetwork } from "@/components/Agents/AgentNetwork";
+import { ScreenshotButton } from "@/components/ScreenshotButton/ScreenshotButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { AgentMessage } from '@/types/agent';
@@ -207,6 +208,7 @@ const AICivilEngineer = () => {
                     style={{ width: `${portalEnergy}%` }}
                   />
                 </div>
+                <ScreenshotButton />
               </div>
             </motion.div>
           )}
