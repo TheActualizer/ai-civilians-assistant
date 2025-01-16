@@ -301,6 +301,53 @@ export type Database = {
         }
         Relationships: []
       }
+      debug_sessions: {
+        Row: {
+          console_history: Json[] | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          participants: Json | null
+          session_data: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          console_history?: Json[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          participants?: Json | null
+          session_data?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          console_history?: Json[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          participants?: Json | null
+          session_data?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debug_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debug_visualizations: {
         Row: {
           active: boolean | null
@@ -721,6 +768,53 @@ export type Database = {
           severity?: string
         }
         Relationships: []
+      }
+      ui_versions: {
+        Row: {
+          component_data: Json
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          name: string
+          route: string
+          updated_at: string | null
+        }
+        Insert: {
+          component_data?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          name: string
+          route: string
+          updated_at?: string | null
+        }
+        Update: {
+          component_data?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          name?: string
+          route?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ui_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
