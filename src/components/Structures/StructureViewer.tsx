@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 interface StructureViewerProps {
   activeStructure: string | null;
@@ -28,13 +28,17 @@ export function StructureViewer({ activeStructure }: StructureViewerProps) {
       0.1,
       1000
     );
-    camera.position.set(4, 4, 4);
+    camera.position.set(6, 6, 6); // Moved camera further back
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
     // Set up renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      alpha: true 
+    });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     containerRef.current.appendChild(renderer.domElement);
@@ -44,36 +48,51 @@ export function StructureViewer({ activeStructure }: StructureViewerProps) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.minDistance = 3;
+    controls.maxDistance = 20;
     controlsRef.current = controls;
 
     // Add lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 2);
+    const ambientLight = new THREE.AmbientLight(0x404040, 3);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-    directionalLight.position.set(5, 5, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+    directionalLight.position.set(5, 10, 5);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 1024;
-    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
     // Add a grid helper
-    const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+    const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
     scene.add(gridHelper);
 
     // Add a sample building structure
-    const geometry = new THREE.BoxGeometry(2, 3, 2);
+    const geometry = new THREE.BoxGeometry(2, 4, 2);
     const material = new THREE.MeshPhongMaterial({
       color: 0x1E40AF,
       transparent: true,
       opacity: 0.9,
       side: THREE.DoubleSide,
+      shininess: 100,
     });
     const building = new THREE.Mesh(geometry, material);
     building.castShadow = true;
     building.receiveShadow = true;
-    building.position.y = 1.5; // Move building up so it sits on the grid
+    building.position.y = 2; // Move building up so it sits on the grid
     scene.add(building);
+
+    // Add ground plane to receive shadows
+    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+    const groundMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x222222,
+      side: THREE.DoubleSide
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = Math.PI / 2;
+    ground.position.y = 0;
+    ground.receiveShadow = true;
+    scene.add(ground);
 
     // Animation loop
     let animationFrameId: number;
@@ -113,5 +132,10 @@ export function StructureViewer({ activeStructure }: StructureViewerProps) {
     };
   }, []);
 
-  return <div ref={containerRef} className="w-full h-full min-h-[400px] rounded-lg" />;
+  return (
+    <div 
+      ref={containerRef} 
+      className="w-full h-full min-h-[400px] rounded-lg bg-gray-900/50 border border-gray-800"
+    />
+  );
 }
