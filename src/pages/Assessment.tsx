@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowRight, FileText, Database, Terminal, Info, Building2, Code } from "lucide-react";
 import { PropertyRequest, AssessmentData } from '@/components/GetStarted/types';
+import { DebugPanel } from '@/components/DebugPanel/DebugPanel';
 
 const Assessment = () => {
   const session = useSession();
@@ -215,6 +216,14 @@ const Assessment = () => {
             <p className="text-gray-600">Loading assessment details...</p>
           </div>
         </div>
+        <DebugPanel
+          isLoading={isLoading}
+          error={error}
+          requestId={propertyRequest?.id}
+          apiCallHistory={apiCallHistory}
+          onRetry={() => window.location.reload()}
+          onMessageSubmit={(message) => console.log('Debug message:', message)}
+        />
       </div>
     );
   }
@@ -229,6 +238,14 @@ const Assessment = () => {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         </div>
+        <DebugPanel
+          isLoading={isLoading}
+          error={error}
+          requestId={propertyRequest?.id}
+          apiCallHistory={apiCallHistory}
+          onRetry={() => window.location.reload()}
+          onMessageSubmit={(message) => console.log('Debug message:', message)}
+        />
       </div>
     );
   }
@@ -384,6 +401,14 @@ const Assessment = () => {
           </div>
         </div>
       </div>
+      <DebugPanel
+        isLoading={isLoading}
+        error={error}
+        requestId={propertyRequest?.id}
+        apiCallHistory={apiCallHistory}
+        onRetry={() => window.location.reload()}
+        onMessageSubmit={(message) => console.log('Debug message:', message)}
+      />
     </div>
   );
 };
