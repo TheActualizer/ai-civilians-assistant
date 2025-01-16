@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ChevronDown, Brain, Building2, Network, Cpu, Settings, Sparkles, Archive } from "lucide-react";
+import { ChevronDown, Brain, Building2, Network, Cpu, Settings, Sparkles, Archive, Bug, Server, Share, Computer } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +39,31 @@ export const NavLinks = () => {
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Link to="/legacy/assessment-view" className="w-full">Legacy Assessment View</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Link to="/legacy/agent-dashboard" className="w-full flex items-center">
+                <Bug className="mr-2 h-4 w-4" />
+                Legacy Agent Dashboard
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link to="/legacy/debug-console" className="w-full flex items-center">
+                <Computer className="mr-2 h-4 w-4" />
+                Legacy Debug Console
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link to="/legacy/system-intelligence" className="w-full flex items-center">
+                <Server className="mr-2 h-4 w-4" />
+                Legacy System Intelligence
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link to="/legacy/shared-computer" className="w-full flex items-center">
+                <Share className="mr-2 h-4 w-4" />
+                Legacy Shared Computer
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

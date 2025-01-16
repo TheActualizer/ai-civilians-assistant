@@ -16,6 +16,10 @@ import AreaCalculations from "./pages/AreaCalculations";
 import LegacyParcelAnalysis from "./pages/legacy/ParcelAnalysis";
 import LegacyPropertyDetails from "./pages/legacy/PropertyDetails";
 import LegacyAssessmentView from "./pages/legacy/AssessmentView";
+import LegacyAgentDashboard from "./pages/legacy/AgentDashboard";
+import LegacyDebugConsole from "./pages/legacy/DebugConsole";
+import LegacySystemIntelligence from "./pages/legacy/SystemIntelligence";
+import LegacySharedComputer from "./pages/legacy/SharedComputer";
 
 // Lazy loaded pages
 const Index = lazy(() => import("./pages/Index"));
@@ -71,6 +75,10 @@ function App() {
               <Route path="/legacy/parcel-analysis" element={<LegacyParcelAnalysis />} />
               <Route path="/legacy/property-details" element={<LegacyPropertyDetails />} />
               <Route path="/legacy/assessment-view" element={<LegacyAssessmentView />} />
+              <Route path="/legacy/agent-dashboard" element={<LegacyAgentDashboard />} />
+              <Route path="/legacy/debug-console" element={<LegacyDebugConsole />} />
+              <Route path="/legacy/system-intelligence" element={<LegacySystemIntelligence />} />
+              <Route path="/legacy/shared-computer" element={<LegacySharedComputer />} />
               
               {/* Dynamic Hub Routes */}
               <Route path="/:hubName">
