@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, memo } from "react";
 import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,23 @@ const MIN_HEIGHT = 300;
 const MAX_HEIGHT = 800;
 const DEFAULT_HEIGHT = 600;
 const THROW_VELOCITY_THRESHOLD = 1.5;
+
+// Memoized ResizeHandle component for better performance
+const ResizeHandle = memo(({ position, onMouseDown, className }: { 
+  position: string;
+  onMouseDown: () => void;
+  className: string;
+}) => (
+  <ResizableHandle 
+    className={className}
+    onMouseDown={onMouseDown}
+  />
+));
+
+ResizeHandle.displayName = 'ResizeHandle';
+
+// Memoized base classes to prevent recalculation
+const BASE_CLASSES = "fixed transition-all duration-300 ease-in-out bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 shadow-xl z-50";
 
 export function DebugPanel({
   isLoading,
@@ -186,8 +203,10 @@ export function DebugPanel({
       newHeight = Math.min(Math.max(MIN_HEIGHT, rect.bottom - e.clientY), MAX_HEIGHT);
     }
 
-    setWidth(newWidth);
-    setHeight(newHeight);
+    requestAnimationFrame(() => {
+      setWidth(newWidth);
+      setHeight(newHeight);
+    });
   }, [isResizing, width, height]);
 
   const startResize = useCallback((direction: string) => {
@@ -203,7 +222,7 @@ export function DebugPanel({
     document.addEventListener('mouseup', handleMouseUp);
   }, [handleResize]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       toast({
@@ -212,68 +231,68 @@ export function DebugPanel({
       });
       onMessageSubmit(`File uploaded: ${file.name}`);
     }
-  };
+  }, [toast, onMessageSubmit]);
 
-  const toggleView = (view: string) => {
+  const toggleView = useCallback((view: string) => {
     setActiveViews(prev => 
       prev.includes(view) 
         ? prev.filter(v => v !== view)
         : [...prev, view]
     );
-  };
+  }, []);
 
-  const getPositionClasses = () => {
-    const baseClasses = "fixed transition-all duration-300 ease-in-out bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 shadow-xl z-50";
-    
-    if (isMinimized) return `${baseClasses} ${position === 'right' ? 'right-0' : position === 'left' ? 'left-0' : 'bottom-0'} h-12`;
+  const getPositionClasses = useCallback(() => {
+    if (isMinimized) {
+      return `${BASE_CLASSES} ${position === 'right' ? 'right-0' : position === 'left' ? 'left-0' : 'bottom-0'} h-12`;
+    }
     
     if (position === "floating") {
-      return `${baseClasses} cursor-move`;
+      return `${BASE_CLASSES} cursor-move`;
     }
 
     switch (position) {
       case "left":
-        return `${baseClasses} left-0 h-screen border-r`;
+        return `${BASE_CLASSES} left-0 h-screen border-r`;
       case "right":
-        return `${baseClasses} right-0 h-screen border-r`;
+        return `${BASE_CLASSES} right-0 h-screen border-r`;
       case "bottom":
-        return `${baseClasses} bottom-0 w-full border-t`;
+        return `${BASE_CLASSES} bottom-0 w-full border-t`;
       default:
-        return `${baseClasses} right-0`;
+        return `${BASE_CLASSES} right-0`;
     }
-  };
+  }, [position, isMinimized]);
 
   const resizeHandles = position === "floating" && !isMinimized && !isCollapsed ? (
     <>
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize" 
         onMouseDown={() => startResize('ne')}
       />
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize" 
         onMouseDown={() => startResize('se')}
       />
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize" 
         onMouseDown={() => startResize('sw')}
       />
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize" 
         onMouseDown={() => startResize('nw')}
       />
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 cursor-n-resize" 
         onMouseDown={() => startResize('n')}
       />
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 cursor-s-resize" 
         onMouseDown={() => startResize('s')}
       />
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 cursor-w-resize" 
         onMouseDown={() => startResize('w')}
       />
-      <ResizableHandle 
+      <ResizeHandle 
         className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 cursor-e-resize" 
         onMouseDown={() => startResize('e')}
       />
