@@ -7,32 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import type { AgentMetricsData } from '@/types/agent';
 
-type MetricsData = {
-  cpuUsage: number;
-  memoryUsage: number;
-  networkLatency: number;
-  activeFlows: number;
-  successRate: number;
-  totalInteractions: number;
-  systemLoad: {
-    cpu_threads: number[];
-    io_operations: number[];
-    memory_allocation: number[];
-  };
-  networkMetrics: {
-    bandwidth_usage: number[];
-    connection_pool: number[];
-    latency_history: number[];
-  };
-  performanceIndicators: {
-    error_rate: number[];
-    throughput: number[];
-    response_times: number[];
-  };
-};
-
-const initialMetrics: MetricsData = {
+const initialMetrics: AgentMetricsData = {
   cpuUsage: 0,
   memoryUsage: 0,
   networkLatency: 0,
@@ -57,7 +34,7 @@ const initialMetrics: MetricsData = {
 };
 
 export function AgentMetrics() {
-  const [metrics, setMetrics] = useState<MetricsData>(initialMetrics);
+  const [metrics, setMetrics] = useState<AgentMetricsData>(initialMetrics);
   const [historicalData, setHistoricalData] = useState<any[]>([]);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
@@ -76,45 +53,44 @@ export function AgentMetrics() {
         (payload) => {
           console.log('New metrics received:', payload);
           setLastUpdate(new Date().toISOString());
-          const { 
-            cpu_usage, 
-            memory_usage, 
-            network_latency, 
-            active_flows, 
-            success_rate, 
-            total_interactions,
-            system_load,
-            network_metrics,
-            performance_indicators
-          } = payload.new;
+          
+          const systemLoad = typeof payload.new.system_load === 'string' 
+            ? JSON.parse(payload.new.system_load)
+            : payload.new.system_load || initialMetrics.systemLoad;
 
-          const newMetrics = {
-            cpuUsage: cpu_usage || 0,
-            memoryUsage: memory_usage || 0,
-            networkLatency: network_latency || 0,
-            activeFlows: active_flows || 0,
-            successRate: success_rate || 0,
-            totalInteractions: total_interactions || 0,
-            systemLoad: system_load || initialMetrics.systemLoad,
-            networkMetrics: network_metrics || initialMetrics.networkMetrics,
-            performanceIndicators: performance_indicators || initialMetrics.performanceIndicators
+          const networkMetrics = typeof payload.new.network_metrics === 'string'
+            ? JSON.parse(payload.new.network_metrics)
+            : payload.new.network_metrics || initialMetrics.networkMetrics;
+
+          const performanceIndicators = typeof payload.new.performance_indicators === 'string'
+            ? JSON.parse(payload.new.performance_indicators)
+            : payload.new.performance_indicators || initialMetrics.performanceIndicators;
+
+          const newMetrics: AgentMetricsData = {
+            cpuUsage: payload.new.cpu_usage || 0,
+            memoryUsage: payload.new.memory_usage || 0,
+            networkLatency: payload.new.network_latency || 0,
+            activeFlows: payload.new.active_flows || 0,
+            successRate: payload.new.success_rate || 0,
+            totalInteractions: payload.new.total_interactions || 0,
+            systemLoad,
+            networkMetrics,
+            performanceIndicators
           };
 
           setMetrics(newMetrics);
           
-          // Update historical data for charts
           setHistoricalData(prev => [...prev, {
             timestamp: new Date().toISOString(),
             cpu: newMetrics.cpuUsage,
             memory: newMetrics.memoryUsage,
             network: newMetrics.networkLatency
-          }].slice(-20)); // Keep last 20 data points
+          }].slice(-20));
         }
       )
       .subscribe();
 
-    // Fetch initial metrics
-    const fetchMetrics = async () => {
+    const fetchInitialMetrics = async () => {
       const { data, error } = await supabase
         .from('agent_metrics')
         .select('*')
@@ -128,21 +104,34 @@ export function AgentMetrics() {
       }
 
       if (data) {
-        setMetrics({
+        const systemLoad = typeof data.system_load === 'string' 
+          ? JSON.parse(data.system_load)
+          : data.system_load || initialMetrics.systemLoad;
+
+        const networkMetrics = typeof data.network_metrics === 'string'
+          ? JSON.parse(data.network_metrics)
+          : data.network_metrics || initialMetrics.networkMetrics;
+
+        const performanceIndicators = typeof data.performance_indicators === 'string'
+          ? JSON.parse(data.performance_indicators)
+          : data.performance_indicators || initialMetrics.performanceIndicators;
+
+        const initialData: AgentMetricsData = {
           cpuUsage: data.cpu_usage || 0,
           memoryUsage: data.memory_usage || 0,
           networkLatency: data.network_latency || 0,
           activeFlows: data.active_flows || 0,
           successRate: data.success_rate || 0,
           totalInteractions: data.total_interactions || 0,
-          systemLoad: data.system_load || initialMetrics.systemLoad,
-          networkMetrics: data.network_metrics || initialMetrics.networkMetrics,
-          performanceIndicators: data.performance_indicators || initialMetrics.performanceIndicators
-        });
+          systemLoad,
+          networkMetrics,
+          performanceIndicators
+        };
+        setMetrics(initialData);
       }
     };
 
-    fetchMetrics();
+    fetchInitialMetrics();
 
     return () => {
       console.log('Cleaning up metrics subscription');
