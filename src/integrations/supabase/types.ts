@@ -465,6 +465,36 @@ export type Database = {
         }
         Relationships: []
       }
+      project_connections: {
+        Row: {
+          created_at: string
+          id: string
+          shared_components: Json | null
+          source_project_id: string
+          sync_settings: Json | null
+          target_project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          shared_components?: Json | null
+          source_project_id: string
+          sync_settings?: Json | null
+          target_project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          shared_components?: Json | null
+          source_project_id?: string
+          sync_settings?: Json | null
+          target_project_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       property_assessments: {
         Row: {
           assessment_date: string | null
