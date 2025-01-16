@@ -4,40 +4,43 @@ export interface SystemLoad {
   network: number;
 }
 
-export interface AgentMetricsData {
-  id: string;
-  timestamp: string;
-  cpu_usage: number;
-  memory_usage: number;
-  network_latency: number;
-  active_flows: number;
-  success_rate: number;
-  total_interactions: number;
-  metrics_data: Record<string, any>;
-  created_at: string;
-  system_load: {
-    cpu_threads: number[];
-    io_operations: number[];
-    memory_allocation: number[];
+export interface SharedComputerState {
+  activeUsers: string[];
+  screenSharing: {
+    active: boolean;
+    userId?: string;
+    resolution: string;
+    frameRate: number;
   };
-  network_metrics: {
-    bandwidth_usage: number[];
-    connection_pool: number[];
-    latency_history: number[];
+  voiceChat: {
+    active: boolean;
+    participants: string[];
+    quality: string;
   };
-  performance_indicators: {
-    error_rate: number[];
-    throughput: number[];
-    response_times: number[];
+  videoChat: {
+    active: boolean;
+    participants: string[];
+    quality: string;
+  };
+  systemLoad: SystemLoad;
+  browserState: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
   };
 }
 
-export interface AgentMessage {
-  role: string;
-  content: string;
-  agent?: string;
-  message?: string;
-  timestamp?: string;
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+}
+
+export interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
 }
 
 export interface ThreadAnalysis {
@@ -46,18 +49,10 @@ export interface ThreadAnalysis {
   thread_type: string;
   connection_status: string;
   analysis_status: string;
-  analysis_data: Record<string, any>;
+  analysis_data: any;
   system_load: SystemLoad;
-  performance_metrics: {
-    response_time: number[];
-    success_rate: number[];
-    error_rate: number[];
-  };
-  network_stats: {
-    latency: number[];
-    bandwidth: number[];
-    connections: number[];
-  };
+  performance_metrics: PerformanceMetrics;
+  network_stats: NetworkStats;
   agent_states: {
     pro: string;
     claude: string;
@@ -67,53 +62,70 @@ export interface ThreadAnalysis {
   connection_score?: number;
 }
 
-export interface SharedComputerState {
-  screen_sharing: {
-    active: boolean;
-    userId: string | null;
+export interface AgentMetricsData {
+  system_load: {
+    cpu_threads: number[];
+    io_operations: number[];
+    memory_allocation: number[];
   };
-  voice_chat: {
-    active: boolean;
-    participants: string[];
+  networkMetrics: {
+    bandwidth_usage: number[];
+    connection_pool: number[];
+    latency_history: number[];
   };
-  video_chat: {
-    active: boolean;
-    participants: string[];
+  performanceIndicators: {
+    error_rate: number[];
+    throughput: number[];
+    response_times: number[];
   };
-  active_users: string[];
-  system_metrics: SystemLoad;
-  browser_state?: {
-    url: string;
-    title: string;
-    isClaudeActive: boolean;
-    lastInteraction: string;
-  };
+  cpuUsage: number;
+  memoryUsage: number;
+  networkLatency: number;
+  activeFlows: number;
+  successRate: number;
+  totalInteractions: number;
+}
+
+export interface AgentMessage {
+  role: string;
+  content: string;
+  timestamp?: string;
+  agent?: string;
+  message?: string;
 }
 
 export interface DifyAgent {
   id: string;
   name: string;
-  role: string;
-  status: 'idle' | 'processing' | 'completed' | 'error';
-  progress?: number;
-  last_action?: string;
+  status: "idle" | "processing" | "completed" | "error";
+  capabilities?: string[];
+  lastAction?: string;
+  metrics?: AgentMetricsData;
+  role?: string;
   backstory?: string;
-  documents?: string[];
   systemPrompt?: string;
-  model?: 'claude' | 'gemini' | 'gemini-vision' | 'grok' | 'perplexity' | 'skyvern';
+  model?: string;
+  progress?: number;
+  documents?: boolean;
 }
 
 export interface AgentAction {
   id: string;
   description: string;
   timestamp: string;
-  agentId?: string;
-  status?: 'success' | 'error' | 'warning';
+  agentId: string;
+  status: 'success' | 'error' | 'pending';
 }
 
 export interface AgentState {
   agents: DifyAgent[];
   actions: AgentAction[];
-  currentPhase: string;
-  isProcessing: boolean;
+  currentPhase?: string;
+  isProcessing?: boolean;
+}
+
+export interface AgentsPanelProps {
+  onMessage: (message: string, agent: string) => Promise<void>;
+  onVoiceInput?: (transcript: string) => void;
+  messages: AgentMessage[];
 }
