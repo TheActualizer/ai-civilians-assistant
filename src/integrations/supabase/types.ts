@@ -56,6 +56,45 @@ export type Database = {
           },
         ]
       }
+      agent_metrics: {
+        Row: {
+          active_flows: number | null
+          cpu_usage: number | null
+          created_at: string | null
+          id: string
+          memory_usage: number | null
+          metrics_data: Json | null
+          network_latency: number | null
+          success_rate: number | null
+          timestamp: string | null
+          total_interactions: number | null
+        }
+        Insert: {
+          active_flows?: number | null
+          cpu_usage?: number | null
+          created_at?: string | null
+          id?: string
+          memory_usage?: number | null
+          metrics_data?: Json | null
+          network_latency?: number | null
+          success_rate?: number | null
+          timestamp?: string | null
+          total_interactions?: number | null
+        }
+        Update: {
+          active_flows?: number | null
+          cpu_usage?: number | null
+          created_at?: string | null
+          id?: string
+          memory_usage?: number | null
+          metrics_data?: Json | null
+          network_latency?: number | null
+          success_rate?: number | null
+          timestamp?: string | null
+          total_interactions?: number | null
+        }
+        Relationships: []
+      }
       chat_history: {
         Row: {
           context: Json | null

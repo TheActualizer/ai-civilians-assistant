@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeAgentFlow, queryAgentContext, subscribeToAgentUpdates } from '@/utils/agentFlow';
 import type { DifyAgent, AgentAction, AgentState, AgentsPanelProps } from './types';
+import { AgentMetrics } from './AgentMetrics';
+import { AgentNetwork } from './AgentNetwork';
 
 const INITIAL_AGENTS: DifyAgent[] = [
   {
@@ -73,22 +75,17 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
   const [selectedAgent, setSelectedAgent] = useState<DifyAgent | null>(null);
   const [customInstructions, setCustomInstructions] = useState<string>('');
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [systemMetrics, setSystemMetrics] = useState({
-    cpuUsage: 0,
-    memoryUsage: 0,
-    networkLatency: 0,
-    activeFlows: 0
-  });
 
   useEffect(() => {
     // Simulate system metrics updates
     const interval = setInterval(() => {
-      setSystemMetrics({
-        cpuUsage: Math.random() * 100,
-        memoryUsage: Math.random() * 100,
-        networkLatency: Math.random() * 200,
-        activeFlows: Math.floor(Math.random() * 10)
-      });
+      setState(prev => ({
+        ...prev,
+        agents: prev.agents.map(agent => ({
+          ...agent,
+          status: Math.random() > 0.5 ? 'completed' : 'processing'
+        }))
+      }));
     }, 2000);
 
     return () => clearInterval(interval);
@@ -237,84 +234,6 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
     }
   };
 
-  const renderMetricsCard = () => (
-    <Card className="bg-gray-800/50 border-gray-700">
-      <CardHeader>
-        <CardTitle className="text-gray-100 flex items-center gap-2">
-          <Cpu className="h-5 w-5 text-primary" />
-          System Metrics
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-400">CPU Usage</p>
-            <Progress value={systemMetrics.cpuUsage} className="h-2 mt-1" />
-            <p className="text-xs text-gray-500 mt-1">{systemMetrics.cpuUsage.toFixed(1)}%</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-400">Memory</p>
-            <Progress value={systemMetrics.memoryUsage} className="h-2 mt-1" />
-            <p className="text-xs text-gray-500 mt-1">{systemMetrics.memoryUsage.toFixed(1)}%</p>
-          </div>
-        </div>
-        <div className="flex justify-between text-sm text-gray-400">
-          <span>Network Latency: {systemMetrics.networkLatency.toFixed(0)}ms</span>
-          <span>Active Flows: {systemMetrics.activeFlows}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderAgentCard = (agent: DifyAgent) => (
-    <div 
-      key={agent.id} 
-      className="p-4 border border-gray-700 rounded-lg bg-gray-800/50 hover:bg-gray-800/70 transition-colors cursor-pointer"
-      onClick={() => setSelectedAgent(agent)}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Brain className={`h-5 w-5 ${getStatusColor(agent.status)}`} />
-          <h3 className="font-medium text-gray-200">{agent.name}</h3>
-        </div>
-        <Badge 
-          variant={agent.status === 'completed' ? 'default' : 'secondary'}
-          className={`${getStatusColor(agent.status)}`}
-        >
-          {agent.status}
-        </Badge>
-      </div>
-      <p className="text-sm text-gray-400 mb-2">{agent.role}</p>
-      {agent.progress !== undefined && (
-        <Progress value={agent.progress} className="h-1" />
-      )}
-      <div className="flex items-center justify-between mt-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-gray-400 hover:text-gray-300"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedAgent(agent);
-          }}
-        >
-          <Settings className="h-4 w-4 mr-1" />
-          Configure
-        </Button>
-        {agent.documents && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-400 hover:text-gray-300"
-          >
-            <FileText className="h-4 w-4 mr-1" />
-            View Docs
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <Card className="bg-gray-900/50 border-gray-700">
       <CardHeader>
@@ -339,80 +258,78 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
             <TabsTrigger value="agents">Agents</TabsTrigger>
+            <TabsTrigger value="network">Network</TabsTrigger>
             <TabsTrigger value="logs">Logs</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            {renderMetricsCard()}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-gray-100 flex items-center gap-2">
-                    <Network className="h-5 w-5 text-primary" />
-                    Network Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-400">Active Connections: {state.agents.filter(a => a.status === 'processing').length}</p>
-                    <p className="text-sm text-gray-400">Total Agents: {state.agents.length}</p>
-                    <p className="text-sm text-gray-400">Recent Actions: {state.actions.length}</p>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-gray-100 flex items-center gap-2">
-                    <Database className="h-5 w-5 text-primary" />
-                    Knowledge Base
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-400">Indexed Documents: 1,234</p>
-                    <p className="text-sm text-gray-400">Last Updated: 2 minutes ago</p>
-                    <p className="text-sm text-gray-400">Active Queries: 3</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <AgentMetrics />
           </TabsContent>
 
           <TabsContent value="metrics">
             <div className="space-y-4">
-              {renderMetricsCard()}
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-gray-100 flex items-center gap-2">
-                    <Workflow className="h-5 w-5 text-primary" />
-                    Flow Analytics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-400">Successful Flows</p>
-                        <p className="text-2xl font-bold text-green-400">89%</p>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-400">Average Response Time</p>
-                        <p className="text-2xl font-bold text-blue-400">1.2s</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <AgentMetrics />
+              <AgentNetwork />
             </div>
           </TabsContent>
 
           <TabsContent value="agents">
             <ScrollArea className="h-[500px]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {state.agents.map(renderAgentCard)}
+                {state.agents.map(agent => (
+                  <div 
+                    key={agent.id} 
+                    className="p-4 border border-gray-700 rounded-lg bg-gray-800/50 hover:bg-gray-800/70 transition-colors cursor-pointer"
+                    onClick={() => setSelectedAgent(agent)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Brain className={`h-5 w-5 ${getStatusColor(agent.status)}`} />
+                        <h3 className="font-medium text-gray-200">{agent.name}</h3>
+                      </div>
+                      <Badge 
+                        variant={agent.status === 'completed' ? 'default' : 'secondary'}
+                        className={`${getStatusColor(agent.status)}`}
+                      >
+                        {agent.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-400 mb-2">{agent.role}</p>
+                    {agent.progress !== undefined && (
+                      <Progress value={agent.progress} className="h-1" />
+                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-gray-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAgent(agent);
+                        }}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Configure
+                      </Button>
+                      {agent.documents && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-gray-300"
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          View Docs
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="network">
+            <AgentNetwork />
           </TabsContent>
 
           <TabsContent value="logs">
