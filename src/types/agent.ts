@@ -34,7 +34,7 @@ export interface AgentMessage {
   timestamp: string;
 }
 
-export interface AgentsPanelProps {
+export interface EngineersPanelProps {
   onMessage: (message: string, agent: string) => Promise<void>;
   onVoiceInput: (transcript: string) => Promise<void>;
   messages: AgentMessage[];
@@ -106,26 +106,31 @@ export interface ApiMetric {
   successRate: number;
   errorCount: number;
   timestamp: string;
-  service_name?: string;
-  system_metrics?: {
-    cpu: number;
-    memory: number;
-    network: number;
+}
+
+export interface ServiceMetrics {
+  id: string;
+  name: string;
+  status: string;
+  performance_metrics: {
+    response_times: number[];
+    error_rates: number[];
+    throughput: number[];
+    resource_usage: {
+      cpu: number[];
+      memory: number[];
+      network: number[];
+    };
   };
 }
 
-export interface ServiceHealth {
-  service_name: string;
-  status: 'healthy' | 'degraded' | 'down';
-  uptime_percentage: number;
-  resource_usage: {
-    cpu: number;
-    memory: number;
-    network: number;
-  };
-  last_check: Date;
-  alerts: any[];
-  dependencies: string[];
+export interface SiteStructurePage {
+  id: string;
+  path: string;
+  title: string;
+  sections: any[];
+  features: string[];
+  integrations: string[];
 }
 
 export interface MainLayoutProps {
@@ -155,5 +160,59 @@ export interface SharedComputerState {
     title: string;
     isClaudeActive: boolean;
     lastInteraction: string;
+  };
+}
+
+export interface SystemAnalysis {
+  metrics: Record<string, any>;
+  patterns: Record<string, any>;
+  insights: string[];
+  correlations: any[];
+  predictions: any[];
+  recommendations: any[];
+}
+
+export interface UIVersion {
+  id: string;
+  name: string;
+  route: string;
+  component_data: Record<string, any>;
+  version_type: string;
+  version_tags: string[];
+  performance_metrics: {
+    api_latency: number[];
+    render_time: number[];
+    memory_usage: number[];
+  };
+  integration_data: {
+    connected_services: string[];
+    api_dependencies: string[];
+    data_flow: string[];
+  };
+  created_at: string;
+  is_active?: boolean;
+  description?: string;
+  metadata?: Record<string, any>;
+  created_by?: string;
+  parent_version_id?: string;
+}
+
+export interface EngineerMessage {
+  id: string;
+  message: string;
+  context: string;
+  message_type: string;
+  importance_level: number;
+  created_at: string;
+  metadata: {
+    mood?: string;
+    energy_level?: string;
+    ready_for_challenge?: boolean;
+  };
+  game_context: {
+    challenge_level: number;
+    achievement_points: number;
+    current_mission: string;
+    badges_earned: string[];
   };
 }

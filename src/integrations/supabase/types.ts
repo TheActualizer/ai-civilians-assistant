@@ -148,6 +148,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_engineer_messages: {
+        Row: {
+          context: string | null
+          created_at: string | null
+          game_context: Json | null
+          id: string
+          importance_level: number | null
+          message: string
+          message_type: string | null
+          metadata: Json | null
+          response_required: boolean | null
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string | null
+          game_context?: Json | null
+          id?: string
+          importance_level?: number | null
+          message: string
+          message_type?: string | null
+          metadata?: Json | null
+          response_required?: boolean | null
+        }
+        Update: {
+          context?: string | null
+          created_at?: string | null
+          game_context?: Json | null
+          id?: string
+          importance_level?: number | null
+          message?: string
+          message_type?: string | null
+          metadata?: Json | null
+          response_required?: boolean | null
+        }
+        Relationships: []
+      }
       ai_video_synthesis: {
         Row: {
           created_at: string | null
