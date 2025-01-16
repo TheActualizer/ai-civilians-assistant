@@ -27,9 +27,18 @@ const AICivilEngineer = () => {
   const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
 
   useEffect(() => {
-    console.log('Initializing AI Civil Engineer page...');
+    console.log('AICivilEngineer: Component mounted, session status:', session ? 'Active' : 'None');
+
     const fetchInitialData = async () => {
+      console.log('AICivilEngineer: Fetching initial data...');
       try {
+        // Log the current session state
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        console.log('AICivilEngineer: Current session:', currentSession ? 'Active' : 'None');
+
+        // Fetch property assessment data
         const { data, error } = await supabase
           .from('property_assessments')
           .select('*')
@@ -37,28 +46,61 @@ const AICivilEngineer = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error fetching property assessment:', error);
+          console.error('AICivilEngineer: Error fetching property assessment:', error);
           throw error;
         }
 
         if (data) {
-          console.log('Fetched property assessment:', data);
+          console.log('AICivilEngineer: Fetched property assessment:', data);
           setRequestId(data.id);
+        } else {
+          console.log('AICivilEngineer: No property assessment found');
         }
         
       } catch (error: any) {
-        console.error('Error in fetchInitialData:', error);
+        console.error('AICivilEngineer: Error in fetchInitialData:', error);
         setError(error.message);
+        toast({
+          title: "Error",
+          description: "Failed to load initial data",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchInitialData();
-  }, []);
+    if (session) {
+      fetchInitialData();
+    }
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('ai-civil-engineer')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'property_assessments'
+        },
+        (payload) => {
+          console.log('AICivilEngineer: Real-time update received:', payload);
+          // Handle real-time updates here
+        }
+      )
+      .subscribe(status => {
+        console.log('AICivilEngineer: Real-time subscription status:', status);
+      });
+
+    return () => {
+      console.log('AICivilEngineer: Cleaning up subscriptions');
+      supabase.removeChannel(channel);
+    };
+  }, [session, toast]);
 
   const handleAgentMessage = async (message: string, agent: string) => {
-    console.log(`Agent ${agent} received message:`, message);
+    console.log(`AICivilEngineer: Agent ${agent} received message:`, message);
     
     setAgentMessages(prev => [...prev, {
       agent,
@@ -74,7 +116,7 @@ const AICivilEngineer = () => {
 
   const handleMessageSubmit = async (message: string) => {
     if (message.trim()) {
-      console.log('Submitting message:', message);
+      console.log('AICivilEngineer: Submitting message:', message);
       setApiCallHistory(prev => [...prev, {
         timestamp: new Date().toISOString(),
         event: "User message",
