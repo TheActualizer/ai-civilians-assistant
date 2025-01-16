@@ -68,6 +68,8 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [threadAnalysis, setThreadAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [autoAnalysis, setAutoAnalysis] = useState(false);
+  const [analysisInterval, setAnalysisInterval] = useState<number | null>(null);
 
   useEffect(() => {
     console.log('Initializing thread analysis subscription...');
@@ -100,6 +102,24 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
       supabase.removeChannel(channel);
     };
   }, [toast]);
+
+  useEffect(() => {
+    if (autoAnalysis && !analysisInterval) {
+      const interval = window.setInterval(startClaudeAnalysis, 300000); // Run every 5 minutes
+      setAnalysisInterval(interval);
+      console.log('Started automated Claude analysis');
+    } else if (!autoAnalysis && analysisInterval) {
+      window.clearInterval(analysisInterval);
+      setAnalysisInterval(null);
+      console.log('Stopped automated Claude analysis');
+    }
+
+    return () => {
+      if (analysisInterval) {
+        window.clearInterval(analysisInterval);
+      }
+    };
+  }, [autoAnalysis]);
 
   const startClaudeAnalysis = async () => {
     console.log('Starting Claude analysis...');
@@ -329,10 +349,7 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
               <Mic className={`h-6 w-6 ${isSpeaking ? 'text-green-500 animate-pulse' : 'text-primary'}`} />
               <span className="sr-only">Toggle voice input</span>
             </Button>
-            <VoiceControls 
-              onSpeakingChange={handleSpeakingChange}
-              className="absolute top-full mt-2 right-0"
-            />
+            <VoiceControls onSpeakingChange={handleSpeakingChange} />
             {state.isProcessing && (
               <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-400/50">
                 Processing
@@ -446,13 +463,22 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-200">Thread Analysis</h3>
-                  <Button 
-                    variant="outline"
-                    onClick={startClaudeAnalysis}
-                    disabled={isAnalyzing}
-                  >
-                    {isAnalyzing ? 'Analyzing...' : 'Start Analysis'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setAutoAnalysis(!autoAnalysis)}
+                      className={autoAnalysis ? 'bg-green-500/20 border-green-500' : ''}
+                    >
+                      {autoAnalysis ? 'Stop Auto Analysis' : 'Start Auto Analysis'}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={startClaudeAnalysis}
+                      disabled={isAnalyzing}
+                    >
+                      {isAnalyzing ? 'Analyzing...' : 'Run Analysis Now'}
+                    </Button>
+                  </div>
                 </div>
                 {threadAnalysis && (
                   <div className="space-y-4">
@@ -463,6 +489,11 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
                       <Badge variant="outline" className="bg-purple-500/10 text-purple-400">
                         Status: {threadAnalysis.analysis_status}
                       </Badge>
+                      {autoAnalysis && (
+                        <Badge variant="outline" className="bg-green-500/10 text-green-400">
+                          Auto Analysis Active
+                        </Badge>
+                      )}
                     </div>
                     {threadAnalysis.analysis_data && (
                       <div className="space-y-2">
