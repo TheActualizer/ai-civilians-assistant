@@ -2,29 +2,89 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 import { AgentMetrics } from "@/components/Agents/AgentMetrics";
 import { AgentNetwork } from "@/components/Agents/AgentNetwork";
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
-import { useState } from "react";
+import { agentMonitoringService } from "@/services/agent-monitoring/AgentMonitoringService";
+import { debugVisualizationService } from "@/services/debug/DebugVisualizationService";
+import { analyticsService } from "@/services/analytics/AnalyticsService";
+import { useToast } from "@/hooks/use-toast";
 
 const AgentMonitoring = () => {
   const session = useSession();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [apiCallHistory, setApiCallHistory] = useState<Array<{
     timestamp: string;
     event: string;
     details?: any;
   }>>([]);
 
-  const handleMessageSubmit = (message: string) => {
-    setApiCallHistory(prev => [...prev, {
-      timestamp: new Date().toISOString(),
-      event: "User message",
-      details: { message }
-    }]);
+  useEffect(() => {
+    console.log('Initializing services...');
+    
+    const initializeServices = async () => {
+      try {
+        // Initialize all services
+        await Promise.all([
+          agentMonitoringService.initialize(),
+          debugVisualizationService.initialize({
+            type: 'network',
+            mode: 'artistic',
+            theme: 'dark',
+            animations: true
+          }),
+        ]);
+
+        // Track page view
+        await analyticsService.trackMetric({
+          metric_type: 'page_view',
+          value: 1,
+          metadata: { page: 'agent-monitoring' }
+        });
+
+        toast({
+          title: "Services Initialized",
+          description: "All monitoring services are now active",
+        });
+      } catch (error) {
+        console.error('Error initializing services:', error);
+        toast({
+          variant: "destructive",
+          title: "Initialization Error",
+          description: "Failed to initialize monitoring services",
+        });
+      }
+    };
+
+    initializeServices();
+
+    return () => {
+      console.log('Cleaning up services...');
+      agentMonitoringService.cleanup();
+    };
+  }, [toast]);
+
+  const handleMessageSubmit = async (message: string) => {
+    try {
+      await agentMonitoringService.logAgentAction('debug-console', 'message-sent', { message });
+      setApiCallHistory(prev => [...prev, {
+        timestamp: new Date().toISOString(),
+        event: "User message",
+        details: { message }
+      }]);
+    } catch (error) {
+      console.error('Error handling message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message",
+      });
+    }
   };
 
   return (
@@ -79,6 +139,7 @@ const AgentMonitoring = () => {
             >
               <AgentsPanel 
                 onMessage={async (message: string, agent: string) => {
+                  await agentMonitoringService.logAgentAction(agent, 'message-received', { message });
                   setApiCallHistory(prev => [...prev, {
                     timestamp: new Date().toISOString(),
                     event: `Agent ${agent} message`,
@@ -86,6 +147,7 @@ const AgentMonitoring = () => {
                   }]);
                 }}
                 onVoiceInput={async (transcript: string) => {
+                  await agentMonitoringService.logAgentAction('voice-input', 'transcript-received', { transcript });
                   setApiCallHistory(prev => [...prev, {
                     timestamp: new Date().toISOString(),
                     event: "Voice input received",
