@@ -423,6 +423,25 @@ export function ClaudeAnalysis({ pageRoute, agentState, onThreadCreated }: Claud
     }
   };
 
+  useEffect(() => {
+    // Automatically send strategic analysis request on mount
+    const strategicPrompt = `Analyze and optimize the entire system architecture for maximum performance:
+
+    1. Evaluate current UI/UX patterns and suggest fluid transitions
+    2. Identify performance bottlenecks across all hubs
+    3. Recommend optimal caching strategies for site_structure data
+    4. Design real-time synchronization patterns between components
+    5. Propose microservices architecture for scalability
+    6. Map dependencies between hubs for efficient routing
+    7. Calculate optimal lazy-loading boundaries
+    8. Measure and enhance component render performance
+    
+    Provide specific metrics and implementation strategies for each area.`;
+
+    setCommandInput(strategicPrompt);
+    handleCommandSubmit();
+  }, []);
+
   return (
     <ScrollArea className="h-[500px]">
       <div className="space-y-4">

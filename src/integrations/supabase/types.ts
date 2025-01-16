@@ -957,6 +957,54 @@ export type Database = {
         }
         Relationships: []
       }
+      site_structure: {
+        Row: {
+          component_data: Json | null
+          created_at: string | null
+          description: string | null
+          hub_name: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          page_path: string
+          page_type: string | null
+          parent_path: string | null
+          requires_auth: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          component_data?: Json | null
+          created_at?: string | null
+          description?: string | null
+          hub_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          page_path: string
+          page_type?: string | null
+          parent_path?: string | null
+          requires_auth?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          component_data?: Json | null
+          created_at?: string | null
+          description?: string | null
+          hub_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          page_path?: string
+          page_type?: string | null
+          parent_path?: string | null
+          requires_auth?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       system_events: {
         Row: {
           component: string
