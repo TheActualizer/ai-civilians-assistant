@@ -55,7 +55,7 @@ const Index = () => {
         >
           <Button
             onClick={() => navigate("/ai-civil-engineer")}
-            className="w-full flex items-center justify-between p-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-lg h-auto"
+            className="w-full flex items-center justify-between p-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-lg h-auto shadow-lg hover:shadow-xl transition-all"
           >
             <div className="flex items-center">
               <Brain className="h-6 w-6 mr-3" />
@@ -66,10 +66,13 @@ const Index = () => {
         </motion.div>
 
         {/* Core Features Grid */}
-        <CoreFeatures />
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Core Features</h2>
+          <CoreFeatures />
+        </div>
 
         {/* Hub Sections */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 gap-8 mb-12 bg-white p-6 rounded-lg shadow-md">
           <HubSection
             title="Enterprise Solutions"
             icon={Building2}
@@ -92,7 +95,7 @@ const Index = () => {
         </div>
 
         {/* Technology & Operations */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 gap-8 mb-12 bg-white p-6 rounded-lg shadow-md">
           <HubSection
             title="Technology"
             icon={Cpu}
@@ -115,7 +118,7 @@ const Index = () => {
         </div>
 
         {/* Innovation & Resources */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8 bg-white p-6 rounded-lg shadow-md">
           <HubSection
             title="Innovation Center"
             icon={Sparkles}
