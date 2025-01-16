@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Newspaper,
   Calendar,
@@ -18,8 +19,11 @@ import {
   Search,
   ArrowUpDown,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  FileDown,
+  FileText
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewsItem {
   id: string;
@@ -38,6 +42,8 @@ interface NewsTableProps {
 
 export const NewsTable = ({ initialData }: NewsTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
   const [sortConfig, setSortConfig] = useState<{
     key: keyof NewsItem;
     direction: 'asc' | 'desc';
@@ -75,6 +81,101 @@ export const NewsTable = ({ initialData }: NewsTableProps) => {
     item.summary.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleGenerateReport = async () => {
+    setIsGenerating(true);
+    try {
+      // Create a report request in Supabase
+      const { data: report, error } = await supabase
+        .from('reports')
+        .insert({
+          report_name: `Custom Report - ${new Date().toLocaleDateString()}`,
+          description: `Generated report based on search: ${searchTerm}`,
+          metadata: {
+            searchTerm,
+            filteredCount: filteredData.length,
+            timestamp: new Date().toISOString()
+          }
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Report Generated",
+        description: "Your custom report has been created successfully.",
+      });
+
+      // Subscribe to realtime updates for the report
+      const channel = supabase
+        .channel(`report-${report.id}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'reports' },
+          (payload) => {
+            console.log('Report updated:', payload);
+            if (payload.new.file_url) {
+              toast({
+                title: "Report Ready",
+                description: "Your report is ready to download",
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate report"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const exportData = filteredData.map(item => ({
+        Title: item.title,
+        Category: item.category,
+        Date: item.date,
+        Author: item.author,
+        Summary: item.summary
+      }));
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `news-export-${new Date().toISOString()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Export Successful",
+        description: "Your data has been exported successfully"
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "Failed to export data"
+      });
+    }
+  };
+
+  // ... keep existing code (table rendering structure)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -87,14 +188,33 @@ export const NewsTable = ({ initialData }: NewsTableProps) => {
           <h2 className="text-2xl font-bold">News Feed</h2>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search news..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 w-[300px]"
-            />
+          <div className="relative flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search news..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 w-[300px]"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleGenerateReport}
+              disabled={isGenerating}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Generate Report
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              className="flex items-center gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Export
+            </Button>
           </div>
         </div>
       </div>
