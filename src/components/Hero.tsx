@@ -39,12 +39,12 @@ const Hero = () => {
             transition={{ duration: 0.8 }}
             className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28"
           >
-            <div className="sm:text-center lg:text-left">
+            <div className="text-center lg:text-left">
               <motion.h1 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl"
+                className="text-3xl tracking-tight font-extrabold text-gray-900 sm:text-4xl md:text-5xl lg:text-6xl"
               >
                 <span className="block">Streamline Your</span>
                 <span className="block text-primary">Building Analysis</span>
@@ -61,18 +61,14 @@ const Hero = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7 }}
-                className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start"
+                className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4"
               >
-                <div className="rounded-md shadow">
-                  <Button size="lg" asChild className="w-full">
-                    <Link to="/get-started">Get Started</Link>
-                  </Button>
-                </div>
-                <div className="mt-3 sm:mt-0 sm:ml-3">
-                  <Button variant="outline" size="lg" asChild className="w-full">
-                    <Link to="/learn-more">Learn More</Link>
-                  </Button>
-                </div>
+                <Button size="lg" asChild className="w-full sm:w-auto">
+                  <Link to="/get-started">Get Started</Link>
+                </Button>
+                <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
+                  <Link to="/learn-more">Learn More</Link>
+                </Button>
               </motion.div>
             </div>
           </motion.main>
@@ -82,13 +78,13 @@ const Hero = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1 }}
-        className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2"
+        className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 mt-8 lg:mt-0"
       >
         <Carousel className="w-full h-full" opts={{ loop: true, align: "start" }}>
           <CarouselContent>
             {images.map((image, index) => (
               <CarouselItem key={index}>
-                <div className="h-56 w-full sm:h-72 md:h-96 lg:w-full lg:h-full">
+                <div className="h-48 sm:h-56 md:h-72 lg:h-full w-full">
                   <img
                     src={image.src}
                     alt={image.alt}
