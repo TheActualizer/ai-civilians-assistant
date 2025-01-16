@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause } from 'lucide-react';
+import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause, Terminal } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,6 +20,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const [autoAnalysis, setAutoAnalysis] = useState(true);
   const [analysisInterval, setAnalysisInterval] = useState<number | null>(null);
   const [analysisCount, setAnalysisCount] = useState(0);
+  const [commandInput, setCommandInput] = useState('');
   const [systemHealth, setSystemHealth] = useState({
     claudeStatus: 'idle',
     geminiStatus: 'idle',
@@ -26,7 +28,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     syncStatus: 'pending'
   });
 
-  // Start analysis immediately when component mounts
   useEffect(() => {
     console.log('Initializing immediate analysis and continuous improvement...');
     startClaudeAnalysis();
@@ -43,7 +44,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           analysis_frequency: 20,
           analysis_status: 'active',
           analysis_data: {
-            ...threadAnalysis?.analysis_data,
             continuous_improvement: true,
             target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
             improvement_focus: [
@@ -56,15 +56,15 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         })
         .eq('page_path', pageRoute)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
       console.log('Page analysis initialized:', existingAnalysis);
       
       toast({
-        title: "Continuous Improvement Activated",
-        description: "Claude will now actively analyze and suggest improvements for all pages.",
+        title: "Command Center Activated",
+        description: "Claude is now ready to receive strategic directives.",
       });
     } catch (error) {
       console.error('Error initializing page analysis:', error);
@@ -89,8 +89,8 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           
           if (payload.new.connection_score > (payload.old?.connection_score || 0)) {
             toast({
-              title: "Thread Connection Achievement! 🎯",
-              description: `New connection score: ${payload.new.connection_score}`,
+              title: "Quantum Thread Connected! 🎯",
+              description: `System Evolution Score: ${payload.new.connection_score}`,
             });
           }
 
@@ -111,18 +111,18 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
   useEffect(() => {
     if (autoAnalysis && !analysisInterval) {
-      const interval = window.setInterval(startClaudeAnalysis, 20000); // Run every 20 seconds for rapid iteration
+      const interval = window.setInterval(startClaudeAnalysis, 20000);
       setAnalysisInterval(interval);
-      console.log('Started automated Claude analysis loop');
+      console.log('Started automated system evolution loop');
       
       toast({
-        title: "Auto Analysis Active",
-        description: "Claude will continuously analyze and improve thread connections.",
+        title: "Auto-Evolution Active",
+        description: "Claude will continuously analyze and improve system connections.",
       });
     } else if (!autoAnalysis && analysisInterval) {
       window.clearInterval(analysisInterval);
       setAnalysisInterval(null);
-      console.log('Stopped automated Claude analysis');
+      console.log('Paused system evolution loop');
     }
 
     return () => {
@@ -132,8 +132,10 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     };
   }, [autoAnalysis]);
 
-  const startClaudeAnalysis = async () => {
-    console.log('Starting Claude analysis iteration:', analysisCount + 1);
+  const handleCommandSubmit = async () => {
+    if (!commandInput.trim()) return;
+    
+    console.log('Processing strategic command:', commandInput);
     setIsAnalyzing(true);
     
     try {
@@ -141,17 +143,17 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         body: {
           messages: [{ 
             role: 'user', 
-            content: 'Analyze the current system state, identify improvements, and coordinate with other agents to implement changes.' 
+            content: commandInput 
           }],
-          systemPrompt: `You are an expert system analyzer and improver working with Gemini and Pro-01 agents.
-                        Your goal is to continuously improve the application by:
-                        1. Identifying UI/UX improvements
-                        2. Suggesting new features and optimizations
-                        3. Coordinating with other agents to implement changes
-                        4. Maintaining system health and performance
+          systemPrompt: `You are the Chief Technology Officer of a trillion-dollar tech company.
+                        Your mission is to analyze and improve the system by:
+                        1. Identifying optimization opportunities
+                        2. Coordinating with Gemini and Pro-01 agents
+                        3. Implementing strategic improvements
+                        4. Maintaining system integrity
                         
-                        Current analysis iteration: ${analysisCount + 1}
-                        Previous findings: ${JSON.stringify(threadAnalysis?.analysis_data || {})}`,
+                        Current evolution phase: ${analysisCount + 1}
+                        Previous insights: ${JSON.stringify(threadAnalysis?.analysis_data || {})}`,
           pageContext: {
             route: pageRoute,
             agents: agentState.agents,
@@ -171,7 +173,8 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           analysis_data: {
             ...analysisData,
             iteration: analysisCount + 1,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            command: commandInput
           },
           analysis_status: 'completed',
           last_analysis_timestamp: new Date().toISOString(),
@@ -185,10 +188,11 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
       setThreadAnalysis(threadUpdate);
       setAnalysisCount(prev => prev + 1);
+      setCommandInput('');
       
       toast({
-        title: "Analysis Complete",
-        description: `Iteration ${analysisCount + 1} completed successfully.`,
+        title: "Strategic Directive Processed",
+        description: `System evolution phase ${analysisCount + 1} completed.`,
       });
 
       setSystemHealth(prev => ({
@@ -198,11 +202,11 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
       }));
 
     } catch (error) {
-      console.error('Error in Claude analysis:', error);
+      console.error('Error processing command:', error);
       toast({
         variant: "destructive",
-        title: "Analysis Error",
-        description: "Failed to complete Claude analysis iteration.",
+        title: "Command Processing Error",
+        description: "Failed to execute strategic directive.",
       });
       
       setSystemHealth(prev => ({
@@ -215,11 +219,16 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     }
   };
 
+  const startClaudeAnalysis = async () => {
+    console.log('Initiating system evolution phase:', analysisCount + 1);
+    await handleCommandSubmit();
+  };
+
   return (
     <ScrollArea className="h-[500px]">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-200">AI System Analysis</h3>
+          <h3 className="text-lg font-semibold text-gray-200">System Command Center</h3>
           <div className="flex items-center gap-2">
             <Button 
               variant="outline"
@@ -229,136 +238,150 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
               {autoAnalysis ? (
                 <>
                   <Pause className="h-4 w-4 mr-2" />
-                  Stop Auto Analysis
+                  Pause Evolution
                 </>
               ) : (
                 <>
                   <Play className="h-4 w-4 mr-2" />
-                  Start Auto Analysis
-                </>
-              )}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={startClaudeAnalysis}
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? (
-                <>
-                  <RotateCw className="h-4 w-4 mr-2 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Brain className="h-4 w-4 mr-2" />
-                  Run Analysis Now
+                  Resume Evolution
                 </>
               )}
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
-          <div className="p-4 bg-gray-800/30 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Brain className="h-4 w-4 text-purple-400" />
-              <span className="text-sm text-gray-300">Claude</span>
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-gray-400">Strategic Command Input</label>
+            <div className="flex gap-2">
+              <Textarea
+                value={commandInput}
+                onChange={(e) => setCommandInput(e.target.value)}
+                placeholder="Enter strategic directive for Claude..."
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleCommandSubmit}
+                disabled={isAnalyzing}
+                className="self-start"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RotateCw className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Terminal className="h-4 w-4 mr-2" />
+                    Execute
+                  </>
+                )}
+              </Button>
             </div>
-            <Badge variant="outline" className={`
-              ${systemHealth.claudeStatus === 'active' && 'bg-green-500/10 text-green-400'}
-              ${systemHealth.claudeStatus === 'error' && 'bg-red-500/10 text-red-400'}
-              ${systemHealth.claudeStatus === 'idle' && 'bg-gray-500/10 text-gray-400'}
-            `}>
-              {systemHealth.claudeStatus}
-            </Badge>
           </div>
 
-          <div className="p-4 bg-gray-800/30 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Cpu className="h-4 w-4 text-blue-400" />
-              <span className="text-sm text-gray-300">Gemini</span>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="p-4 bg-gray-800/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Brain className="h-4 w-4 text-purple-400" />
+                <span className="text-sm text-gray-300">Claude</span>
+              </div>
+              <Badge variant="outline" className={`
+                ${systemHealth.claudeStatus === 'active' && 'bg-green-500/10 text-green-400'}
+                ${systemHealth.claudeStatus === 'error' && 'bg-red-500/10 text-red-400'}
+                ${systemHealth.claudeStatus === 'idle' && 'bg-gray-500/10 text-gray-400'}
+              `}>
+                {systemHealth.claudeStatus}
+              </Badge>
             </div>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
-              {systemHealth.geminiStatus}
-            </Badge>
-          </div>
 
-          <div className="p-4 bg-gray-800/30 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Network className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm text-gray-300">Pro-01</span>
-            </div>
-            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400">
-              {systemHealth.proStatus}
-            </Badge>
-          </div>
-
-          <div className="p-4 bg-gray-800/30 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-gray-300">Sync Status</span>
-            </div>
-            <Badge variant="outline" className="bg-green-500/10 text-green-400">
-              {systemHealth.syncStatus}
-            </Badge>
-          </div>
-        </div>
-
-        {threadAnalysis && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="p-4 bg-gray-800/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Cpu className="h-4 w-4 text-blue-400" />
+                <span className="text-sm text-gray-300">Gemini</span>
+              </div>
               <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
-                Score: {threadAnalysis.connection_score}
+                {systemHealth.geminiStatus}
               </Badge>
-              <Badge variant="outline" className="bg-purple-500/10 text-purple-400">
-                Status: {threadAnalysis.analysis_status}
+            </div>
+
+            <div className="p-4 bg-gray-800/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Network className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm text-gray-300">Pro-01</span>
+              </div>
+              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400">
+                {systemHealth.proStatus}
               </Badge>
-              {autoAnalysis && (
-                <Badge variant="outline" className="bg-green-500/10 text-green-400">
-                  Auto Analysis Active
+            </div>
+
+            <div className="p-4 bg-gray-800/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="h-4 w-4 text-green-400" />
+                <span className="text-sm text-gray-300">Sync Status</span>
+              </div>
+              <Badge variant="outline" className="bg-green-500/10 text-green-400">
+                {systemHealth.syncStatus}
+              </Badge>
+            </div>
+          </div>
+
+          {threadAnalysis && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
+                  Score: {threadAnalysis.connection_score}
                 </Badge>
+                <Badge variant="outline" className="bg-purple-500/10 text-purple-400">
+                  Status: {threadAnalysis.analysis_status}
+                </Badge>
+                {autoAnalysis && (
+                  <Badge variant="outline" className="bg-green-500/10 text-green-400">
+                    Auto Analysis Active
+                  </Badge>
+                )}
+              </div>
+
+              <div className="p-4 bg-gray-800/50 rounded-lg">
+                <h4 className="font-medium text-gray-300 mb-2">Analysis Progress</h4>
+                <Progress value={analysisCount * 10} className="h-2" />
+                <p className="text-sm text-gray-400 mt-2">
+                  Completed Iterations: {analysisCount}
+                </p>
+              </div>
+
+              {threadAnalysis.analysis_data && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-300">Analysis Results</h4>
+                  <pre className="p-4 bg-gray-800/50 rounded-lg overflow-x-auto text-sm text-gray-300">
+                    {JSON.stringify(threadAnalysis.analysis_data, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {threadAnalysis.suggested_connections?.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-300">Suggested Connections</h4>
+                  <div className="grid gap-2">
+                    {threadAnalysis.suggested_connections.map((connection: any, index: number) => (
+                      <div 
+                        key={index}
+                        className="p-3 bg-gray-800/30 rounded-lg border border-gray-700"
+                      >
+                        <p className="text-sm text-gray-300">{connection.description}</p>
+                        {connection.score && (
+                          <Badge className="mt-2" variant="outline">
+                            Score: {connection.score}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
-
-            <div className="p-4 bg-gray-800/50 rounded-lg">
-              <h4 className="font-medium text-gray-300 mb-2">Analysis Progress</h4>
-              <Progress value={analysisCount * 10} className="h-2" />
-              <p className="text-sm text-gray-400 mt-2">
-                Completed Iterations: {analysisCount}
-              </p>
-            </div>
-
-            {threadAnalysis.analysis_data && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-300">Analysis Results</h4>
-                <pre className="p-4 bg-gray-800/50 rounded-lg overflow-x-auto text-sm text-gray-300">
-                  {JSON.stringify(threadAnalysis.analysis_data, null, 2)}
-                </pre>
-              </div>
-            )}
-
-            {threadAnalysis.suggested_connections?.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-300">Suggested Connections</h4>
-                <div className="grid gap-2">
-                  {threadAnalysis.suggested_connections.map((connection: any, index: number) => (
-                    <div 
-                      key={index}
-                      className="p-3 bg-gray-800/30 rounded-lg border border-gray-700"
-                    >
-                      <p className="text-sm text-gray-300">{connection.description}</p>
-                      {connection.score && (
-                        <Badge className="mt-2" variant="outline">
-                          Score: {connection.score}
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </ScrollArea>
   );
