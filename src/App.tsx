@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import Index from "./pages/Index";
 import GetStarted from "./pages/GetStarted";
@@ -32,6 +32,8 @@ function App() {
           <Route path="/address-validation" element={<AddressValidation />} />
           <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
           <Route path="/assessment" element={<Assessment />} />
+          {/* Add redirect from old route to new route */}
+          <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
         </Routes>
         <Toaster />
       </Router>

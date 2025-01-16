@@ -6,15 +6,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Calculator, FileText, Map, Database, Code, Workflow } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 
-interface KnowledgeBaseEntry {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  tags: string[];
-  metadata: Record<string, any>;
-}
+type KnowledgeBaseEntry = Database['public']['Tables']['knowledge_base']['Row'];
 
 export function ProjectOverview() {
   const [entries, setEntries] = useState<KnowledgeBaseEntry[]>([]);
@@ -156,4 +150,4 @@ export function ProjectOverview() {
       </CardContent>
     </Card>
   );
-}
+};
