@@ -18,7 +18,6 @@ import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MobileViewPrompt } from "@/components/MobileViewPrompt";
 
 const AICivilEngineer = () => {
   const session = useSession();
@@ -51,7 +50,6 @@ const AICivilEngineer = () => {
   const handleRetry = async () => {
     setIsLoading(true);
     setError(null);
-    setApiError(null); // Reset API error on retry
     addToHistory("Retrying API call");
     await fetchLatestRequest();
   };
@@ -144,18 +142,11 @@ const AICivilEngineer = () => {
           if (apiError) {
             console.error('LightBox API call error:', apiError);
             setApiError({
-              message: 'Error calling LightBox API. Please check your API key configuration.',
+              message: apiError.message || 'Error calling LightBox API',
               details: apiError,
               timestamp: new Date().toISOString()
             });
             addToHistory("LightBox API call failed", apiError);
-            
-            toast({
-              variant: "destructive",
-              title: "API Error",
-              description: "Failed to fetch LightBox data. Please check the API configuration.",
-              duration: 5000,
-            });
           } else {
             console.log('LightBox API response:', data);
             addToHistory("LightBox API call successful", data);
@@ -176,26 +167,12 @@ const AICivilEngineer = () => {
             timestamp: new Date().toISOString()
           });
           addToHistory("Error in LightBox API call", apiError);
-          
-          toast({
-            variant: "destructive",
-            title: "API Error",
-            description: "Failed to process property data. Please try again.",
-            duration: 5000,
-          });
         }
       }
     } catch (error: any) {
       console.error('Unexpected error:', error);
       addToHistory("Unexpected error occurred", error);
       setError('An unexpected error occurred');
-      
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        duration: 5000,
-      });
     } finally {
       setIsLoading(false);
     }
@@ -244,7 +221,6 @@ const AICivilEngineer = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar session={session} />
-      <MobileViewPrompt />
       <SidebarProvider>
         <div className="flex w-full min-h-[calc(100vh-4rem)]">
           <DebugPanel

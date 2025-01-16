@@ -36,15 +36,15 @@ const Hero = () => {
           <motion.main 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.8 }}
             className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28"
           >
-            <div className="text-center lg:text-left">
+            <div className="sm:text-center lg:text-left">
               <motion.h1 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-2xl tracking-tight font-extrabold text-gray-900 sm:text-3xl md:text-4xl lg:text-5xl"
+                transition={{ delay: 0.3 }}
+                className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl"
               >
                 <span className="block">Streamline Your</span>
                 <span className="block text-primary">Building Analysis</span>
@@ -52,32 +52,27 @@ const Hero = () => {
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="mt-3 text-sm text-gray-500 sm:text-base md:text-lg lg:text-xl max-w-md mx-auto lg:mx-0"
+                transition={{ delay: 0.5 }}
+                className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0"
               >
                 Get instant zoning analysis, feasibility reports, and maximum buildable area calculations for your projects.
               </motion.p>
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="mt-5 sm:mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-2 sm:gap-4"
+                transition={{ delay: 0.7 }}
+                className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start"
               >
-                <Button 
-                  size="lg" 
-                  asChild 
-                  className="w-full sm:w-auto text-sm sm:text-base transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Link to="/get-started">Get Started</Link>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  asChild 
-                  className="w-full sm:w-auto text-sm sm:text-base transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Link to="/learn-more">Learn More</Link>
-                </Button>
+                <div className="rounded-md shadow">
+                  <Button size="lg" asChild className="w-full">
+                    <Link to="/get-started">Get Started</Link>
+                  </Button>
+                </div>
+                <div className="mt-3 sm:mt-0 sm:ml-3">
+                  <Button variant="outline" size="lg" asChild className="w-full">
+                    <Link to="/learn-more">Learn More</Link>
+                  </Button>
+                </div>
               </motion.div>
             </div>
           </motion.main>
@@ -86,34 +81,26 @@ const Hero = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 mt-6 lg:mt-0"
+        transition={{ duration: 1 }}
+        className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2"
       >
-        <Carousel 
-          className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-full" 
-          opts={{ 
-            loop: true, 
-            align: "start",
-            skipSnaps: false,
-            dragFree: true
-          }}
-        >
+        <Carousel className="w-full h-full" opts={{ loop: true, align: "start" }}>
           <CarouselContent>
             {images.map((image, index) => (
-              <CarouselItem key={index} className="h-full">
-                <div className="h-full w-full relative overflow-hidden rounded-lg">
+              <CarouselItem key={index}>
+                <div className="h-56 w-full sm:h-72 md:h-96 lg:w-full lg:h-full">
                   <img
                     src={image.src}
                     alt={image.alt}
-                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="left-2 sm:left-4" />
-          <CarouselNext className="right-2 sm:right-4" />
+          <CarouselPrevious className="left-4" />
+          <CarouselNext className="right-4" />
         </Carousel>
       </motion.div>
     </div>
