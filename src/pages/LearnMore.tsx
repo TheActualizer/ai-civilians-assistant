@@ -20,7 +20,7 @@ const LearnMore = () => {
         {/* Main content area with video call style layout */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
           
-          {/* Left panel - Command Center */}
+          {/* Left panel - Command Center (2/3 width) */}
           <div className="xl:col-span-2 space-y-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -81,7 +81,7 @@ const LearnMore = () => {
             </Card>
           </div>
 
-          {/* Right panel - Metrics & Controls */}
+          {/* Right panel - Metrics & Controls (1/3 width) */}
           <div className="space-y-4">
             {/* Quick action cards */}
             <div className="grid grid-cols-2 xl:grid-cols-1 gap-4">
