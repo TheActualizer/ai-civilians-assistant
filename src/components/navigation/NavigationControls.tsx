@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { 
   Building2, 
@@ -10,11 +10,15 @@ import {
   ChevronRight,
   ChevronLeft
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-export const NavigationControls = () => {
+interface NavigationControlsProps {
+  onToggle: () => void;
+}
+
+export const NavigationControls = ({ onToggle }: NavigationControlsProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isExpanded, setIsExpanded] = useState(true);
 
   const navigationItems = [
     { path: '/enterprise', icon: Building2, label: 'Enterprise Hub' },
@@ -25,29 +29,42 @@ export const NavigationControls = () => {
   ];
 
   return (
-    <nav className={`fixed left-0 top-20 h-full bg-gray-900/50 border-r border-gray-700 transition-all duration-300 ${isExpanded ? 'w-64' : 'w-16'}`}>
+    <motion.nav 
+      className="h-full bg-gray-900/50 border-r border-gray-700 w-64"
+      initial={{ x: -100 }}
+      animate={{ x: 0 }}
+      transition={{ duration: 0.2 }}
+    >
       <Button
         variant="ghost"
         size="icon"
         className="absolute -right-3 top-4 bg-gray-800 rounded-full"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggle}
       >
-        {isExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        <ChevronLeft className="h-4 w-4" />
       </Button>
 
       <div className="flex flex-col gap-2 p-4">
-        {navigationItems.map(({ path, icon: Icon, label }) => (
-          <Button
-            key={path}
-            variant={location.pathname.startsWith(path) ? "secondary" : "ghost"}
-            className={`justify-start ${isExpanded ? 'w-full' : 'w-8 p-2'}`}
-            onClick={() => navigate(path)}
-          >
-            <Icon className="h-4 w-4" />
-            {isExpanded && <span className="ml-2">{label}</span>}
-          </Button>
-        ))}
+        <TooltipProvider>
+          {navigationItems.map(({ path, icon: Icon, label }) => (
+            <Tooltip key={path}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={location.pathname.startsWith(path) ? "secondary" : "ghost"}
+                  className="justify-start w-full"
+                  onClick={() => navigate(path)}
+                >
+                  <Icon className="h-4 w-4 mr-2" />
+                  <span className="truncate">{label}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{label}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </TooltipProvider>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
