@@ -7,36 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface SystemLoad {
-  cpu: number;
-  memory: number;
-  network: number;
-}
-
-interface PerformanceMetrics {
-  response_time: number[];
-  success_rate: number[];
-  error_rate: number[];
-}
-
-interface NetworkStats {
-  latency: number[];
-  bandwidth: number[];
-  connections: number[];
-}
-
-interface MetricsState {
-  system_load: SystemLoad;
-  performance_metrics: PerformanceMetrics;
-  network_stats: NetworkStats;
-}
+import type { SystemLoad, PerformanceMetrics, NetworkStats, ThreadAnalysis } from '@/types/agent';
 
 interface ClaudeMetricsProps {
   threadId: string;
 }
 
-const defaultMetrics: MetricsState = {
+const defaultMetrics: ThreadAnalysis = {
+  id: '',
+  page_path: '',
+  thread_type: '',
   system_load: {
     cpu: 0,
     memory: 0,
@@ -51,11 +31,15 @@ const defaultMetrics: MetricsState = {
     latency: [],
     bandwidth: [],
     connections: []
-  }
+  },
+  analysis_status: 'pending',
+  last_analysis_timestamp: new Date().toISOString(),
+  connection_status: 'pending',
+  connection_score: 0
 };
 
 export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
-  const [metrics, setMetrics] = useState<MetricsState>(defaultMetrics);
+  const [metrics, setMetrics] = useState<ThreadAnalysis>(defaultMetrics);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const { toast } = useToast();
 
@@ -72,7 +56,7 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
           table: 'debug_thread_analysis',
           filter: `id=eq.${threadId}`
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Received metrics update:', {
             timestamp: new Date().toISOString(),
             payload,
@@ -80,31 +64,8 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
           });
 
           if (payload.new) {
-            const newData = payload.new as any;
-            
-            // Safely parse and validate metrics data
-            const systemLoad = typeof newData.system_load === 'object' ? newData.system_load : defaultMetrics.system_load;
-            const perfMetrics = typeof newData.performance_metrics === 'object' ? newData.performance_metrics : defaultMetrics.performance_metrics;
-            const netStats = typeof newData.network_stats === 'object' ? newData.network_stats : defaultMetrics.network_stats;
-
-            setMetrics({
-              system_load: {
-                cpu: Number(systemLoad.cpu) || 0,
-                memory: Number(systemLoad.memory) || 0,
-                network: Number(systemLoad.network) || 0
-              },
-              performance_metrics: {
-                response_time: Array.isArray(perfMetrics.response_time) ? perfMetrics.response_time : [],
-                success_rate: Array.isArray(perfMetrics.success_rate) ? perfMetrics.success_rate : [],
-                error_rate: Array.isArray(perfMetrics.error_rate) ? perfMetrics.error_rate : []
-              },
-              network_stats: {
-                latency: Array.isArray(netStats.latency) ? netStats.latency : [],
-                bandwidth: Array.isArray(netStats.bandwidth) ? netStats.bandwidth : [],
-                connections: Array.isArray(netStats.connections) ? netStats.connections : []
-              }
-            });
-
+            const newData = payload.new as ThreadAnalysis;
+            setMetrics(newData);
             setLastUpdate(new Date().toISOString());
             
             // Log detailed metrics to system_metrics table
@@ -127,27 +88,7 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
 
         if (data) {
           console.log('Initial metrics loaded:', data);
-          const systemLoad = typeof data.system_load === 'object' ? data.system_load : defaultMetrics.system_load;
-          const perfMetrics = typeof data.performance_metrics === 'object' ? data.performance_metrics : defaultMetrics.performance_metrics;
-          const netStats = typeof data.network_stats === 'object' ? data.network_stats : defaultMetrics.network_stats;
-
-          setMetrics({
-            system_load: {
-              cpu: Number(systemLoad.cpu) || 0,
-              memory: Number(systemLoad.memory) || 0,
-              network: Number(systemLoad.network) || 0
-            },
-            performance_metrics: {
-              response_time: Array.isArray(perfMetrics.response_time) ? perfMetrics.response_time : [],
-              success_rate: Array.isArray(perfMetrics.success_rate) ? perfMetrics.success_rate : [],
-              error_rate: Array.isArray(perfMetrics.error_rate) ? perfMetrics.error_rate : []
-            },
-            network_stats: {
-              latency: Array.isArray(netStats.latency) ? netStats.latency : [],
-              bandwidth: Array.isArray(netStats.bandwidth) ? netStats.bandwidth : [],
-              connections: Array.isArray(netStats.connections) ? netStats.connections : []
-            }
-          });
+          setMetrics(data as ThreadAnalysis);
         }
       } catch (error) {
         console.error('Error fetching initial metrics:', error);
@@ -167,15 +108,14 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
     };
   }, [threadId, toast]);
 
-  const logDetailedMetrics = async (data: any) => {
+  const logDetailedMetrics = async (data: ThreadAnalysis) => {
     try {
       const timestamp = new Date().toISOString();
       
-      // Log system metrics
       await supabase.from('system_metrics').insert([
         {
           metric_type: 'claude_system_load',
-          value: data.system_load?.cpu || 0,
+          value: data.system_load.cpu,
           component: 'claude',
           metadata: {
             thread_id: threadId,
@@ -207,7 +147,7 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">
               <Cpu className="h-4 w-4 text-blue-400 inline mr-2" />
-              CPU Usage
+              System Load
             </CardTitle>
             <Badge variant="outline" className="bg-blue-500/10">
               {metrics.system_load.cpu.toFixed(1)}%
@@ -294,6 +234,45 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
                 </div>
                 <Progress 
                   value={metrics.performance_metrics.error_rate[metrics.performance_metrics.error_rate.length - 1] || 0} 
+                  className="h-2" 
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">Network Latency</span>
+                  <Badge variant="outline" className="bg-yellow-500/10">
+                    {metrics.network_stats.latency[metrics.network_stats.latency.length - 1]?.toFixed(2) || 0}ms
+                  </Badge>
+                </div>
+                <Progress 
+                  value={metrics.network_stats.latency[metrics.network_stats.latency.length - 1] || 0} 
+                  className="h-2" 
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">Bandwidth Usage</span>
+                  <Badge variant="outline" className="bg-indigo-500/10">
+                    {metrics.network_stats.bandwidth[metrics.network_stats.bandwidth.length - 1]?.toFixed(1) || 0}%
+                  </Badge>
+                </div>
+                <Progress 
+                  value={metrics.network_stats.bandwidth[metrics.network_stats.bandwidth.length - 1] || 0} 
+                  className="h-2" 
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">Active Connections</span>
+                  <Badge variant="outline" className="bg-pink-500/10">
+                    {metrics.network_stats.connections[metrics.network_stats.connections.length - 1] || 0}
+                  </Badge>
+                </div>
+                <Progress 
+                  value={metrics.network_stats.connections[metrics.network_stats.connections.length - 1] || 0} 
                   className="h-2" 
                 />
               </div>
