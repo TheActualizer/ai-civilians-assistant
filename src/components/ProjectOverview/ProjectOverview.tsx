@@ -8,10 +8,11 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 import {
   Building2, Calculator, FileText, Map, Database, 
   Code, Workflow, Brain, Network, Settings2,
-  MessagesSquare, GitBranch, Bot
+  MessagesSquare, GitBranch, Bot, Zap, Activity
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,21 +30,16 @@ export function ProjectOverview() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [temperature, setTemperature] = useState(0.7);
-  const [maxTokens, setMaxTokens] = useState(2000);
-  const [memoryDepth, setMemoryDepth] = useState(5);
 
   useEffect(() => {
     const fetchKnowledgeBase = async () => {
       try {
-        console.log('Fetching knowledge base entries...');
         const { data, error: fetchError } = await supabase
           .from('knowledge_base')
           .select('*')
           .order('created_at', { ascending: false });
 
         if (fetchError) {
-          console.error('Error fetching knowledge base:', fetchError);
           setError('Failed to load project information');
           toast({
             variant: "destructive",
@@ -53,10 +49,8 @@ export function ProjectOverview() {
           return;
         }
 
-        console.log('Knowledge base entries loaded:', data);
         setEntries(data || []);
       } catch (err) {
-        console.error('Unexpected error:', err);
         setError('An unexpected error occurred');
       } finally {
         setIsLoading(false);
@@ -65,14 +59,6 @@ export function ProjectOverview() {
 
     fetchKnowledgeBase();
   }, [toast]);
-
-  const handleParameterUpdate = () => {
-    console.log('Updating parameters:', { temperature, maxTokens, memoryDepth });
-    toast({
-      title: "Parameters Updated",
-      description: "System parameters have been updated successfully"
-    });
-  };
 
   const sections = [
     {
@@ -130,21 +116,31 @@ export function ProjectOverview() {
     entries.filter(entry => entry.category === category);
 
   return (
-    <Card className="bg-gray-800/40 border-gray-700 backdrop-blur-sm shadow-lg">
+    <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 border-gray-700 backdrop-blur-lg shadow-xl">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Network className="h-5 w-5 text-primary" />
-          <CardTitle className="text-gray-100">CrewAI System Overview</CardTitle>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Network className="h-6 w-6 text-primary animate-pulse" />
+          </div>
+          <div>
+            <CardTitle className="text-2xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              CrewAI System Overview
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Real-time visualization of AI system architecture and controls
+            </CardDescription>
+          </div>
         </div>
-        <CardDescription className="text-gray-400">
-          Interactive visualization of the AI system architecture and controls
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="crew-ai" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-1">
             {sections.map((section) => (
-              <TabsTrigger key={section.id} value={section.id}>
+              <TabsTrigger 
+                key={section.id} 
+                value={section.id}
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
                 <div className="flex items-center gap-2">
                   <section.icon className="h-4 w-4" />
                   <span className="hidden md:inline">{section.title}</span>
@@ -154,175 +150,297 @@ export function ProjectOverview() {
           </TabsList>
 
           <TabsContent value="crew-ai">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-primary" />
-                    <CardTitle>CrewAI System</CardTitle>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Brain className="h-5 w-5 text-primary" />
+                      </div>
+                      <CardTitle>System Status</CardTitle>
+                    </div>
+                    <Badge 
+                      variant="outline" 
+                      className="bg-green-500/10 text-green-400 border-green-400/20"
+                    >
+                      Active
+                    </Badge>
                   </div>
-                  <Badge variant="outline">Active</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-3 gap-4">
-                    <Card className="p-4 bg-gray-800/50">
-                      <h3 className="text-sm font-medium mb-2">Memory Store</h3>
-                      <div className="text-2xl font-bold text-primary">
-                        {entries.length} Entries
-                      </div>
-                    </Card>
-                    <Card className="p-4 bg-gray-800/50">
-                      <h3 className="text-sm font-medium mb-2">Active Agents</h3>
-                      <div className="text-2xl font-bold text-primary">
-                        {getEntriesByCategory('agents').length}
-                      </div>
-                    </Card>
-                    <Card className="p-4 bg-gray-800/50">
-                      <h3 className="text-sm font-medium mb-2">Architecture Components</h3>
-                      <div className="text-2xl font-bold text-primary">
-                        {getEntriesByCategory('architecture').length}
-                      </div>
-                    </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <Card className="border-gray-800 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-blue-500/10 rounded-lg">
+                              <Database className="h-5 w-5 text-blue-400" />
+                            </div>
+                            <h3 className="text-sm font-medium text-gray-200">Memory Store</h3>
+                          </div>
+                          <div className="text-3xl font-bold text-blue-400">
+                            {entries.length} Entries
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <Card className="border-gray-800 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-green-500/10 rounded-lg">
+                              <Bot className="h-5 w-5 text-green-400" />
+                            </div>
+                            <h3 className="text-sm font-medium text-gray-200">Active Agents</h3>
+                          </div>
+                          <div className="text-3xl font-bold text-green-400">
+                            {getEntriesByCategory('agents').length}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <Card className="border-gray-800 bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-purple-500/10 rounded-lg">
+                              <GitBranch className="h-5 w-5 text-purple-400" />
+                            </div>
+                            <h3 className="text-sm font-medium text-gray-200">Components</h3>
+                          </div>
+                          <div className="text-3xl font-bold text-purple-400">
+                            {getEntriesByCategory('architecture').length}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="memory">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  <CardTitle>Memory System</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-4">
-                    {getEntriesByCategory('memory').map(entry => (
-                      <div key={entry.id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-                        <h3 className="text-lg font-medium text-gray-100">{entry.title}</h3>
-                        <p className="mt-2 text-gray-400">{entry.content}</p>
-                        <div className="mt-4 flex gap-2">
-                          {entry.tags?.map(tag => (
-                            <Badge key={tag} variant="secondary">{tag}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                      <Database className="h-5 w-5 text-blue-400" />
+                    </div>
+                    <CardTitle>Memory System</CardTitle>
                   </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-4">
+                      {getEntriesByCategory('memory').map((entry, index) => (
+                        <motion.div
+                          key={entry.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <Card className="border-gray-800 bg-gradient-to-br from-blue-500/5 to-purple-500/5 hover:from-blue-500/10 hover:to-purple-500/10 transition-all duration-300">
+                            <CardContent className="p-6">
+                              <h3 className="text-lg font-medium text-gray-200 mb-2">{entry.title}</h3>
+                              <p className="text-gray-400 mb-4">{entry.content}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {entry.tags?.map(tag => (
+                                  <Badge 
+                                    key={tag} 
+                                    variant="secondary"
+                                    className="bg-blue-500/10 text-blue-400 border-blue-400/20"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="agents">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-primary" />
-                  <CardTitle>AI Agents</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  {getEntriesByCategory('agents').map(agent => (
-                    <Card key={agent.id} className="p-4 bg-gray-800/50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Bot className="h-4 w-4 text-primary" />
-                        <h3 className="font-medium">{agent.title}</h3>
-                      </div>
-                      <p className="text-sm text-gray-400 mb-3">{agent.content}</p>
-                      <Badge variant="outline">Active</Badge>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-500/10 rounded-lg">
+                      <Bot className="h-5 w-5 text-green-400" />
+                    </div>
+                    <CardTitle>AI Agents</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-4">
+                      {getEntriesByCategory('agents').map(agent => (
+                        <motion.div
+                          key={agent.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                        >
+                          <Card className="border-gray-800 bg-gradient-to-br from-green-500/5 to-emerald-500/5 hover:from-green-500/10 hover:to-emerald-500/10 transition-all duration-300">
+                            <CardContent className="p-6">
+                              <h3 className="text-lg font-medium text-gray-200 mb-2">{agent.title}</h3>
+                              <p className="text-gray-400 mb-4">{agent.content}</p>
+                              <Badge variant="outline">Active</Badge>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="architecture">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <GitBranch className="h-5 w-5 text-primary" />
-                  <CardTitle>System Architecture</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-4">
-                    {getEntriesByCategory('architecture').map(entry => (
-                      <div key={entry.id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-                        <h3 className="text-lg font-medium text-gray-100">{entry.title}</h3>
-                        <p className="mt-2 text-gray-400">{entry.content}</p>
-                        <div className="mt-4 flex gap-2">
-                          {entry.tags?.map(tag => (
-                            <Badge key={tag} variant="secondary">{tag}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-500/10 rounded-lg">
+                      <GitBranch className="h-5 w-5 text-purple-400" />
+                    </div>
+                    <CardTitle>System Architecture</CardTitle>
                   </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-4">
+                      {getEntriesByCategory('architecture').map(entry => (
+                        <motion.div
+                          key={entry.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                        >
+                          <Card className="border-gray-800 bg-gradient-to-br from-purple-500/5 to-pink-500/5 hover:from-purple-500/10 hover:to-pink-500/10 transition-all duration-300">
+                            <CardContent className="p-6">
+                              <h3 className="text-lg font-medium text-gray-200 mb-2">{entry.title}</h3>
+                              <p className="text-gray-400 mb-4">{entry.content}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {entry.tags?.map(tag => (
+                                  <Badge 
+                                    key={tag} 
+                                    variant="secondary"
+                                    className="bg-purple-500/10 text-purple-400 border-purple-400/20"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Settings2 className="h-5 w-5 text-primary" />
-                  <CardTitle>System Parameters</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Temperature</label>
-                    <Slider
-                      value={[temperature]}
-                      onValueChange={([value]) => setTemperature(value)}
-                      max={1}
-                      step={0.1}
-                      className="w-full"
-                    />
-                    <span className="text-sm text-gray-400">{temperature}</span>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gray-500/10 rounded-lg">
+                      <Settings2 className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <CardTitle>System Parameters</CardTitle>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Max Tokens</label>
-                    <Input
-                      type="number"
-                      value={maxTokens}
-                      onChange={(e) => setMaxTokens(Number(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Temperature</label>
+                      <Slider
+                        value={[0.7]}
+                        onValueChange={([value]) => {}}
+                        max={1}
+                        step={0.1}
+                        className="w-full"
+                      />
+                      <span className="text-sm text-gray-400">0.7</span>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Max Tokens</label>
+                      <Input
+                        type="number"
+                        value={2000}
+                        onChange={(e) => {}}
+                        className="w-full"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Memory Depth</label>
-                    <Input
-                      type="number"
-                      value={memoryDepth}
-                      onChange={(e) => setMemoryDepth(Number(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Memory Depth</label>
+                      <Input
+                        type="number"
+                        value={5}
+                        onChange={(e) => {}}
+                        className="w-full"
+                      />
+                    </div>
 
-                  <Button 
-                    onClick={handleParameterUpdate}
-                    className="w-full"
-                  >
-                    Update Parameters
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                    <Button 
+                      onClick={() => {}}
+                      className="w-full"
+                    >
+                      Update Parameters
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
         </Tabs>
       </CardContent>
