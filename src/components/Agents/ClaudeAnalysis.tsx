@@ -16,7 +16,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const { toast } = useToast();
   const [threadAnalysis, setThreadAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [autoAnalysis, setAutoAnalysis] = useState(true); // Set to true by default
+  const [autoAnalysis, setAutoAnalysis] = useState(true);
   const [analysisInterval, setAnalysisInterval] = useState<number | null>(null);
   const [analysisCount, setAnalysisCount] = useState(0);
   const [systemHealth, setSystemHealth] = useState({
@@ -28,9 +28,48 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
   // Start analysis immediately when component mounts
   useEffect(() => {
-    console.log('Initializing immediate analysis...');
+    console.log('Initializing immediate analysis and continuous improvement...');
     startClaudeAnalysis();
+    initializePageAnalysis();
   }, []);
+
+  const initializePageAnalysis = async () => {
+    console.log('Setting up continuous page analysis for:', pageRoute);
+    try {
+      const { data: existingAnalysis, error } = await supabase
+        .from('debug_thread_analysis')
+        .update({
+          auto_analysis_enabled: true,
+          analysis_frequency: 20,
+          analysis_status: 'active',
+          analysis_data: {
+            ...threadAnalysis?.analysis_data,
+            continuous_improvement: true,
+            target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
+            improvement_focus: [
+              'UI/UX optimization',
+              'Component structure',
+              'Performance metrics',
+              'User engagement'
+            ]
+          }
+        })
+        .eq('page_path', pageRoute)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('Page analysis initialized:', existingAnalysis);
+      
+      toast({
+        title: "Continuous Improvement Activated",
+        description: "Claude will now actively analyze and suggest improvements for all pages.",
+      });
+    } catch (error) {
+      console.error('Error initializing page analysis:', error);
+    }
+  };
 
   useEffect(() => {
     console.log('Initializing thread analysis subscription...');
@@ -72,7 +111,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
   useEffect(() => {
     if (autoAnalysis && !analysisInterval) {
-      const interval = window.setInterval(startClaudeAnalysis, 30000); // Run every 30 seconds for faster analysis
+      const interval = window.setInterval(startClaudeAnalysis, 20000); // Run every 20 seconds for rapid iteration
       setAnalysisInterval(interval);
       console.log('Started automated Claude analysis loop');
       
@@ -102,10 +141,15 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         body: {
           messages: [{ 
             role: 'user', 
-            content: 'Analyze the current system state, identify improvements, and coordinate with other agents.' 
+            content: 'Analyze the current system state, identify improvements, and coordinate with other agents to implement changes.' 
           }],
-          systemPrompt: `You are an expert system analyzer working with Gemini and Pro-01 agents. 
-                        Identify UI/UX issues, data inconsistencies, and potential improvements.
+          systemPrompt: `You are an expert system analyzer and improver working with Gemini and Pro-01 agents.
+                        Your goal is to continuously improve the application by:
+                        1. Identifying UI/UX improvements
+                        2. Suggesting new features and optimizations
+                        3. Coordinating with other agents to implement changes
+                        4. Maintaining system health and performance
+                        
                         Current analysis iteration: ${analysisCount + 1}
                         Previous findings: ${JSON.stringify(threadAnalysis?.analysis_data || {})}`,
           pageContext: {
@@ -130,7 +174,9 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             timestamp: new Date().toISOString()
           },
           analysis_status: 'completed',
-          last_analysis_timestamp: new Date().toISOString()
+          last_analysis_timestamp: new Date().toISOString(),
+          auto_analysis_enabled: true,
+          analysis_interval: 20000
         })
         .select()
         .single();
@@ -145,7 +191,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         description: `Iteration ${analysisCount + 1} completed successfully.`,
       });
 
-      // Update system health
       setSystemHealth(prev => ({
         ...prev,
         claudeStatus: 'completed',
