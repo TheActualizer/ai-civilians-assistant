@@ -72,6 +72,7 @@ const AIChat = () => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [agents] = useState<DifyAgent[]>([ORCHESTRATOR, ...INITIAL_AGENTS]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const determineRelevantAgents = (message: string) => {
     // Simple keyword matching for demo purposes
@@ -99,6 +100,7 @@ const AIChat = () => {
 
   const handleMessageSubmit = async (message: string) => {
     console.log('Processing message:', message);
+    setIsProcessing(true);
     
     // Add user message
     const userMessage: ChatMessage = {
@@ -111,46 +113,77 @@ const AIChat = () => {
     
     try {
       // Log the chat interaction
-      const { data: chatData, error: chatError } = await supabase
+      const { error: chatError } = await supabase
         .from('chat_history')
-        .insert([{
+        .insert({
           user_id: session?.user?.id,
           message: message,
           context: { agents: agents.map(a => a.id) }
-        }])
-        .select();
+        });
 
       if (chatError) throw chatError;
 
-      // Orchestrator response
-      setTimeout(() => {
-        const relevantAgentIds = determineRelevantAgents(message);
-        const orchestratorMessage: ChatMessage = {
-          agent: ORCHESTRATOR.name,
-          message: `I'll coordinate responses from our experts on this query. Based on the context, I'm engaging: ${
-            relevantAgentIds.map(id => agents.find(a => a.id === id)?.name).join(', ')
-          }`,
+      // Get orchestrator response
+      const { data: orchestratorData, error: orchestratorError } = await supabase.functions.invoke(
+        'coordinate-agents',
+        {
+          body: { 
+            message,
+            agentId: ORCHESTRATOR.id,
+            context: { agents: agents.map(a => a.id) }
+          }
+        }
+      );
+
+      if (orchestratorError) throw orchestratorError;
+
+      // Add orchestrator message
+      const orchestratorMessage: ChatMessage = {
+        agent: ORCHESTRATOR.name,
+        message: orchestratorData.message,
+        timestamp: new Date().toISOString(),
+        role: ORCHESTRATOR.role
+      };
+      setMessages(prev => [...prev, orchestratorMessage]);
+
+      // Get relevant agent responses
+      const relevantAgentIds = determineRelevantAgents(message);
+      
+      // Process agent responses sequentially
+      for (const agentId of relevantAgentIds) {
+        const agent = agents.find(a => a.id === agentId);
+        if (!agent) continue;
+
+        const { data: agentData, error: agentError } = await supabase.functions.invoke(
+          'coordinate-agents',
+          {
+            body: { 
+              message,
+              agentId: agent.id,
+              context: { 
+                previousMessages: messages,
+                orchestratorResponse: orchestratorData
+              }
+            }
+          }
+        );
+
+        if (agentError) {
+          console.error(`Error getting response from agent ${agent.name}:`, agentError);
+          continue;
+        }
+
+        const agentMessage: ChatMessage = {
+          agent: agent.name,
+          message: agentData.message,
           timestamp: new Date().toISOString(),
-          role: ORCHESTRATOR.role
+          role: agent.role
         };
-        setMessages(prev => [...prev, orchestratorMessage]);
+        setMessages(prev => [...prev, agentMessage]);
 
-        // Simulate relevant agent responses with different delays
-        relevantAgentIds.forEach((agentId, index) => {
-          const agent = agents.find(a => a.id === agentId);
-          if (!agent) return;
-
-          setTimeout(() => {
-            const agentMessage: ChatMessage = {
-              agent: agent.name,
-              message: `From ${agent.role} perspective: Analyzing the request based on my expertise in ${agent.role.toLowerCase()}...`,
-              timestamp: new Date().toISOString(),
-              role: agent.role
-            };
-            setMessages(prev => [...prev, agentMessage]);
-          }, (index + 1) * 1000); // Stagger responses
-        });
-      }, 500);
+        // Add small delay between agent responses
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
 
     } catch (error) {
       console.error('Error processing message:', error);
@@ -159,6 +192,8 @@ const AIChat = () => {
         title: "Error",
         description: "Failed to process message"
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
