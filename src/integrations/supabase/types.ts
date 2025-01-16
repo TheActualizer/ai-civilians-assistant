@@ -703,6 +703,45 @@ export type Database = {
         }
         Relationships: []
       }
+      page_engagement_metrics: {
+        Row: {
+          created_at: string | null
+          engagement_score: number | null
+          id: string
+          interaction_count: number | null
+          last_interaction: string | null
+          message_count: number | null
+          page_path: string
+          updated_at: string | null
+          user_feedback: Json | null
+          view_duration: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          engagement_score?: number | null
+          id?: string
+          interaction_count?: number | null
+          last_interaction?: string | null
+          message_count?: number | null
+          page_path: string
+          updated_at?: string | null
+          user_feedback?: Json | null
+          view_duration?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          engagement_score?: number | null
+          id?: string
+          interaction_count?: number | null
+          last_interaction?: string | null
+          message_count?: number | null
+          page_path?: string
+          updated_at?: string | null
+          user_feedback?: Json | null
+          view_duration?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
