@@ -3,7 +3,6 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -18,6 +17,7 @@ import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
+import { useDebug } from "@/lib/debug-panel/context/DebugContext";
 
 const AICivilEngineer = () => {
   const session = useSession();
@@ -45,6 +45,13 @@ const AICivilEngineer = () => {
     timestamp: string;
   }>>([]);
 
+  const debug = useDebug();
+
+  const addToHistory = (event: string, details?: any) => {
+    console.log(`API Event: ${event}`, details);
+    debug.addToHistory(event, details);
+  };
+
   const handleAgentMessage = async (message: string, agent: string) => {
     console.log(`Agent ${agent} received message:`, message);
     
@@ -71,15 +78,6 @@ const AICivilEngineer = () => {
     
     // Process voice input
     await handleAgentMessage(transcript, 'Civil Engineer');
-  };
-
-  const addToHistory = (event: string, details?: any) => {
-    console.log(`API Event: ${event}`, details);
-    setApiCallHistory(prev => [...prev, {
-      timestamp: new Date().toISOString(),
-      event,
-      details
-    }]);
   };
 
   const handleRetry = async () => {
@@ -258,17 +256,6 @@ const AICivilEngineer = () => {
       <Navbar session={session} />
       <SidebarProvider>
         <div className="flex w-full min-h-[calc(100vh-4rem)]">
-          <DebugPanel
-            isLoading={isLoading}
-            error={error}
-            requestId={requestId}
-            lightboxData={lightboxData}
-            apiCallHistory={apiCallHistory}
-            apiError={apiError}
-            onRetry={handleRetry}
-            onMessageSubmit={handleMessageSubmit}
-          />
-          
           <div className="flex-1 pt-16 px-6 pb-8">
             <div className="mb-8">
               <div className="flex items-center justify-between">

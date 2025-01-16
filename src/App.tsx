@@ -16,6 +16,7 @@ import AgentMonitoring from "./pages/AgentMonitoring";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 import { DebugProvider } from "@/lib/debug-panel/context/DebugContext";
+import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <Route path="/agent-monitoring" element={<AgentMonitoring />} />
             <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
           </Routes>
+          <DebugPanel />
           <Toaster />
         </Router>
       </DebugProvider>
