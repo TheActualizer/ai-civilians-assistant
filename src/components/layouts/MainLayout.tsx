@@ -19,8 +19,8 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     isAnalyzing: false,
     currentRoute: window.location.pathname,
     threadId: null as string | null,
-    isSidebarCollapsed: isMobile,
-    isDebugPanelOpen: !isMobile
+    isSidebarCollapsed: true, // Changed to true by default
+    isDebugPanelOpen: false // Changed to false by default
   });
 
   useEffect(() => {
@@ -73,8 +73,8 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   useEffect(() => {
     setSystemState(prev => ({
       ...prev,
-      isSidebarCollapsed: isMobile,
-      isDebugPanelOpen: !isMobile
+      isSidebarCollapsed: true,
+      isDebugPanelOpen: false
     }));
   }, [isMobile]);
 
@@ -112,7 +112,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         </AnimatePresence>
         
         <main className={`flex-1 transition-all duration-300 ${
-          systemState.isSidebarCollapsed ? 'ml-16' : 'ml-16 lg:ml-64'
+          systemState.isSidebarCollapsed ? 'ml-0' : 'ml-16 lg:ml-64'
         } px-4 sm:px-6 lg:px-8 py-20`}>
           <div className="max-w-[1920px] mx-auto">
             {children}
