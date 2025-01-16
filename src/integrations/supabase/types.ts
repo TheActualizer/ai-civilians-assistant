@@ -1005,6 +1005,69 @@ export type Database = {
         }
         Relationships: []
       }
+      system_analysis_intelligence: {
+        Row: {
+          analysis_layer: string
+          analysis_type: string
+          architecture_metrics: Json | null
+          correlations: Json | null
+          created_at: string | null
+          historical_context: Json | null
+          id: string
+          insights: Json | null
+          learning_progress: Json | null
+          metrics: Json | null
+          patterns: Json | null
+          performance_metrics: Json | null
+          predictions: Json | null
+          recommendations: Json | null
+          resource_metrics: Json | null
+          timestamp: string | null
+          updated_at: string | null
+          user_experience_metrics: Json | null
+        }
+        Insert: {
+          analysis_layer: string
+          analysis_type: string
+          architecture_metrics?: Json | null
+          correlations?: Json | null
+          created_at?: string | null
+          historical_context?: Json | null
+          id?: string
+          insights?: Json | null
+          learning_progress?: Json | null
+          metrics?: Json | null
+          patterns?: Json | null
+          performance_metrics?: Json | null
+          predictions?: Json | null
+          recommendations?: Json | null
+          resource_metrics?: Json | null
+          timestamp?: string | null
+          updated_at?: string | null
+          user_experience_metrics?: Json | null
+        }
+        Update: {
+          analysis_layer?: string
+          analysis_type?: string
+          architecture_metrics?: Json | null
+          correlations?: Json | null
+          created_at?: string | null
+          historical_context?: Json | null
+          id?: string
+          insights?: Json | null
+          learning_progress?: Json | null
+          metrics?: Json | null
+          patterns?: Json | null
+          performance_metrics?: Json | null
+          predictions?: Json | null
+          recommendations?: Json | null
+          resource_metrics?: Json | null
+          timestamp?: string | null
+          updated_at?: string | null
+          user_experience_metrics?: Json | null
+        }
+        Relationships: []
+      }
       system_events: {
         Row: {
           component: string

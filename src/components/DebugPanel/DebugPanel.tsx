@@ -10,6 +10,7 @@ import { VoiceControls } from "@/components/DebugPanel/VoiceControls";
 import { MessageHistory } from "@/components/DebugPanel/MessageHistory";
 import { GamifiedMetrics } from "@/components/DebugPanel/GamifiedMetrics";
 import { AgentControl } from "@/components/DebugPanel/AgentControl";
+import { SystemIntelligencePanel } from "@/components/SystemIntelligence/SystemIntelligencePanel";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { DebugPanelProps } from "./types";
@@ -163,6 +164,7 @@ export function DebugPanel({
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
             <TabsTrigger value="system">System</TabsTrigger>
+            <TabsTrigger value="intelligence">Intelligence</TabsTrigger>
           </TabsList>
 
           <div className="mt-6 space-y-6">
@@ -215,6 +217,10 @@ export function DebugPanel({
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="intelligence">
+              <SystemIntelligencePanel />
             </TabsContent>
           </div>
         </Tabs>
