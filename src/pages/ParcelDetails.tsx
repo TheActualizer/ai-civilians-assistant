@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
@@ -96,8 +97,10 @@ const ParcelDetails = () => {
         if (propertyRequest.lightbox_data) {
           console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
           addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
-          // Explicitly cast the lightbox_data to LightBoxResponse
-          setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
+          
+          // First cast to unknown, then to LightBoxResponse to safely handle the type conversion
+          const typedLightboxData = propertyRequest.lightbox_data as unknown as LightBoxResponse;
+          setLightboxData(typedLightboxData);
         } else {
           try {
             const address = propertyRequest.street_address;
@@ -106,20 +109,10 @@ const ParcelDetails = () => {
             const zip = propertyRequest.zip_code;
 
             console.log('Calling LightBox API with address:', { address, city, state, zip });
-            addToHistory("Initiating LightBox API call", {
-              address,
-              city,
-              state,
-              zip
-            });
+            addToHistory("Initiating LightBox API call", { address, city, state, zip });
             
             const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
-              body: {
-                address,
-                city,
-                state,
-                zip
-              }
+              body: { address, city, state, zip }
             });
 
             if (apiError) {
@@ -133,8 +126,10 @@ const ParcelDetails = () => {
             } else {
               console.log('LightBox API response:', data);
               addToHistory("LightBox API call successful", data);
-              // Explicitly cast the API response to LightBoxResponse
-              setLightboxData(data as LightBoxResponse);
+              
+              // First cast to unknown, then to LightBoxResponse
+              const typedData = data as unknown as LightBoxResponse;
+              setLightboxData(typedData);
               
               toast({
                 title: "Success",
@@ -224,19 +219,20 @@ const ParcelDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
-      <div className="flex">
-        <DebugPanel
-          isLoading={isLoading}
-          error={error}
-          requestId={requestId}
-          lightboxData={lightboxData}
-          apiCallHistory={apiCallHistory}
-          apiError={apiError}
-          onRetry={handleRetry}
-          onMessageSubmit={handleMessageSubmit}
-        />
-        
-        <div className="flex-1 pt-24 px-4 pb-8">
+      <SidebarProvider>
+        <div className="flex w-full">
+          <DebugPanel
+            isLoading={isLoading}
+            error={error}
+            requestId={requestId}
+            lightboxData={lightboxData}
+            apiCallHistory={apiCallHistory}
+            apiError={apiError}
+            onRetry={handleRetry}
+            onMessageSubmit={handleMessageSubmit}
+          />
+          
+          <div className="flex-1 pt-24 px-4 pb-8">
           <Tabs defaultValue="property" className="w-full">
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="property">
@@ -410,8 +406,9 @@ const ParcelDetails = () => {
               </Button>
             </div>
           </Tabs>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     </div>
   );
 };
