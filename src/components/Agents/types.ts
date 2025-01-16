@@ -100,40 +100,6 @@ export interface ThreadAnalysis {
   analysis_interval?: number;
 }
 
-export interface SharedComputerState {
-  id?: string;
-  session_id?: string;
-  screen_sharing: {
-    active: boolean;
-    userId: string | null;
-  };
-  voice_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  video_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  active_users: string[];
-  system_metrics: SystemLoad;
-  browser_state?: {
-    url: string;
-    title: string;
-    isClaudeActive: boolean;
-    lastInteraction: string;
-  };
-}
-
-export interface SystemAnalysis {
-  metrics: Record<string, any>;
-  patterns: Record<string, any>;
-  insights: string[];
-  correlations: any[];
-  predictions: any[];
-  recommendations: any[];
-}
-
 export interface ApiMetric {
   endpoint: string;
   responseTime: number;
@@ -172,16 +138,38 @@ export interface MainLayoutProps {
   showNavigation?: boolean;
 }
 
-export interface PageVersion {
-  version_id: string;
-  version_name: string;
-  route: string;
-  components: any;
-  implementation_details: Record<string, any>;
-  layout_type: string;
-  page_category: string;
-  integration_points: string[];
-  component_registry: Record<string, any>;
+export interface SharedComputerState {
+  id?: string;
+  session_id?: string;
+  screen_sharing: {
+    active: boolean;
+    userId: string | null;
+  };
+  voice_chat: {
+    active: boolean;
+    participants: string[];
+  };
+  video_chat: {
+    active: boolean;
+    participants: string[];
+  };
+  active_users: string[];
+  system_metrics: SystemLoad;
+  browser_state?: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
+  };
+}
+
+export interface SystemAnalysis {
+  metrics: Record<string, any>;
+  patterns: Record<string, any>;
+  insights: string[];
+  correlations: any[];
+  predictions: any[];
+  recommendations: any[];
 }
 
 export interface UIVersion {

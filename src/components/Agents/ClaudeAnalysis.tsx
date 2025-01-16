@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import type { ThreadAnalysis } from '@/types/agent';
+import type { ThreadAnalysis, SystemLoad, NetworkStats, PerformanceMetrics } from '@/types/agent';
 
 interface ClaudeAnalysisProps {
   pageRoute: string;

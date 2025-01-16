@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import type { AgentMetricsData } from '@/types/agent';
+import type { AgentMetricsData, SystemLoad, NetworkStats } from '@/types/agent';
 import { useToast } from "@/hooks/use-toast";
 
 const initialMetrics: AgentMetricsData = {
@@ -11,11 +11,17 @@ const initialMetrics: AgentMetricsData = {
   successRate: 0,
   totalInteractions: 0,
   system_load: {
+    cpu: 0,
+    memory: 0,
+    network: 0,
     cpu_threads: [],
     io_operations: [],
     memory_allocation: []
   },
   networkMetrics: {
+    latency: [],
+    bandwidth: [],
+    connections: [],
     bandwidth_usage: [],
     connection_pool: [],
     latency_history: []
