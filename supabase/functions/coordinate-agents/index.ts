@@ -12,20 +12,35 @@ serve(async (req) => {
   }
 
   try {
-    const { action, agentId, data } = await req.json();
-    console.log(`Coordinating agent action: ${action} for agent ${agentId}`, data);
+    const { message, agentId, context } = await req.json();
+    console.log(`Coordinating response for agent ${agentId}:`, { message, context });
 
-    // Here we'll implement the agent coordination logic
-    // For now, we'll just return a mock response
+    // Log the interaction in the database
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: interaction, error } = await supabase
+      .from('agent_interactions')
+      .insert({
+        agent_id: agentId,
+        action: 'respond',
+        details: { message, context },
+        status: 'completed'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // For now, return a simulated response
+    // In a real implementation, this would use the appropriate AI model for each agent
     const response = {
-      status: 'success',
+      id: interaction.id,
       agentId,
-      action,
-      result: {
-        status: 'completed',
-        message: `Successfully processed ${action} for agent ${agentId}`,
-        timestamp: new Date().toISOString(),
-      }
+      message: `Processed ${agentId}'s response to: ${message}`,
+      timestamp: new Date().toISOString(),
     };
 
     return new Response(

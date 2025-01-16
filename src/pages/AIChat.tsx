@@ -15,6 +15,15 @@ interface ChatMessage {
   role?: string;
 }
 
+const ORCHESTRATOR: DifyAgent = {
+  id: 'orchestrator',
+  name: 'Orchestrator',
+  role: 'Coordinates agent responses and manages conversation flow',
+  status: 'idle',
+  backstory: 'An expert system coordinator that ensures efficient and relevant agent collaboration.',
+  systemPrompt: 'You are the orchestrator responsible for coordinating agent responses based on context.'
+};
+
 const INITIAL_AGENTS: DifyAgent[] = [
   {
     id: 'data-ingestion',
@@ -62,9 +71,35 @@ const AIChat = () => {
   const session = useSession();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [agents] = useState<DifyAgent[]>(INITIAL_AGENTS);
+  const [agents] = useState<DifyAgent[]>([ORCHESTRATOR, ...INITIAL_AGENTS]);
+
+  const determineRelevantAgents = (message: string) => {
+    // Simple keyword matching for demo purposes
+    const keywords = {
+      'data': ['data-ingestion'],
+      'property': ['parcel-analysis', 'buildable-envelope'],
+      'zoning': ['setback-calculation'],
+      'environment': ['environmental'],
+      'build': ['buildable-envelope', 'setback-calculation'],
+      'analysis': ['data-ingestion', 'parcel-analysis'],
+      'regulation': ['setback-calculation', 'environmental']
+    };
+
+    const relevantAgentIds = new Set<string>();
+    Object.entries(keywords).forEach(([keyword, agentIds]) => {
+      if (message.toLowerCase().includes(keyword)) {
+        agentIds.forEach(id => relevantAgentIds.add(id));
+      }
+    });
+
+    return relevantAgentIds.size > 0 
+      ? Array.from(relevantAgentIds)
+      : INITIAL_AGENTS.map(a => a.id); // Default to all agents if no specific matches
+  };
 
   const handleMessageSubmit = async (message: string) => {
+    console.log('Processing message:', message);
+    
     // Add user message
     const userMessage: ChatMessage = {
       agent: 'user',
@@ -87,18 +122,35 @@ const AIChat = () => {
 
       if (chatError) throw chatError;
 
-      // Simulate agent responses with different perspectives
-      for (const agent of agents) {
-        setTimeout(() => {
-          const agentMessage: ChatMessage = {
-            agent: agent.name,
-            message: `From ${agent.role} perspective: Analyzing the request...`,
-            timestamp: new Date().toISOString(),
-            role: agent.role
-          };
-          setMessages(prev => [...prev, agentMessage]);
-        }, Math.random() * 2000); // Stagger responses
-      }
+      // Orchestrator response
+      setTimeout(() => {
+        const relevantAgentIds = determineRelevantAgents(message);
+        const orchestratorMessage: ChatMessage = {
+          agent: ORCHESTRATOR.name,
+          message: `I'll coordinate responses from our experts on this query. Based on the context, I'm engaging: ${
+            relevantAgentIds.map(id => agents.find(a => a.id === id)?.name).join(', ')
+          }`,
+          timestamp: new Date().toISOString(),
+          role: ORCHESTRATOR.role
+        };
+        setMessages(prev => [...prev, orchestratorMessage]);
+
+        // Simulate relevant agent responses with different delays
+        relevantAgentIds.forEach((agentId, index) => {
+          const agent = agents.find(a => a.id === agentId);
+          if (!agent) return;
+
+          setTimeout(() => {
+            const agentMessage: ChatMessage = {
+              agent: agent.name,
+              message: `From ${agent.role} perspective: Analyzing the request based on my expertise in ${agent.role.toLowerCase()}...`,
+              timestamp: new Date().toISOString(),
+              role: agent.role
+            };
+            setMessages(prev => [...prev, agentMessage]);
+          }, (index + 1) * 1000); // Stagger responses
+        });
+      }, 500);
 
     } catch (error) {
       console.error('Error processing message:', error);
@@ -156,7 +208,7 @@ const AIChat = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-6">
-              Engage with our team of specialized AI agents, each bringing unique expertise to analyze your property development queries.
+              Engage with our team of specialized AI agents, coordinated by an intelligent orchestrator to provide comprehensive analysis of your property development queries.
             </p>
           </CardContent>
         </Card>
