@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause, Terminal, MousePointer, Send, Power } from 'lucide-react';
+import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause, Terminal, MousePointer, Send, Power, Activity } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -204,6 +204,18 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     };
   }, [autoAnalysis]);
 
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'active':
+      case 'connected':
+        return 'outline';
+      case 'error':
+        return 'destructive';
+      default:
+        return 'secondary';
+    }
+  };
+
   const handleCommandSubmit = async () => {
     if (!commandInput.trim()) {
       toast({
@@ -218,6 +230,9 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     setIsAnalyzing(true);
     
     try {
+      const startTime = new Date().toISOString();
+      console.log(`[${startTime}] Sending command to Claude compute function`);
+
       const { data: analysisData, error } = await supabase.functions.invoke('claude-compute', {
         body: {
           messages: [{ 
@@ -244,6 +259,9 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
       if (error) throw error;
 
+      const endTime = new Date().toISOString();
+      console.log(`[${endTime}] Received response from Claude:`, analysisData);
+
       const { data: threadUpdate, error: updateError } = await supabase
         .from('debug_thread_analysis')
         .upsert({
@@ -253,7 +271,11 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             ...analysisData,
             iteration: analysisCount + 1,
             timestamp: new Date().toISOString(),
-            command: commandInput
+            command: commandInput,
+            execution_time: {
+              start: startTime,
+              end: endTime
+            }
           },
           analysis_status: 'completed',
           last_analysis_timestamp: new Date().toISOString(),
@@ -298,11 +320,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     }
   };
 
-  const startClaudeAnalysis = async () => {
-    console.log('Initiating system evolution phase:', analysisCount + 1);
-    await handleCommandSubmit();
-  };
-
   return (
     <ScrollArea className="h-[500px]">
       <div className="space-y-4">
@@ -310,17 +327,22 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-gray-200">System Command Center</h3>
             <Badge 
-              variant={isConnected ? "success" : "destructive"}
-              className="animate-pulse"
+              variant={getBadgeVariant(systemHealth.claudeStatus)}
+              className={`${systemHealth.claudeStatus === 'active' ? 'animate-pulse' : ''}`}
             >
-              {isConnected ? "Connected" : "Disconnected"}
+              Claude: {systemHealth.claudeStatus}
+            </Badge>
+            <Badge 
+              variant={getBadgeVariant(systemHealth.syncStatus)}
+            >
+              Sync: {systemHealth.syncStatus}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
             <Button 
               variant="outline"
               onClick={() => setAutoAnalysis(!autoAnalysis)}
-              className={autoAnalysis ? 'bg-green-500/20 border-green-500' : ''}
+              className={autoAnalysis ? 'bg-green-500/20' : ''}
             >
               {autoAnalysis ? (
                 <>
@@ -337,7 +359,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             <Button
               variant="outline"
               onClick={() => window.location.reload()}
-              className="bg-blue-500/20 border-blue-500"
+              className="bg-blue-500/20"
             >
               <Power className="h-4 w-4 mr-2" />
               Reconnect
@@ -394,11 +416,41 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             </div>
           </div>
 
+          {/* Claude Activity Log */}
+          <div className="p-4 bg-gray-800/50 rounded-lg space-y-2">
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="h-4 w-4 text-primary" />
+              <h4 className="font-medium text-gray-300">Claude Activity Log</h4>
+            </div>
+            <ScrollArea className="h-[200px] border border-gray-700 rounded-md p-2">
+              {threadAnalysis?.analysis_data?.execution_time && (
+                <div className="text-sm text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <span>Start: {threadAnalysis.analysis_data.execution_time.start}</span>
+                    <span>End: {threadAnalysis.analysis_data.execution_time.end}</span>
+                  </div>
+                  <div className="mt-2">
+                    Command: {threadAnalysis.analysis_data.command}
+                  </div>
+                  <pre className="mt-2 whitespace-pre-wrap">
+                    {JSON.stringify(threadAnalysis.analysis_data, null, 2)}
+                  </pre>
+                </div>
+              )}
+              {!threadAnalysis?.analysis_data?.execution_time && (
+                <div className="text-center text-gray-500 py-4">
+                  No Claude activity logged yet. Try sending a command.
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+
+          {/* System Status */}
           {threadAnalysis && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
-                  Score: {threadAnalysis.connection_score}
+                  Score: {threadAnalysis.connection_score || 0}
                 </Badge>
                 <Badge variant="outline" className="bg-purple-500/10 text-purple-400">
                   Status: {threadAnalysis.analysis_status}
@@ -417,36 +469,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
                   Completed Iterations: {analysisCount}
                 </p>
               </div>
-
-              {threadAnalysis.analysis_data && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-gray-300">Analysis Results</h4>
-                  <pre className="p-4 bg-gray-800/50 rounded-lg overflow-x-auto text-sm text-gray-300">
-                    {JSON.stringify(threadAnalysis.analysis_data, null, 2)}
-                  </pre>
-                </div>
-              )}
-
-              {threadAnalysis.suggested_connections?.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-gray-300">Suggested Connections</h4>
-                  <div className="grid gap-2">
-                    {threadAnalysis.suggested_connections.map((connection: any, index: number) => (
-                      <div 
-                        key={index}
-                        className="p-3 bg-gray-800/30 rounded-lg border border-gray-700"
-                      >
-                        <p className="text-sm text-gray-300">{connection.description}</p>
-                        {connection.score && (
-                          <Badge className="mt-2" variant="outline">
-                            Score: {connection.score}
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
