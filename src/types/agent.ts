@@ -60,8 +60,8 @@ export interface AgentMessage {
 }
 
 export interface SharedComputerState {
-  id: string;
-  session_id: string;
+  id?: string;
+  session_id?: string;
   screen_sharing: {
     active: boolean;
     userId: string | null;
@@ -119,4 +119,16 @@ export interface SiteStructurePage {
   };
   created_at?: string;
   updated_at?: string;
+}
+
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+}
+
+export interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
 }
