@@ -18,6 +18,7 @@ import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MobileViewPrompt } from "@/components/MobileViewPrompt";
 
 const AICivilEngineer = () => {
   const session = useSession();
@@ -243,6 +244,7 @@ const AICivilEngineer = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar session={session} />
+      <MobileViewPrompt />
       <SidebarProvider>
         <div className="flex w-full min-h-[calc(100vh-4rem)]">
           <DebugPanel
