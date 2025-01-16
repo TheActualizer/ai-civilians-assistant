@@ -47,6 +47,9 @@ export const NavLinks = () => {
             <DropdownMenuItem>
               <Link to="/legacy/assessment-view" className="w-full">Legacy Assessment View</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link to="/zoning-analysis" className="w-full">Zoning Analysis</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Link to="/legacy/agent-dashboard" className="w-full flex items-center">

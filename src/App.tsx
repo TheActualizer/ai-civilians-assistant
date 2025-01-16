@@ -32,6 +32,7 @@ const AgentMonitoring = lazy(() => import("./pages/AgentMonitoring"));
 const LearnMore = lazy(() => import("./pages/LearnMore"));
 const AICivilEngineer = lazy(() => import("./pages/AICivilEngineer"));
 const AreaCalculations = lazy(() => import("./pages/AreaCalculations"));
+const ZoningAnalysis = lazy(() => import("./pages/ZoningAnalysis"));
 
 // Legacy Pages
 const LegacyParcelAnalysis = lazy(() => import("./pages/legacy/ParcelAnalysis"));
@@ -89,6 +90,7 @@ function App() {
               <Route path="/learn-more" element={lazyLoad(() => import("./pages/LearnMore"))} />
               <Route path="/ai-civil-engineer" element={lazyLoad(() => import("./pages/AICivilEngineer"))} />
               <Route path="/area-calculations" element={lazyLoad(() => import("./pages/AreaCalculations"))} />
+              <Route path="/zoning-analysis" element={lazyLoad(() => import("./pages/ZoningAnalysis"))} />
 
               {/* Legacy Routes */}
               <Route path="/legacy/*" element={
