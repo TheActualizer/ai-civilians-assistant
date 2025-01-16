@@ -610,6 +610,51 @@ export type Database = {
         }
         Relationships: []
       }
+      genetic_sequences: {
+        Row: {
+          analysis_results: Json | null
+          annotations: Json | null
+          base_pairs: string | null
+          created_at: string | null
+          gc_content: number | null
+          id: string
+          length: number | null
+          mutations: Json | null
+          sequence_name: string
+          sequence_type: string
+          structure_prediction: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          analysis_results?: Json | null
+          annotations?: Json | null
+          base_pairs?: string | null
+          created_at?: string | null
+          gc_content?: number | null
+          id?: string
+          length?: number | null
+          mutations?: Json | null
+          sequence_name: string
+          sequence_type: string
+          structure_prediction?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          analysis_results?: Json | null
+          annotations?: Json | null
+          base_pairs?: string | null
+          created_at?: string | null
+          gc_content?: number | null
+          id?: string
+          length?: number | null
+          mutations?: Json | null
+          sequence_name?: string
+          sequence_type?: string
+          structure_prediction?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       knowledge_base: {
         Row: {
           category: string
@@ -699,6 +744,51 @@ export type Database = {
           service_name?: string
           service_type?: string
           status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      molecular_simulations: {
+        Row: {
+          atomic_positions: Json | null
+          created_at: string | null
+          energy_levels: Json | null
+          force_fields: Json | null
+          id: string
+          molecule_count: number | null
+          pressure: number | null
+          results: Json | null
+          simulation_time: number | null
+          simulation_type: string
+          temperature: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          atomic_positions?: Json | null
+          created_at?: string | null
+          energy_levels?: Json | null
+          force_fields?: Json | null
+          id?: string
+          molecule_count?: number | null
+          pressure?: number | null
+          results?: Json | null
+          simulation_time?: number | null
+          simulation_type: string
+          temperature?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          atomic_positions?: Json | null
+          created_at?: string | null
+          energy_levels?: Json | null
+          force_fields?: Json | null
+          id?: string
+          molecule_count?: number | null
+          pressure?: number | null
+          results?: Json | null
+          simulation_time?: number | null
+          simulation_type?: string
+          temperature?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -953,6 +1043,48 @@ export type Database = {
           },
         ]
       }
+      quantum_computation_registry: {
+        Row: {
+          coherence_time: number | null
+          computation_type: string
+          created_at: string | null
+          entanglement_fidelity: number | null
+          error_rate: number | null
+          execution_time: number | null
+          id: string
+          metadata: Json | null
+          qubits_used: number | null
+          results: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          coherence_time?: number | null
+          computation_type: string
+          created_at?: string | null
+          entanglement_fidelity?: number | null
+          error_rate?: number | null
+          execution_time?: number | null
+          id?: string
+          metadata?: Json | null
+          qubits_used?: number | null
+          results?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          coherence_time?: number | null
+          computation_type?: string
+          created_at?: string | null
+          entanglement_fidelity?: number | null
+          error_rate?: number | null
+          execution_time?: number | null
+          id?: string
+          metadata?: Json | null
+          qubits_used?: number | null
+          results?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       rebuild_operations: {
         Row: {
           created_at: string | null
@@ -1205,6 +1337,48 @@ export type Database = {
           updated_at?: string | null
           video_chat?: Json | null
           voice_chat?: Json | null
+        }
+        Relationships: []
+      }
+      simulation_forecasts: {
+        Row: {
+          confidence_level: number | null
+          created_at: string | null
+          forecast_type: string
+          id: string
+          iterations: number | null
+          metrics: Json | null
+          parameters: Json
+          predictions: Json | null
+          results: Json | null
+          updated_at: string | null
+          validation_data: Json | null
+        }
+        Insert: {
+          confidence_level?: number | null
+          created_at?: string | null
+          forecast_type: string
+          id?: string
+          iterations?: number | null
+          metrics?: Json | null
+          parameters: Json
+          predictions?: Json | null
+          results?: Json | null
+          updated_at?: string | null
+          validation_data?: Json | null
+        }
+        Update: {
+          confidence_level?: number | null
+          created_at?: string | null
+          forecast_type?: string
+          id?: string
+          iterations?: number | null
+          metrics?: Json | null
+          parameters?: Json
+          predictions?: Json | null
+          results?: Json | null
+          updated_at?: string | null
+          validation_data?: Json | null
         }
         Relationships: []
       }
