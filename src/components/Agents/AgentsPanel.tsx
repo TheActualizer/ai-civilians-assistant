@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Brain, Activity, AlertCircle, Settings, FileText, Network, Cpu, Database, Workflow } from 'lucide-react';
+import { Brain, Activity, AlertCircle, Settings, FileText, Network, Cpu, Database, Workflow, Mic } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -249,8 +249,25 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
             <Activity className="h-5 w-5 text-primary animate-pulse" />
             <CardTitle className="text-gray-100">AI Agent Network</CardTitle>
           </div>
-          <div className="flex items-center gap-2">
-            <VoiceControls onSpeakingChange={handleSpeakingChange} />
+          <div className="flex items-center gap-4">
+            {/* Enhanced Voice Controls */}
+            <div className="relative">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className={`rounded-full p-4 transition-all duration-200 ${
+                  isSpeaking ? 'bg-green-500/20 border-green-500' : 'hover:bg-primary/20'
+                }`}
+                onClick={() => setIsSpeaking(!isSpeaking)}
+              >
+                <Mic className={`h-6 w-6 ${isSpeaking ? 'text-green-500 animate-pulse' : 'text-primary'}`} />
+                <span className="sr-only">Toggle voice input</span>
+              </Button>
+              <VoiceControls 
+                onSpeakingChange={handleSpeakingChange}
+                className="absolute top-full mt-2 right-0"
+              />
+            </div>
             {state.isProcessing && (
               <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-400/50">
                 Processing
@@ -267,6 +284,7 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
             <TabsTrigger value="agents">Agents</TabsTrigger>
             <TabsTrigger value="network">Network</TabsTrigger>
             <TabsTrigger value="logs">Logs</TabsTrigger>
+            <TabsTrigger value="claude-analysis">Claude Analysis</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -354,6 +372,56 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
                     </span>
                   </div>
                 ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="claude-analysis">
+            <ScrollArea className="h-[500px]">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-200">Thread Analysis</h3>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      toast({
+                        title: "Analysis Started",
+                        description: "Claude is analyzing the current page...",
+                      });
+                      // Trigger Claude analysis
+                    }}
+                  >
+                    Start Analysis
+                  </Button>
+                </div>
+                <div className="grid gap-4">
+                  {/* Analysis Results */}
+                  {state.actions
+                    .filter(action => action.type === 'analysis')
+                    .map((analysis) => (
+                      <div 
+                        key={analysis.id}
+                        className="p-4 border border-gray-700 rounded-lg bg-gray-800/50"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-400">
+                            {new Date(analysis.timestamp).toLocaleTimeString()}
+                          </span>
+                          <Badge 
+                            variant={analysis.status === 'success' ? 'default' : 'secondary'}
+                          >
+                            {analysis.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-300">{analysis.description}</p>
+                        {analysis.details && (
+                          <pre className="mt-2 p-2 bg-gray-900/50 rounded text-xs text-gray-400 overflow-x-auto">
+                            {JSON.stringify(analysis.details, null, 2)}
+                          </pre>
+                        )}
+                      </div>
+                    ))}
+                </div>
               </div>
             </ScrollArea>
           </TabsContent>

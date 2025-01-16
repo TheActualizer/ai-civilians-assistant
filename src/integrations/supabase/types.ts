@@ -381,6 +381,48 @@ export type Database = {
           },
         ]
       }
+      debug_thread_analysis: {
+        Row: {
+          analysis_data: Json | null
+          claude_feedback: string | null
+          connection_score: number | null
+          connection_status: string | null
+          created_at: string | null
+          element_identifier: string | null
+          id: string
+          page_path: string
+          suggested_connections: Json[] | null
+          thread_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          analysis_data?: Json | null
+          claude_feedback?: string | null
+          connection_score?: number | null
+          connection_status?: string | null
+          created_at?: string | null
+          element_identifier?: string | null
+          id?: string
+          page_path: string
+          suggested_connections?: Json[] | null
+          thread_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          analysis_data?: Json | null
+          claude_feedback?: string | null
+          connection_score?: number | null
+          connection_status?: string | null
+          created_at?: string | null
+          element_identifier?: string | null
+          id?: string
+          page_path?: string
+          suggested_connections?: Json[] | null
+          thread_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       debug_visualizations: {
         Row: {
           active: boolean | null
