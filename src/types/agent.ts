@@ -116,7 +116,11 @@ export interface SharedComputerState {
     participants: string[];
   };
   active_users: string[];
-  system_metrics: SystemLoad;
+  system_metrics: {
+    cpu: number;
+    memory: number;
+    network: number;
+  };
   browser_state?: {
     url: string;
     title: string;

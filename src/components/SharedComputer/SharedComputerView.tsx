@@ -1,192 +1,191 @@
 import { useEffect, useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Mic, Camera, Monitor, Users, Globe, Brain, Gauge, Terminal } from 'lucide-react';
+import { useSession } from '@supabase/auth-helpers-react';
+import { motion } from 'framer-motion';
+import { Monitor, Users, Video, Mic, Share2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { SharedComputerState } from '@/types/agent';
 
-interface SharedComputerProps {
-  sessionId?: string;
-}
-
-export function SharedComputerView({ sessionId }: SharedComputerProps) {
+export function SharedComputerView() {
+  const session = useSession();
   const { toast } = useToast();
-  const [isConnected, setIsConnected] = useState(false);
-  const [computerState, setComputerState] = useState<SharedComputerState>({
-    active_users: [],
+  const [state, setState] = useState<SharedComputerState>({
     screen_sharing: {
       active: false,
-      resolution: '4K',
-      frameRate: 60
+      userId: null,
     },
     voice_chat: {
       active: false,
       participants: [],
-      quality: 'high'
     },
     video_chat: {
       active: false,
       participants: [],
-      quality: 'high'
     },
-    system_load: {
+    active_users: [],
+    system_metrics: {
       cpu: 0,
       memory: 0,
-      network: 0
+      network: 0,
     },
     browser_state: {
-      url: 'https://lovable.ai',
-      title: 'Claude Terminal Interface',
-      is_claude_active: true,
-      last_interaction: new Date().toISOString()
-    }
+      url: window.location.href,
+      title: document.title,
+      isClaudeActive: false,
+      lastInteraction: new Date().toISOString(),
+    },
   });
 
   useEffect(() => {
-    if (!sessionId) {
-      console.log('No session ID provided, cannot initialize shared computer view');
-      return;
-    }
-
-    console.log('Initializing Claude terminal view:', { sessionId });
-
-    // Subscribe to session updates
-    const channel = supabase
-      .channel(`shared_computer_${sessionId}`)
-      .on(
-        'presence',
-        { event: 'sync' },
-        () => {
-          const state = channel.presenceState();
-          console.log('Presence state updated:', state);
-          setComputerState(prev => ({
-            ...prev,
-            active_users: Object.keys(state)
-          }));
-        }
-      )
+    const channel = supabase.channel('shared_computer')
+      .on('presence', { event: 'sync' }, () => {
+        const newState = channel.presenceState();
+        console.log('Presence state updated:', newState);
+      })
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        console.log('User joined:', newPresences);
+        toast({
+          title: 'User Joined',
+          description: `A new user has joined the shared computer session`,
+        });
+      })
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        console.log('User left:', leftPresences);
+      })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to Claude terminal updates');
-          setIsConnected(true);
-          
           await channel.track({
-            user_id: sessionId,
+            user_id: session?.user?.id,
             online_at: new Date().toISOString(),
-            system_specs: {
-              resolution: '4K',
-              frameRate: 60,
-              quality: 'ultra'
-            }
-          });
-
-          toast({
-            title: "Claude Terminal Connected",
-            description: "Live terminal view is now active",
           });
         }
       });
 
     return () => {
-      console.log('Cleaning up Claude terminal subscriptions');
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
-  }, [sessionId, toast]);
+  }, [session, toast]);
+
+  const toggleScreenSharing = async () => {
+    try {
+      const newState = {
+        ...state,
+        screen_sharing: {
+          active: !state.screen_sharing.active,
+          userId: session?.user?.id || null,
+        },
+      };
+      
+      await supabase
+        .from('shared_computer_sessions')
+        .upsert({ 
+          session_id: 'main',
+          screen_sharing: newState.screen_sharing,
+        });
+      
+      setState(newState);
+      
+      toast({
+        title: state.screen_sharing.active ? 'Screen Sharing Stopped' : 'Screen Sharing Started',
+        description: state.screen_sharing.active ? 'You have stopped sharing your screen' : 'You are now sharing your screen',
+      });
+    } catch (error) {
+      console.error('Error toggling screen sharing:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to toggle screen sharing",
+      });
+    }
+  };
 
   return (
-    <Card className="bg-gray-900/50 border-gray-700">
-      <CardContent className="p-0">
-        <div className="relative w-full h-[800px] rounded-xl overflow-hidden">
-          {/* Terminal View */}
-          <div className="absolute inset-0 bg-gray-800/50 backdrop-blur-sm">
-            <div className="w-full h-12 bg-gray-900/90 border-b border-gray-700 flex items-center px-4 gap-4">
-              <Terminal className="h-5 w-5 text-green-400" />
-              <span className="text-gray-300">Claude Terminal Interface</span>
-              <div className="ml-auto flex items-center gap-2">
-                <Brain className="h-5 w-5 text-green-400" />
-                <span className="text-green-400">Active</span>
-              </div>
-            </div>
-            
-            {/* Terminal iframe */}
-            <div className="w-full h-[calc(100%-3rem)] bg-black/90 p-4">
-              <iframe 
-                src={`https://terminal.lovable.ai/${sessionId}`}
-                className="w-full h-full rounded-lg border border-gray-700"
-                style={{ 
-                  backgroundColor: 'black',
-                  fontFamily: 'monospace'
-                }}
-              />
-            </div>
+    <div className="container mx-auto p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Monitor className="h-6 w-6 text-primary" />
+            <h1 className="text-3xl font-bold">Shared Computer</h1>
           </div>
-
-          {/* System metrics */}
-          <div className="absolute top-16 left-6 space-y-2">
-            <div className="px-4 py-2 bg-gray-800/90 rounded-lg text-sm space-y-2">
-              <div className="flex items-center gap-2 text-blue-400">
-                <Gauge className="h-4 w-4" />
-                <span>System Metrics</span>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-gray-400">CPU</span>
-                  <span className="text-blue-400">{computerState.system_load.cpu.toFixed(1)}%</span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-gray-400">Memory</span>
-                  <span className="text-purple-400">{computerState.system_load.memory.toFixed(1)}%</span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-gray-400">Network</span>
-                  <span className="text-green-400">{computerState.system_load.network.toFixed(1)}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Controls overlay */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 bg-gray-800/90 px-6 py-3 rounded-full border border-gray-700/50 backdrop-blur-xl">
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
-              className={`${computerState.screen_sharing.active ? 'text-green-400' : 'text-gray-400'} hover:text-green-300`}
+              variant={state.screen_sharing.active ? "destructive" : "default"}
+              onClick={toggleScreenSharing}
+              className="gap-2"
             >
-              <Monitor className="h-5 w-5" />
+              <Share2 className="h-4 w-4" />
+              {state.screen_sharing.active ? "Stop Sharing" : "Share Screen"}
             </Button>
-            <Button
-              variant="ghost"
-              className={`${computerState.video_chat.active ? 'text-blue-400' : 'text-gray-400'} hover:text-blue-300`}
-            >
-              <Camera className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              className={`${computerState.voice_chat.active ? 'text-purple-400' : 'text-gray-400'} hover:text-purple-300`}
-            >
-              <Mic className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center space-x-2 px-3 py-1 bg-gray-700/50 rounded-full">
-              <Users className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-300">{computerState.active_users.length}</span>
-            </div>
-          </div>
-
-          {/* Connection status */}
-          <div className="absolute top-6 right-6">
-            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
-              isConnected ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'
-            }`}>
-              <div className={`h-2 w-2 rounded-full ${
-                isConnected ? 'bg-green-400' : 'bg-yellow-400'
-              }`} />
-              <span className="text-sm">
-                {isConnected ? 'Connected' : 'Connecting...'}
-              </span>
-            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Active Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {state.active_users.map((userId, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg">
+                    <div className="h-2 w-2 rounded-full bg-green-500" />
+                    <span>{userId}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Monitor className="h-5 w-5 text-primary" />
+                System Metrics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm text-gray-500">CPU Usage</div>
+                  <div className="h-2 bg-gray-200 rounded-full mt-1">
+                    <div 
+                      className="h-2 bg-primary rounded-full" 
+                      style={{ width: `${state.system_metrics.cpu}%` }} 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">Memory Usage</div>
+                  <div className="h-2 bg-gray-200 rounded-full mt-1">
+                    <div 
+                      className="h-2 bg-primary rounded-full" 
+                      style={{ width: `${state.system_metrics.memory}%` }} 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">Network Usage</div>
+                  <div className="h-2 bg-gray-200 rounded-full mt-1">
+                    <div 
+                      className="h-2 bg-primary rounded-full" 
+                      style={{ width: `${state.system_metrics.network}%` }} 
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </motion.div>
+    </div>
   );
 }

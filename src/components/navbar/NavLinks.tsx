@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ChevronDown, Brain, Building2, Network, Cpu, Settings, Sparkles, Archive } from "lucide-react";
+import { Brain, Building2, Network, Cpu, Settings, Sparkles, Archive, Monitor } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,11 @@ const baseNavItems = [
   {
     path: "/solutions",
     label: "Solutions",
+  },
+  {
+    path: "/shared-computer",
+    label: "Shared Computer",
+    icon: <Monitor className="mr-2 h-5 w-5" />,
   },
   {
     path: "/legacy",
@@ -112,7 +117,6 @@ export const NavLinks = () => {
             <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
               {item.icon}
               {item.label}
-              <ChevronDown className="ml-1 h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72">
               <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
