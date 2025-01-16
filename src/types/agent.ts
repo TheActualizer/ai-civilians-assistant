@@ -54,7 +54,7 @@ export interface ThreadAnalysis {
 export interface AgentMessage {
   role: string;
   content: string;
-  timestamp: string;
+  timestamp?: string;
   agent?: string;
   message?: string;
 }
@@ -90,6 +90,7 @@ export interface DifyAgent {
   status: 'idle' | 'processing' | 'completed' | 'error';
   type?: string;
   capabilities?: string[];
+  role?: string;
 }
 
 export interface SystemAnalysis {
