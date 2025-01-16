@@ -165,6 +165,13 @@ const AICivilEngineer = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar session={session} />
       <SidebarProvider>
+        {/* Debug Panels Container */}
+        <div className="fixed top-16 right-0 z-50 w-[800px] h-screen bg-transparent pointer-events-none">
+          <div className="w-full h-full pointer-events-auto">
+            <DebugPanel />
+          </div>
+        </div>
+
         <div className="flex flex-col w-full min-h-[calc(100vh-4rem)]">
           <div className="flex-1 pt-16 px-6 pb-[500px]">
             <div className="mb-8">
@@ -220,7 +227,6 @@ const AICivilEngineer = () => {
           />
         </div>
       </SidebarProvider>
-      <DebugPanel />
     </div>
   );
 };
