@@ -32,6 +32,12 @@ Deno.serve(async (req) => {
       throw new Error('Invalid LIGHTBOX_API_KEY format')
     }
 
+    // Test API key format
+    if (!LIGHTBOX_API_KEY.match(/^[A-Za-z0-9-_]+$/)) {
+      console.error('LIGHTBOX_API_KEY contains invalid characters')
+      throw new Error('Invalid LIGHTBOX_API_KEY format - contains invalid characters')
+    }
+
     const { address, city, state, zip } = await req.json() as AddressRequest
 
     // Validate request parameters with detailed logging
@@ -72,6 +78,30 @@ Deno.serve(async (req) => {
 
       console.log('Sending request to LightBox API...');
       
+      // Test the API endpoint first
+      try {
+        const testResponse = await fetch('https://api-prod.lightboxre.com/api/v2/health', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${LIGHTBOX_API_KEY}`,
+          },
+          signal: controller.signal
+        });
+
+        if (!testResponse.ok) {
+          console.error('LightBox API health check failed:', {
+            status: testResponse.status,
+            statusText: testResponse.statusText
+          });
+          throw new Error('LightBox API health check failed');
+        }
+
+        console.log('LightBox API health check successful');
+      } catch (healthError) {
+        console.error('Error during health check:', healthError);
+        throw new Error(`LightBox API health check failed: ${healthError.message}`);
+      }
+      
       const response = await fetch('https://api-prod.lightboxre.com/api/v2/property/search', {
         method: 'POST',
         headers: {
@@ -110,7 +140,6 @@ Deno.serve(async (req) => {
                 headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
-                  // Don't log Authorization header
                 }
               }
             }
