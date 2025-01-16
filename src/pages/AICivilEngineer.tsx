@@ -18,7 +18,7 @@ import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
 
-const ParcelDetails = () => {
+const AICivilEngineer = () => {
   const session = useSession();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -235,4 +235,4 @@ const ParcelDetails = () => {
   );
 };
 
-export default ParcelDetails;
+export default AICivilEngineer;
