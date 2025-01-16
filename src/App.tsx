@@ -20,6 +20,8 @@ import { DebugProvider } from "@/lib/debug-panel/context/DebugContext";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 
 function App() {
+  console.log("App component mounting, initializing debug panel");
+  
   return (
     <SessionContextProvider supabaseClient={supabase}>
       <DebugProvider>

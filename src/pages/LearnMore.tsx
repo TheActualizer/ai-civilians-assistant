@@ -4,10 +4,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Navbar from "@/components/Navbar";
-import { ArrowRight, Database, Layout, Library, Microchip, Network, Shield, BarChart } from "lucide-react";
+import { 
+  ArrowRight, 
+  Database, 
+  Layout, 
+  Library, 
+  Microchip, 
+  Network, 
+  Shield, 
+  BarChart,
+  Server,
+  Layers,
+  Cog,
+  MessageCircle
+} from "lucide-react";
 
 const LearnMore = () => {
   const session = useSession();
+  console.log("LearnMore component mounting, session:", session?.user?.id);
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -25,14 +39,38 @@ const LearnMore = () => {
 
         <Tabs defaultValue="domains" className="w-full">
           <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
-            <TabsTrigger value="domains">Core Domains</TabsTrigger>
-            <TabsTrigger value="microservices">Microservices</TabsTrigger>
-            <TabsTrigger value="libraries">Libraries</TabsTrigger>
-            <TabsTrigger value="api">API Layer</TabsTrigger>
-            <TabsTrigger value="storage">Storage</TabsTrigger>
-            <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="development">Development</TabsTrigger>
+            <TabsTrigger value="domains" className="flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Core Domains
+            </TabsTrigger>
+            <TabsTrigger value="microservices" className="flex items-center gap-2">
+              <Network className="h-4 w-4" />
+              Microservices
+            </TabsTrigger>
+            <TabsTrigger value="libraries" className="flex items-center gap-2">
+              <Library className="h-4 w-4" />
+              Libraries
+            </TabsTrigger>
+            <TabsTrigger value="api" className="flex items-center gap-2">
+              <Server className="h-4 w-4" />
+              API Layer
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Storage
+            </TabsTrigger>
+            <TabsTrigger value="monitoring" className="flex items-center gap-2">
+              <BarChart className="h-4 w-4" />
+              Monitoring
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Security
+            </TabsTrigger>
+            <TabsTrigger value="development" className="flex items-center gap-2">
+              <Cog className="h-4 w-4" />
+              Development
+            </TabsTrigger>
           </TabsList>
 
           <ScrollArea className="h-[600px] mt-6 rounded-md border">
