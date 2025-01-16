@@ -21,29 +21,35 @@ Deno.serve(async (req) => {
       throw new Error('LightBox API key not configured')
     }
 
-    console.log('Using LightBox API key starting with:', LIGHTBOX_API_KEY.substring(0, 5))
+    console.log('Validating LightBox API key configuration...')
 
     const { address, city, state, zip } = await req.json() as AddressRequest
-    console.log('Received request for address:', { address, city, state, zip })
+    console.log('Processing request for address:', { address, city, state, zip })
 
     if (!address || !city || !state || !zip) {
-      console.error('Missing required address components:', { address, city, state, zip })
-      throw new Error('Missing required address components')
+      console.error('Missing required address components')
+      return new Response(
+        JSON.stringify({ error: 'Missing required address components' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
 
-    try {
-      const lightboxUrl = 'https://api-prod.lightboxre.com/api/v2/property/search'
-      const requestPayload = {
-        address: {
-          streetAddress: address,
-          city: city,
-          state: state,
-          postalCode: zip
-        }
+    const lightboxUrl = 'https://api-prod.lightboxre.com/api/v2/property/search'
+    const requestPayload = {
+      address: {
+        streetAddress: address,
+        city: city,
+        state: state,
+        postalCode: zip
       }
+    }
 
-      console.log('Calling LightBox API with payload:', JSON.stringify(requestPayload))
-      
+    console.log('Sending request to LightBox API:', JSON.stringify(requestPayload))
+
+    try {
       const lightboxResponse = await fetch(lightboxUrl, {
         method: 'POST',
         headers: {
@@ -56,28 +62,42 @@ Deno.serve(async (req) => {
 
       if (!lightboxResponse.ok) {
         const errorText = await lightboxResponse.text()
-        console.error('LightBox API error response:', {
+        console.error('LightBox API error:', {
           status: lightboxResponse.status,
           statusText: lightboxResponse.statusText,
-          body: errorText
+          error: errorText
         })
-        throw new Error(`LightBox API error: ${lightboxResponse.status} - ${errorText}`)
+        
+        return new Response(
+          JSON.stringify({ 
+            error: `LightBox API error: ${lightboxResponse.status}`,
+            details: errorText
+          }),
+          { 
+            status: lightboxResponse.status,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
       }
 
       const responseText = await lightboxResponse.text()
-      console.log('LightBox API raw response:', responseText)
+      console.log('Received response from LightBox API')
 
       let lightboxData
       try {
         lightboxData = JSON.parse(responseText)
+        console.log('Successfully parsed LightBox response')
       } catch (parseError) {
-        console.error('Error parsing LightBox response:', parseError)
-        throw new Error('Invalid JSON response from LightBox API')
+        console.error('Failed to parse LightBox response:', parseError)
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON response from LightBox API' }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
       }
 
-      console.log('LightBox API successful response:', lightboxData)
-
-      // Format the response to match our LightBoxResponse type
       const formattedResponse = {
         parcelId: lightboxData.parcelId || null,
         address: {
@@ -88,7 +108,6 @@ Deno.serve(async (req) => {
         },
         propertyDetails: lightboxData.propertyDetails || {},
         rawResponse: lightboxData,
-        timestamp: new Date().toISOString(),
         lightbox_processed: true,
         processed_at: new Date().toISOString(),
         api_progress: {
@@ -103,7 +122,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Store the response in Supabase
+      console.log('Storing response in Supabase...')
+
       const supabaseClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -117,8 +137,14 @@ Deno.serve(async (req) => {
         .single()
 
       if (propertyError) {
-        console.error('Error fetching property request:', propertyError)
-        throw new Error('Failed to fetch property request')
+        console.error('Failed to fetch property request:', propertyError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch property request' }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
       }
 
       const { error: updateError } = await supabaseClient
@@ -131,9 +157,17 @@ Deno.serve(async (req) => {
         .eq('id', propertyRequest.id)
 
       if (updateError) {
-        console.error('Error updating property request:', updateError)
-        throw new Error('Failed to update property request with LightBox data')
+        console.error('Failed to update property request:', updateError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to update property request' }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
       }
+
+      console.log('Successfully processed and stored LightBox data')
 
       return new Response(
         JSON.stringify(formattedResponse),
@@ -141,17 +175,29 @@ Deno.serve(async (req) => {
       )
 
     } catch (apiError) {
-      console.error('LightBox API error details:', apiError)
-      throw new Error(`Error calling LightBox API: ${apiError.message}`)
+      console.error('Error calling LightBox API:', apiError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Error calling LightBox API',
+          details: apiError.message 
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
 
   } catch (error) {
     console.error('Edge function error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
