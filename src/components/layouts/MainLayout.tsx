@@ -17,7 +17,8 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const [systemState, setSystemState] = useState({
     isAnalyzing: false,
     currentRoute: window.location.pathname,
-    threadId: null as string | null
+    threadId: null as string | null,
+    isSidebarCollapsed: false
   });
 
   useEffect(() => {
@@ -66,18 +67,37 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     initializeClaudeSystem();
   }, [session, toast]);
 
+  const toggleSidebar = () => {
+    setSystemState(prev => ({
+      ...prev,
+      isSidebarCollapsed: !prev.isSidebarCollapsed
+    }));
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary-light dark:from-gray-900 dark:to-gray-800">
       <Navbar session={session} />
       
       <div className="flex min-h-screen">
         <NavigationControls />
         
-        <main className="flex-1 px-4 py-20 ml-16">
-          {children}
+        <main className={`flex-1 transition-all duration-300 ${
+          systemState.isSidebarCollapsed ? 'ml-16' : 'ml-16 lg:ml-64'
+        } px-4 sm:px-6 lg:px-8 py-20`}>
+          <div className="max-w-[1920px] mx-auto">
+            {children}
+          </div>
         </main>
 
-        <div className="fixed right-0 top-20 bottom-0 w-96 bg-gray-900/50 border-l border-gray-700">
+        <div className={`fixed right-0 top-20 bottom-0 transition-all duration-300 ${
+          systemState.isSidebarCollapsed ? 'w-12' : 'w-96'
+        } glass-morphism border-l border-white/20 dark:border-gray-800/20`}>
+          <button
+            onClick={toggleSidebar}
+            className="absolute -left-4 top-4 p-2 rounded-full bg-primary text-white shadow-lg hover:bg-primary-600 transition-colors"
+          >
+            {systemState.isSidebarCollapsed ? '←' : '→'}
+          </button>
           <div className="h-full overflow-y-auto">
             <DebugPanel 
               isLoading={false}

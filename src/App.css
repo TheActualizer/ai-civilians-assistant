@@ -1,7 +1,5 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -11,9 +9,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -34,9 +34,26 @@
 }
 
 .card {
-  padding: 2em;
+  @apply p-6 glass-morphism rounded-xl shadow-lg hover:shadow-xl transition-all duration-300;
 }
 
 .read-the-docs {
-  color: #888;
+  @apply text-secondary-foreground/70;
+}
+
+/* Enhanced layout utilities */
+.page-container {
+  @apply min-h-screen bg-gradient-to-b from-background to-secondary-light dark:from-gray-900 dark:to-gray-800;
+}
+
+.content-wrapper {
+  @apply px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12;
+}
+
+.grid-layout {
+  @apply grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3;
+}
+
+.flex-layout {
+  @apply flex flex-col sm:flex-row gap-6 sm:gap-8;
 }
