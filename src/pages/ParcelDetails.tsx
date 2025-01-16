@@ -166,6 +166,62 @@ const ParcelDetails = () => {
     fetchLatestRequest();
   }, [toast]);
 
+  const renderPropertyDetails = () => {
+    if (!lightboxData) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No property details available</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {lightboxData.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
+            <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500 capitalize">
+                {key.replace(/([A-Z])/g, ' $1').trim()}
+              </h3>
+              <p className="mt-1 text-lg">{value || 'Not available'}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAdditionalDetails = () => {
+    if (!lightboxData) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No additional details available</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500">Processing Status</h3>
+            <Badge className="mt-2" variant={lightboxData.lightbox_processed ? "default" : "secondary"}>
+              {lightboxData.lightbox_processed ? "Processed" : "Pending"}
+            </Badge>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-gray-500">Processing Time</h3>
+            <p className="mt-1">
+              {lightboxData.processed_at 
+                ? new Date(lightboxData.processed_at).toLocaleString()
+                : 'Not processed yet'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">

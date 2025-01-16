@@ -54,18 +54,18 @@ Deno.serve(async (req) => {
         body: JSON.stringify(requestPayload)
       })
 
-      // Log the full response for debugging
-      const responseText = await lightboxResponse.text()
-      console.log('LightBox API raw response:', responseText)
-
       if (!lightboxResponse.ok) {
+        const errorText = await lightboxResponse.text()
         console.error('LightBox API error response:', {
           status: lightboxResponse.status,
           statusText: lightboxResponse.statusText,
-          body: responseText
+          body: errorText
         })
-        throw new Error(`LightBox API error: ${lightboxResponse.status} - ${responseText}`)
+        throw new Error(`LightBox API error: ${lightboxResponse.status} - ${errorText}`)
       }
+
+      const responseText = await lightboxResponse.text()
+      console.log('LightBox API raw response:', responseText)
 
       let lightboxData
       try {
@@ -90,7 +90,17 @@ Deno.serve(async (req) => {
         rawResponse: lightboxData,
         timestamp: new Date().toISOString(),
         lightbox_processed: true,
-        processed_at: new Date().toISOString()
+        processed_at: new Date().toISOString(),
+        api_progress: {
+          parcel_completed: true,
+          zoning_completed: false,
+          geocoding_completed: false,
+          assessment_completed: false,
+          structures_completed: false,
+          transactions_completed: false,
+          historical_tax_completed: false,
+          historical_assessment_completed: false
+        }
       }
 
       // Store the response in Supabase
