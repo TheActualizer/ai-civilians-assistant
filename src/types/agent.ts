@@ -1,3 +1,30 @@
+// ... keep existing code (up to UIVersion interface)
+
+export interface UIVersion {
+  id: string;
+  name: string;
+  route: string;
+  component_data: Record<string, any>;
+  version_type: string;
+  version_tags: string[];
+  performance_metrics: {
+    api_latency: number[];
+    render_time: number[];
+    memory_usage: number[];
+  };
+  integration_data: {
+    connected_services: string[];
+    api_dependencies: string[];
+    data_flow: string[];
+  };
+  created_at: string;
+  is_active?: boolean;
+  description?: string;
+  metadata?: Record<string, any>;
+  created_by?: string;
+  parent_version_id?: string;
+}
+
 export interface SystemLoad {
   cpu: number;
   memory: number;
@@ -14,6 +41,10 @@ export interface NetworkStats {
   bandwidth_usage?: number[];
   connection_pool?: number[];
   latency_history?: number[];
+}
+
+export interface MainLayoutProps {
+  children: React.ReactNode;
 }
 
 export interface PerformanceMetrics {
