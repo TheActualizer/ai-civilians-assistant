@@ -28,6 +28,7 @@ export function DebugPanel({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [position, setPosition] = useState<"right" | "left" | "bottom">("right");
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,8 +101,13 @@ export function DebugPanel({
       className={`fixed transition-all duration-300 ease-in-out 
         ${getPositionClasses()} bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50`}
     >
-      <div className="p-4 space-y-4 h-full flex flex-col">
-        <div className="flex justify-between items-center gap-2">
+      <div className="relative p-4 space-y-4 h-full flex flex-col">
+        {/* Voice Control Floating Button */}
+        <div className="absolute top-4 right-4 z-50">
+          <VoiceControls onSpeakingChange={setIsSpeaking} />
+        </div>
+
+        <div className="flex justify-between items-center gap-2 pt-2">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -118,9 +124,13 @@ export function DebugPanel({
                 {error && (
                   <Badge variant="destructive" className="animate-pulse">Error</Badge>
                 )}
+                {isSpeaking && (
+                  <Badge variant="secondary" className="animate-pulse">Listening...</Badge>
+                )}
               </>
             )}
           </div>
+          
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -190,7 +200,7 @@ export function DebugPanel({
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type debug message..."
+            placeholder="Type debug message or speak using the mic button..."
             className="flex-1"
           />
           <Button type="submit" variant="secondary">
