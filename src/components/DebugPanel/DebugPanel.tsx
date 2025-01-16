@@ -3,7 +3,7 @@ import {
   Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, 
   Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, 
   ArrowRight, ArrowDown, Rocket, CircuitBoard, Dna, Infinity,
-  Upload, Paperclip, Mic, MicOff
+  Upload, Paperclip
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,8 +40,6 @@ export function DebugPanel({
     const file = event.target.files?.[0];
     if (file) {
       console.log('File selected:', file.name);
-      // Here you can handle the file upload
-      // For now we'll just log it
     }
   };
 
@@ -217,7 +215,7 @@ export function DebugPanel({
                 placeholder="Debug message..."
                 className="flex-1 bg-gray-800/50 border-gray-700 focus:border-primary/50 transition-colors pr-24"
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <VoiceControls onSpeakingChange={setIsSpeaking} />
                 <label 
                   htmlFor="file-upload" 

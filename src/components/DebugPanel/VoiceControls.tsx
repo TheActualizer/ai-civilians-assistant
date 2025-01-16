@@ -57,7 +57,7 @@ export function VoiceControls({ onSpeakingChange }: VoiceControlsProps) {
       variant={isConnected ? "destructive" : "secondary"}
       size="icon"
       onClick={isConnected ? endConversation : startConversation}
-      className="relative"
+      className="w-8 h-8 p-0"
     >
       {isConnected ? (
         <MicOff className="h-4 w-4" />
