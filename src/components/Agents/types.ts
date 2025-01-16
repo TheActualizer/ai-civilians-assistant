@@ -5,6 +5,8 @@ export type DifyAgent = {
   status: 'idle' | 'processing' | 'completed' | 'error';
   progress?: number;
   lastAction?: string;
+  backstory?: string;
+  documents?: string[];
 };
 
 export type AgentAction = {
