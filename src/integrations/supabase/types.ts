@@ -1315,6 +1315,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           feature_list: Json | null
+          final_build_status: Json | null
           id: string
           integration_data: Json | null
           is_active: boolean | null
@@ -1337,6 +1338,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           feature_list?: Json | null
+          final_build_status?: Json | null
           id?: string
           integration_data?: Json | null
           is_active?: boolean | null
@@ -1359,6 +1361,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           feature_list?: Json | null
+          final_build_status?: Json | null
           id?: string
           integration_data?: Json | null
           is_active?: boolean | null
@@ -1386,6 +1389,13 @@ export type Database = {
             foreignKeyName: "ui_versions_parent_version_id_fkey"
             columns: ["parent_version_id"]
             isOneToOne: false
+            referencedRelation: "final_build_restore_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ui_versions_parent_version_id_fkey"
+            columns: ["parent_version_id"]
+            isOneToOne: false
             referencedRelation: "ui_versions"
             referencedColumns: ["id"]
           },
@@ -1393,7 +1403,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      final_build_restore_points: {
+        Row: {
+          build_metrics: Json | null
+          id: string | null
+          implemented_features: number | null
+          include_in_final_build: boolean | null
+          name: string | null
+          restore_point_hash: string | null
+          restore_point_timestamp: string | null
+          route: string | null
+          synthesis_history: Json | null
+          total_features: number | null
+        }
+        Insert: {
+          build_metrics?: never
+          id?: string | null
+          implemented_features?: never
+          include_in_final_build?: never
+          name?: string | null
+          restore_point_hash?: string | null
+          restore_point_timestamp?: string | null
+          route?: string | null
+          synthesis_history?: Json | null
+          total_features?: never
+        }
+        Update: {
+          build_metrics?: never
+          id?: string | null
+          implemented_features?: never
+          include_in_final_build?: never
+          name?: string | null
+          restore_point_hash?: string | null
+          restore_point_timestamp?: string | null
+          route?: string | null
+          synthesis_history?: Json | null
+          total_features?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       binary_quantize:
