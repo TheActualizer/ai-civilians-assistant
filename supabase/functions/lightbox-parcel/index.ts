@@ -82,12 +82,14 @@ Deno.serve(async (req) => {
 
       console.log('LightBox API response status:', lightboxResponse.status)
       
+      const responseText = await lightboxResponse.text()
+      console.log('Raw LightBox API response:', responseText)
+
       if (!lightboxResponse.ok) {
-        const errorText = await lightboxResponse.text()
         console.error('LightBox API error details:', {
           status: lightboxResponse.status,
           statusText: lightboxResponse.statusText,
-          error: errorText,
+          response: responseText,
           headers: Object.fromEntries(lightboxResponse.headers.entries())
         })
 
@@ -97,20 +99,33 @@ Deno.serve(async (req) => {
           endpoint: 'property_search',
           status: 'error',
           message: `API error: ${lightboxResponse.status} ${lightboxResponse.statusText}`,
-          details: { error: errorText, headers: Object.fromEntries(lightboxResponse.headers.entries()) }
+          details: { error: responseText, headers: Object.fromEntries(lightboxResponse.headers.entries()) }
         })
 
         return new Response(
           JSON.stringify({ 
             error: 'LightBox API error',
-            details: `${lightboxResponse.status}: ${errorText}`,
+            details: `${lightboxResponse.status}: ${responseText}`,
             headers: Object.fromEntries(lightboxResponse.headers.entries())
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: lightboxResponse.status }
         )
       }
 
-      const responseData = await lightboxResponse.json()
+      let responseData
+      try {
+        responseData = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Failed to parse LightBox API response:', parseError)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Invalid JSON response from LightBox API',
+            details: responseText
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+      }
+
       console.log('LightBox API response received:', JSON.stringify(responseData))
 
       // Format the response
@@ -120,9 +135,11 @@ Deno.serve(async (req) => {
           streetAddress: address,
           city: city,
           state: state,
-          zip: zip
+          zip: zip,
+          county: responseData.county || null
         },
         propertyDetails: responseData.propertyDetails || {},
+        coordinates: responseData.coordinates || null,
         rawResponse: responseData,
         lightbox_processed: true,
         processed_at: new Date().toISOString(),
