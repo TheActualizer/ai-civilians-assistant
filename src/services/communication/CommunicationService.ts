@@ -1,190 +1,170 @@
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-interface CommunicationSession {
-  id: string;
-  session_type: 'video' | 'audio' | 'screen_share';
-  participants: any[];
-  session_data: Record<string, any>;
-  started_at: string;
-  ended_at?: string;
-  metrics: {
-    bandwidth_usage: number[];
-    quality_metrics: Record<string, any>;
-    participant_stats: any[];
-  };
-}
+import { supabase } from '@/integrations/supabase/client';
+import type { CommunicationSession } from '@/types/agent';
 
 class CommunicationService {
-  private peerConnection?: RTCPeerConnection;
-  private dataChannel?: RTCDataChannel;
-  private localStream?: MediaStream;
-  private sessionId?: string;
+  private peerConnections: Map<string, RTCPeerConnection> = new Map();
+  private localStream: MediaStream | null = null;
 
-  constructor() {
-    console.log('🎥 Initializing CommunicationService');
-  }
-
-  async initializeSession(type: 'video' | 'audio' | 'screen_share'): Promise<string> {
+  async createSession(sessionType: 'video' | 'audio' | 'screen_share'): Promise<CommunicationSession> {
     try {
-      console.log(`🎥 Initializing ${type} session`);
+      console.log('Creating new communication session:', { sessionType });
       
-      const { data: session, error } = await supabase
+      const { data, error } = await supabase
         .from('communication_sessions')
         .insert({
-          session_type: type,
+          session_type: sessionType,
           participants: [],
-          session_data: {},
-          metrics: {
-            bandwidth_usage: [],
-            quality_metrics: {},
-            participant_stats: []
+          session_data: {
+            settings: {
+              video: sessionType === 'video',
+              audio: true,
+              screen: sessionType === 'screen_share'
+            }
           }
         })
         .select()
         .single();
 
       if (error) throw error;
-
-      this.sessionId = session.id;
-      console.log('🎥 Session created:', session.id);
       
-      await this.setupWebRTC();
-      
-      return session.id;
+      console.log('Communication session created:', data);
+      return data as CommunicationSession;
     } catch (error) {
-      console.error('🔴 Failed to initialize session:', error);
-      toast.error('Failed to initialize communication session');
+      console.error('Error creating communication session:', error);
       throw error;
     }
   }
 
-  private async setupWebRTC() {
+  async joinSession(sessionId: string, participantId: string): Promise<void> {
     try {
-      console.log('🎥 Setting up WebRTC');
+      console.log('Joining communication session:', { sessionId, participantId });
       
-      const configuration = {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' }
-        ]
+      const { data: session, error } = await supabase
+        .from('communication_sessions')
+        .select()
+        .eq('id', sessionId)
+        .single();
+
+      if (error) throw error;
+
+      const participants = [...(session.participants || []), participantId];
+      
+      await supabase
+        .from('communication_sessions')
+        .update({ participants })
+        .eq('id', sessionId);
+
+      // Initialize WebRTC connection
+      await this.initializeWebRTC(sessionId, participantId, session.session_type);
+      
+      console.log('Successfully joined session:', { sessionId, participantId });
+    } catch (error) {
+      console.error('Error joining session:', error);
+      throw error;
+    }
+  }
+
+  private async initializeWebRTC(sessionId: string, participantId: string, sessionType: string): Promise<void> {
+    try {
+      console.log('Initializing WebRTC:', { sessionId, participantId, sessionType });
+      
+      const constraints: MediaStreamConstraints = {
+        video: sessionType === 'video',
+        audio: true
       };
 
-      this.peerConnection = new RTCPeerConnection(configuration);
-      
-      // Setup data channel for messaging
-      this.dataChannel = this.peerConnection.createDataChannel('messaging');
-      this.setupDataChannelHandlers();
+      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
 
-      // Log connection state changes
-      this.peerConnection.onconnectionstatechange = () => {
-        console.log('🎥 Connection state:', this.peerConnection?.connectionState);
-      };
+      const peerConnection = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      this.peerConnections.set(participantId, peerConnection);
+
+      // Add local tracks to peer connection
+      this.localStream.getTracks().forEach(track => {
+        if (this.localStream) {
+          peerConnection.addTrack(track, this.localStream);
+        }
+      });
 
       // Handle ICE candidates
-      this.peerConnection.onicecandidate = async (event) => {
+      peerConnection.onicecandidate = event => {
         if (event.candidate) {
-          await this.updateSessionData({ iceCandidate: event.candidate });
+          this.broadcastIceCandidate(sessionId, participantId, event.candidate);
         }
       };
 
-      console.log('🎥 WebRTC setup complete');
-    } catch (error) {
-      console.error('🔴 WebRTC setup failed:', error);
-      throw error;
-    }
-  }
-
-  private setupDataChannelHandlers() {
-    if (!this.dataChannel) return;
-
-    this.dataChannel.onopen = () => {
-      console.log('🎥 Data channel opened');
-    };
-
-    this.dataChannel.onclose = () => {
-      console.log('🎥 Data channel closed');
-    };
-
-    this.dataChannel.onmessage = (event) => {
-      console.log('🎥 Message received:', event.data);
-    };
-  }
-
-  private async updateSessionData(data: Record<string, any>) {
-    if (!this.sessionId) return;
-
-    try {
-      const { error } = await supabase
-        .from('communication_sessions')
-        .update({
-          session_data: data
-        })
-        .eq('id', this.sessionId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('🔴 Failed to update session data:', error);
-    }
-  }
-
-  async startLocalStream(type: 'video' | 'audio' | 'screen_share'): Promise<MediaStream> {
-    try {
-      console.log(`🎥 Starting ${type} stream`);
-      
-      let constraints: MediaStreamConstraints = {
-        audio: true,
-        video: type === 'video'
+      // Handle incoming tracks
+      peerConnection.ontrack = event => {
+        console.log('Received remote track:', event);
+        // Handle remote media stream
       };
 
-      if (type === 'screen_share') {
-        // @ts-ignore - TypeScript doesn't recognize getDisplayMedia
-        this.localStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true
-        });
-      } else {
-        this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-      }
-
-      // Add tracks to peer connection
-      this.localStream.getTracks().forEach(track => {
-        this.peerConnection?.addTrack(track, this.localStream!);
-      });
-
-      console.log('🎥 Local stream started');
-      return this.localStream;
+      console.log('WebRTC initialized successfully');
     } catch (error) {
-      console.error('🔴 Failed to start local stream:', error);
-      toast.error('Failed to access media devices');
+      console.error('Error initializing WebRTC:', error);
       throw error;
     }
   }
 
-  async endSession() {
+  private async broadcastIceCandidate(
+    sessionId: string, 
+    participantId: string, 
+    candidate: RTCIceCandidate
+  ): Promise<void> {
     try {
-      console.log('🎥 Ending session');
-      
-      // Stop all tracks
-      this.localStream?.getTracks().forEach(track => track.stop());
-      
-      // Close peer connection
-      this.peerConnection?.close();
-      
-      if (this.sessionId) {
-        const { error } = await supabase
-          .from('communication_sessions')
-          .update({
-            ended_at: new Date().toISOString()
-          })
-          .eq('id', this.sessionId);
+      await supabase.from('communication_sessions').update({
+        session_data: {
+          ice_candidates: {
+            [participantId]: candidate
+          }
+        }
+      }).eq('id', sessionId);
+    } catch (error) {
+      console.error('Error broadcasting ICE candidate:', error);
+    }
+  }
 
-        if (error) throw error;
+  async leaveSession(sessionId: string, participantId: string): Promise<void> {
+    try {
+      console.log('Leaving session:', { sessionId, participantId });
+      
+      // Cleanup WebRTC
+      const peerConnection = this.peerConnections.get(participantId);
+      if (peerConnection) {
+        peerConnection.close();
+        this.peerConnections.delete(participantId);
       }
 
-      console.log('🎥 Session ended');
+      if (this.localStream) {
+        this.localStream.getTracks().forEach(track => track.stop());
+        this.localStream = null;
+      }
+
+      // Update session in database
+      const { data: session, error } = await supabase
+        .from('communication_sessions')
+        .select()
+        .eq('id', sessionId)
+        .single();
+
+      if (error) throw error;
+
+      const participants = (session.participants || []).filter(id => id !== participantId);
+      
+      await supabase
+        .from('communication_sessions')
+        .update({ 
+          participants,
+          ended_at: participants.length === 0 ? new Date().toISOString() : null
+        })
+        .eq('id', sessionId);
+
+      console.log('Successfully left session');
     } catch (error) {
-      console.error('🔴 Failed to end session:', error);
-      toast.error('Failed to end session properly');
+      console.error('Error leaving session:', error);
+      throw error;
     }
   }
 }
