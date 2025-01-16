@@ -38,7 +38,7 @@ const INITIAL_AGENTS: DifyAgent[] = [
     status: 'idle',
     backstory: 'A precise mathematician specializing in spatial calculations and zoning regulations.',
     systemPrompt: 'You are a zoning expert. Your role is to calculate required setbacks and buffers for properties.',
-    model: 'claude'
+    model: 'grok'
   },
   {
     id: 'environmental',
@@ -91,6 +91,21 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
         }
 
         console.log('Gemini compute response:', data);
+        return data.content;
+      } else if (agent.model === 'grok') {
+        const { data, error } = await supabase.functions.invoke('grok-compute', {
+          body: {
+            messages: [{ role: 'user', content: message }],
+            systemPrompt: agent.systemPrompt || `You are ${agent.name}. ${agent.backstory}`
+          }
+        });
+
+        if (error) {
+          console.error('Error calling Grok compute:', error);
+          throw error;
+        }
+
+        console.log('Grok compute response:', data);
         return data.content;
       } else {
         const { data, error } = await supabase.functions.invoke('claude-compute', {
