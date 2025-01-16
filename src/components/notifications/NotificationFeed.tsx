@@ -15,7 +15,7 @@ export function NotificationFeed() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    // Subscribe to debug logs for connection events
+    // Subscribe to debug logs for critical events only
     const channel = supabase
       .channel('connection-events')
       .on(
@@ -28,13 +28,16 @@ export function NotificationFeed() {
         (payload) => {
           if (payload.new) {
             const log = payload.new as any;
-            if (log.message.includes('connection') || log.message.includes('initializ')) {
+            // Only show critical notifications
+            if (log.level === 'error' || 
+                (log.level === 'warning' && log.message.includes('critical')) ||
+                (log.level === 'info' && log.message.includes('initialized'))) {
               setNotifications(prev => [{
                 id: log.id,
                 type: log.level as 'success' | 'error' | 'warning' | 'info',
                 message: log.message,
                 timestamp: new Date(log.timestamp)
-              }, ...prev].slice(0, 50)); // Keep last 50 notifications
+              }, ...prev].slice(0, 10)); // Keep only last 10 notifications
             }
           }
         }
@@ -62,12 +65,12 @@ export function NotificationFeed() {
   return (
     <div className="w-full max-w-sm bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-lg shadow-lg">
       <div className="p-4 border-b">
-        <h3 className="font-semibold">Connection Events</h3>
+        <h3 className="font-semibold">System Notifications</h3>
       </div>
       <ScrollArea className="h-[300px]">
         <div className="p-4 space-y-3">
           {notifications.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center">No connection events yet</p>
+            <p className="text-sm text-muted-foreground text-center">No critical notifications</p>
           ) : (
             notifications.map((notification) => (
               <div
