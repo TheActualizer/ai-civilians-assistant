@@ -3,28 +3,35 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Send, Mic, MicOff } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { MessageCircle, Send, Mic, MicOff, Brain } from "lucide-react";
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { useToast } from "@/hooks/use-toast";
+import { DifyAgent } from '@/components/Agents/types';
 
 interface ChatMessage {
   agent: string;
   message: string;
   timestamp: string;
+  role?: string;
+  avatar?: string;
 }
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
   onMessageSubmit: (message: string) => void;
   onVoiceInput?: (transcript: string) => void;
+  agents?: DifyAgent[];
 }
 
-export function ChatInterface({ messages, onMessageSubmit, onVoiceInput }: ChatInterfaceProps) {
+export function ChatInterface({ messages, onMessageSubmit, onVoiceInput, agents = [] }: ChatInterfaceProps) {
   const { toast } = useToast();
   const [userInput, setUserInput] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [realtimeChat, setRealtimeChat] = useState<RealtimeChat | null>(null);
+  const [activeAgents, setActiveAgents] = useState<Set<string>>(new Set());
 
   const handleVoiceToggle = async () => {
     if (!isConnected) {
@@ -83,6 +90,17 @@ export function ChatInterface({ messages, onMessageSubmit, onVoiceInput }: ChatI
     setUserInput('');
   };
 
+  const getAgentColor = (agentId: string) => {
+    const colors = {
+      'data-ingestion': 'bg-blue-500',
+      'parcel-analysis': 'bg-green-500',
+      'setback-calculation': 'bg-purple-500',
+      'environmental': 'bg-yellow-500',
+      'buildable-envelope': 'bg-red-500',
+    };
+    return colors[agentId as keyof typeof colors] || 'bg-gray-500';
+  };
+
   useEffect(() => {
     return () => {
       realtimeChat?.disconnect();
@@ -96,20 +114,41 @@ export function ChatInterface({ messages, onMessageSubmit, onVoiceInput }: ChatI
           <div className="flex items-center justify-between gap-2 mb-4 text-gray-200">
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold">Agent Chat</h3>
+              <h3 className="font-semibold">AI Agent Collaboration</h3>
             </div>
-            <Button
-              variant={isConnected ? "destructive" : "secondary"}
-              size="icon"
-              onClick={handleVoiceToggle}
-              className="w-8 h-8 p-0"
-            >
-              {isConnected ? (
-                <MicOff className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              {agents.map((agent) => (
+                <Badge
+                  key={agent.id}
+                  variant={activeAgents.has(agent.id) ? "default" : "secondary"}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const newActiveAgents = new Set(activeAgents);
+                    if (newActiveAgents.has(agent.id)) {
+                      newActiveAgents.delete(agent.id);
+                    } else {
+                      newActiveAgents.add(agent.id);
+                    }
+                    setActiveAgents(newActiveAgents);
+                  }}
+                >
+                  <Brain className="h-3 w-3 mr-1" />
+                  {agent.name}
+                </Badge>
+              ))}
+              <Button
+                variant={isConnected ? "destructive" : "secondary"}
+                size="icon"
+                onClick={handleVoiceToggle}
+                className="w-8 h-8 p-0"
+              >
+                {isConnected ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
           
           <Card className="flex-1 bg-gray-800/50 border-gray-700 mb-4">
@@ -130,6 +169,11 @@ export function ChatInterface({ messages, onMessageSubmit, onVoiceInput }: ChatI
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
+                        {msg.agent !== 'user' && (
+                          <Avatar className={`h-6 w-6 ${getAgentColor(msg.agent)}`}>
+                            <Brain className="h-4 w-4 text-white" />
+                          </Avatar>
+                        )}
                         <span className="text-sm font-medium">
                           {msg.agent === 'user' ? 'You' : msg.agent}
                         </span>
@@ -138,6 +182,11 @@ export function ChatInterface({ messages, onMessageSubmit, onVoiceInput }: ChatI
                         </span>
                       </div>
                       <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                      {msg.role && (
+                        <Badge variant="outline" className="mt-2">
+                          {msg.role}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -149,7 +198,7 @@ export function ChatInterface({ messages, onMessageSubmit, onVoiceInput }: ChatI
             <Textarea
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type your message to the agent team..."
+              placeholder="Ask the AI agent team..."
               className="min-h-[80px] bg-gray-800/50 border-gray-700 text-gray-100"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
