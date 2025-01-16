@@ -28,18 +28,15 @@ Deno.serve(async (req) => {
       throw new Error('Missing required address components')
     }
 
-    // Call the LightBox API with proper error handling
     try {
-      // Updated LightBox API endpoint and request structure
-      const lightboxUrl = 'https://api.lightbox.com/api/v2/property/search'
+      // Using the correct LightBox API endpoint
+      const lightboxUrl = 'https://api-prod.lightboxre.com/api/v2/property/search'
       const requestPayload = {
-        searchCriteria: {
-          address: {
-            streetAddress: address,
-            city: city,
-            state: state,
-            postalCode: zip
-          }
+        address: {
+          streetAddress: address,
+          city: city,
+          state: state,
+          postalCode: zip
         }
       }
 
