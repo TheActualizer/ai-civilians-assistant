@@ -5,6 +5,7 @@ import { ToolbarStyleProvider } from "./contexts/ToolbarStyleContext";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
+import { DynamicPage } from "./components/DynamicPage/DynamicPage";
 
 // Preserve direct imports for critical pages
 import LearnMore from "./pages/LearnMore";
@@ -59,6 +60,12 @@ function App() {
               <Route path="/learn-more" element={<LearnMore />} />
               <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
               
+              {/* Dynamic Hub Routes */}
+              <Route path="/:hubName">
+                <Route index element={<DynamicPage />} />
+                <Route path=":pagePath" element={<DynamicPage />} />
+              </Route>
+
               {/* Lazy Loaded Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
