@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
   try {
     const LIGHTBOX_API_KEY = Deno.env.get('LIGHTBOX_API_KEY')
     
-    // Enhanced API key validation
+    // Enhanced API key validation with detailed logging
     if (!LIGHTBOX_API_KEY) {
       console.error('LIGHTBOX_API_KEY is not configured in environment')
       throw new Error('LIGHTBOX_API_KEY is not configured')
@@ -34,10 +34,16 @@ Deno.serve(async (req) => {
 
     const { address, city, state, zip } = await req.json() as AddressRequest
 
-    // Validate request parameters
+    // Validate request parameters with detailed logging
     if (!address || !city || !state || !zip) {
-      console.error('Missing required address fields:', { address, city, state, zip })
-      throw new Error('Missing required address fields')
+      const missingFields = [];
+      if (!address) missingFields.push('address');
+      if (!city) missingFields.push('city');
+      if (!state) missingFields.push('state');
+      if (!zip) missingFields.push('zip');
+      
+      console.error('Missing required address fields:', missingFields);
+      throw new Error(`Missing required address fields: ${missingFields.join(', ')}`)
     }
 
     console.log('Making LightBox API request with:', {
@@ -45,7 +51,7 @@ Deno.serve(async (req) => {
       city,
       state,
       zip,
-      apiKeyPresent: true,
+      apiKeyPresent: !!LIGHTBOX_API_KEY,
       apiKeyLength: LIGHTBOX_API_KEY.length
     })
 
@@ -64,6 +70,8 @@ Deno.serve(async (req) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
+      console.log('Sending request to LightBox API...');
+      
       const response = await fetch('https://api-prod.lightboxre.com/api/v2/property/search', {
         method: 'POST',
         headers: {
@@ -77,6 +85,8 @@ Deno.serve(async (req) => {
 
       clearTimeout(timeoutId);
 
+      console.log('LightBox API response status:', response.status);
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('LightBox API error response:', {
@@ -86,14 +96,23 @@ Deno.serve(async (req) => {
           headers: Object.fromEntries(response.headers.entries())
         });
 
-        // Enhanced error response
+        // Enhanced error response with more details
         return new Response(
           JSON.stringify({
             error: 'LightBox API request failed',
             details: {
               status: response.status,
               statusText: response.statusText,
-              body: errorText
+              body: errorText,
+              requestInfo: {
+                url: 'https://api-prod.lightboxre.com/api/v2/property/search',
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  // Don't log Authorization header
+                }
+              }
             }
           }),
           { 
@@ -104,7 +123,7 @@ Deno.serve(async (req) => {
       }
 
       const responseData = await response.json();
-      console.log('LightBox API successful response:', responseData);
+      console.log('LightBox API successful response received');
       
       const formattedResponse = {
         parcelId: responseData.parcelId || null,
@@ -162,7 +181,8 @@ Deno.serve(async (req) => {
         details: {
           message: error.message,
           name: error.name,
-          stack: error.stack
+          stack: error.stack,
+          timestamp: new Date().toISOString()
         }
       }),
       { 
