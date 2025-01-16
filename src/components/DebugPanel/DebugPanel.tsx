@@ -6,10 +6,14 @@ import type { DebugPanelProps, PanelPosition, DragState } from "./types";
 import { DebugHeader } from "./DebugHeader";
 import { DebugControls } from "./DebugControls";
 import { DebugContent } from "./DebugContent";
+import { ResizableHandle } from "@/components/ui/resizable";
 
 const MIN_WIDTH = 400;
 const MAX_WIDTH = 800;
 const DEFAULT_WIDTH = 600;
+const MIN_HEIGHT = 300;
+const MAX_HEIGHT = 800;
+const DEFAULT_HEIGHT = 600;
 const THROW_VELOCITY_THRESHOLD = 1.5;
 
 export function DebugPanel({
@@ -30,6 +34,7 @@ export function DebugPanel({
   const [position, setPosition] = useState<PanelPosition>("right");
   const [isMinimized, setIsMinimized] = useState(false);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     startX: 0,
@@ -38,6 +43,7 @@ export function DebugPanel({
     currentY: 0,
     velocity: { x: 0, y: 0 }
   });
+  const [isResizing, setIsResizing] = useState(false);
 
   const panelRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
@@ -160,6 +166,43 @@ export function DebugPanel({
     };
   }, [dragState.isDragging, handleDrag, handleDragEnd]);
 
+  const handleResize = useCallback((e: MouseEvent, direction: string) => {
+    if (!isResizing || !panelRef.current) return;
+
+    const rect = panelRef.current.getBoundingClientRect();
+    let newWidth = width;
+    let newHeight = height;
+
+    if (direction.includes('e')) {
+      newWidth = Math.min(Math.max(MIN_WIDTH, e.clientX - rect.left), MAX_WIDTH);
+    }
+    if (direction.includes('w')) {
+      newWidth = Math.min(Math.max(MIN_WIDTH, rect.right - e.clientX), MAX_WIDTH);
+    }
+    if (direction.includes('s')) {
+      newHeight = Math.min(Math.max(MIN_HEIGHT, e.clientY - rect.top), MAX_HEIGHT);
+    }
+    if (direction.includes('n')) {
+      newHeight = Math.min(Math.max(MIN_HEIGHT, rect.bottom - e.clientY), MAX_HEIGHT);
+    }
+
+    setWidth(newWidth);
+    setHeight(newHeight);
+  }, [isResizing, width, height]);
+
+  const startResize = useCallback((direction: string) => {
+    setIsResizing(true);
+    const handleMouseMove = (e: MouseEvent) => handleResize(e, direction);
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [handleResize]);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -185,31 +228,75 @@ export function DebugPanel({
     if (isMinimized) return `${baseClasses} ${position === 'right' ? 'right-0' : position === 'left' ? 'left-0' : 'bottom-0'} h-12`;
     
     if (position === "floating") {
-      return `${baseClasses} ${isCollapsed ? 'w-16' : `w-[${width}px]`} h-[600px] cursor-move`;
+      return `${baseClasses} cursor-move`;
     }
 
     switch (position) {
       case "left":
-        return `${baseClasses} left-0 h-screen border-r ${isCollapsed ? 'w-16' : `w-[${width}px]`}`;
+        return `${baseClasses} left-0 h-screen border-r`;
       case "right":
-        return `${baseClasses} right-0 h-screen border-r ${isCollapsed ? 'w-16' : `w-[${width}px]`}`;
+        return `${baseClasses} right-0 h-screen border-r`;
       case "bottom":
-        return `${baseClasses} bottom-0 w-full h-[300px] border-t`;
+        return `${baseClasses} bottom-0 w-full border-t`;
       default:
         return `${baseClasses} right-0`;
     }
   };
 
+  const resizeHandles = position === "floating" && !isMinimized && !isCollapsed ? (
+    <>
+      <ResizableHandle 
+        className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize" 
+        onMouseDown={() => startResize('ne')}
+      />
+      <ResizableHandle 
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize" 
+        onMouseDown={() => startResize('se')}
+      />
+      <ResizableHandle 
+        className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize" 
+        onMouseDown={() => startResize('sw')}
+      />
+      <ResizableHandle 
+        className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize" 
+        onMouseDown={() => startResize('nw')}
+      />
+      <ResizableHandle 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 cursor-n-resize" 
+        onMouseDown={() => startResize('n')}
+      />
+      <ResizableHandle 
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 cursor-s-resize" 
+        onMouseDown={() => startResize('s')}
+      />
+      <ResizableHandle 
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 cursor-w-resize" 
+        onMouseDown={() => startResize('w')}
+      />
+      <ResizableHandle 
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 cursor-e-resize" 
+        onMouseDown={() => startResize('e')}
+      />
+    </>
+  ) : null;
+
   return (
     <div
       ref={panelRef}
       className={getPositionClasses()}
-      style={position === "floating" ? {
-        transform: `translate(${dragState.currentX}px, ${dragState.currentY}px)`,
-        transition: dragState.isDragging ? 'none' : 'transform 0.3s ease-out'
-      } : undefined}
+      style={{
+        ...position === "floating" ? {
+          transform: `translate(${dragState.currentX}px, ${dragState.currentY}px)`,
+          transition: dragState.isDragging ? 'none' : 'transform 0.3s ease-out',
+          width: isCollapsed ? 64 : width,
+          height: isMinimized ? 48 : height
+        } : {
+          width: isCollapsed ? 64 : width
+        }
+      }}
       onMouseDown={handleDragStart}
     >
+      {resizeHandles}
       <div className="p-4 space-y-4 h-full flex flex-col">
         <DebugHeader 
           isCollapsed={isCollapsed}
@@ -225,7 +312,6 @@ export function DebugPanel({
         />
 
         {!isCollapsed && !isMinimized && (
-          <>
             <div className="flex justify-between items-center mb-4">
               <div className="text-sm text-gray-400">
                 Request ID: <span className="font-mono">{requestId || 'Not available'}</span>
