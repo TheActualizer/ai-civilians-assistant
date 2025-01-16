@@ -15,8 +15,8 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, systemPrompt } = await req.json();
-    console.log('Received request for Claude compute:', { messages, systemPrompt });
+    const { messages, systemPrompt, pageContext } = await req.json();
+    console.log('Received request for Claude compute:', { messages, systemPrompt, pageContext });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

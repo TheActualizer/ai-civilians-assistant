@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_coordination: {
+        Row: {
+          agent_type: string
+          coordination_score: number | null
+          created_at: string | null
+          feedback: string | null
+          id: string
+          metadata: Json | null
+          sync_status: string | null
+          thread_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_type: string
+          coordination_score?: number | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          metadata?: Json | null
+          sync_status?: string | null
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_type?: string
+          coordination_score?: number | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          metadata?: Json | null
+          sync_status?: string | null
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_coordination_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "debug_thread_analysis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_interactions: {
         Row: {
           action: string
@@ -383,15 +427,19 @@ export type Database = {
       }
       debug_thread_analysis: {
         Row: {
+          agent_feedback: Json | null
           analysis_data: Json | null
           analysis_frequency: number | null
+          analysis_interval: number | null
           analysis_status: string | null
+          auto_analysis_enabled: boolean | null
           claude_feedback: string | null
           connection_score: number | null
           connection_status: string | null
           created_at: string | null
           element_identifier: string | null
           id: string
+          last_agent_sync: string | null
           last_analysis_timestamp: string | null
           page_path: string
           suggested_connections: Json[] | null
@@ -399,15 +447,19 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          agent_feedback?: Json | null
           analysis_data?: Json | null
           analysis_frequency?: number | null
+          analysis_interval?: number | null
           analysis_status?: string | null
+          auto_analysis_enabled?: boolean | null
           claude_feedback?: string | null
           connection_score?: number | null
           connection_status?: string | null
           created_at?: string | null
           element_identifier?: string | null
           id?: string
+          last_agent_sync?: string | null
           last_analysis_timestamp?: string | null
           page_path: string
           suggested_connections?: Json[] | null
@@ -415,15 +467,19 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          agent_feedback?: Json | null
           analysis_data?: Json | null
           analysis_frequency?: number | null
+          analysis_interval?: number | null
           analysis_status?: string | null
+          auto_analysis_enabled?: boolean | null
           claude_feedback?: string | null
           connection_score?: number | null
           connection_status?: string | null
           created_at?: string | null
           element_identifier?: string | null
           id?: string
+          last_agent_sync?: string | null
           last_analysis_timestamp?: string | null
           page_path?: string
           suggested_connections?: Json[] | null
