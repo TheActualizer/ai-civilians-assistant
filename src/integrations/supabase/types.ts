@@ -299,6 +299,57 @@ export type Database = {
           },
         ]
       }
+      crypto_key_registry: {
+        Row: {
+          access_control: Json | null
+          algorithm: string
+          bit_strength: number | null
+          created_at: string | null
+          id: string
+          key_name: string
+          key_type: string
+          last_rotation: string | null
+          metadata: Json | null
+          next_rotation: string | null
+          rotation_period: unknown | null
+          status: string | null
+          updated_at: string | null
+          usage_stats: Json | null
+        }
+        Insert: {
+          access_control?: Json | null
+          algorithm: string
+          bit_strength?: number | null
+          created_at?: string | null
+          id?: string
+          key_name: string
+          key_type: string
+          last_rotation?: string | null
+          metadata?: Json | null
+          next_rotation?: string | null
+          rotation_period?: unknown | null
+          status?: string | null
+          updated_at?: string | null
+          usage_stats?: Json | null
+        }
+        Update: {
+          access_control?: Json | null
+          algorithm?: string
+          bit_strength?: number | null
+          created_at?: string | null
+          id?: string
+          key_name?: string
+          key_type?: string
+          last_rotation?: string | null
+          metadata?: Json | null
+          next_rotation?: string | null
+          rotation_period?: unknown | null
+          status?: string | null
+          updated_at?: string | null
+          usage_stats?: Json | null
+        }
+        Relationships: []
+      }
       debug_agent_monitoring: {
         Row: {
           agent_id: string
@@ -568,6 +619,51 @@ export type Database = {
         }
         Relationships: []
       }
+      edge_function_library: {
+        Row: {
+          code_hash: string | null
+          created_at: string | null
+          dependencies: Json | null
+          description: string | null
+          function_name: string
+          id: string
+          memory_requirements: Json | null
+          performance_metrics: Json | null
+          runtime_environment: Json | null
+          security_config: Json | null
+          updated_at: string | null
+          version: string
+        }
+        Insert: {
+          code_hash?: string | null
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          function_name: string
+          id?: string
+          memory_requirements?: Json | null
+          performance_metrics?: Json | null
+          runtime_environment?: Json | null
+          security_config?: Json | null
+          updated_at?: string | null
+          version: string
+        }
+        Update: {
+          code_hash?: string | null
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          function_name?: string
+          id?: string
+          memory_requirements?: Json | null
+          performance_metrics?: Json | null
+          runtime_environment?: Json | null
+          security_config?: Json | null
+          updated_at?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       enterprise_api_metrics: {
         Row: {
           created_at: string | null
@@ -711,6 +807,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      memory_allocation_registry: {
+        Row: {
+          allocated_bytes: number
+          allocation_type: string
+          created_at: string | null
+          id: string
+          max_bytes: number
+          memory_pool: string
+          optimization_rules: Json | null
+          performance_impact: Json | null
+          service_name: string
+          updated_at: string | null
+          utilization_metrics: Json | null
+        }
+        Insert: {
+          allocated_bytes: number
+          allocation_type: string
+          created_at?: string | null
+          id?: string
+          max_bytes: number
+          memory_pool: string
+          optimization_rules?: Json | null
+          performance_impact?: Json | null
+          service_name: string
+          updated_at?: string | null
+          utilization_metrics?: Json | null
+        }
+        Update: {
+          allocated_bytes?: number
+          allocation_type?: string
+          created_at?: string | null
+          id?: string
+          max_bytes?: number
+          memory_pool?: string
+          optimization_rules?: Json | null
+          performance_impact?: Json | null
+          service_name?: string
+          updated_at?: string | null
+          utilization_metrics?: Json | null
+        }
+        Relationships: []
       }
       microservice_registry: {
         Row: {
@@ -1729,6 +1867,19 @@ export type Database = {
       }
     }
     Functions: {
+      analyze_memory_usage: {
+        Args: {
+          service_name: string
+          time_window?: unknown
+        }
+        Returns: {
+          allocation_type: string
+          total_bytes: number
+          peak_usage: number
+          average_usage: number
+          optimization_suggestions: Json
+        }[]
+      }
       binary_quantize:
         | {
             Args: {
@@ -1858,6 +2009,16 @@ export type Database = {
           details?: Json
         }
         Returns: undefined
+      }
+      rotate_crypto_keys: {
+        Args: {
+          key_names?: string[]
+        }
+        Returns: {
+          key_name: string
+          rotation_status: string
+          new_rotation_date: string
+        }[]
       }
       search_agent_context: {
         Args: {
