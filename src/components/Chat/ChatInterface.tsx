@@ -69,7 +69,16 @@ export function ChatInterface({ messages, onMessageSubmit, onVoiceInput }: ChatI
     
     onMessageSubmit(userInput);
     if (realtimeChat) {
-      await realtimeChat.sendMessage(userInput);
+      try {
+        await realtimeChat.sendMessage(userInput);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to send message",
+        });
+      }
     }
     setUserInput('');
   };

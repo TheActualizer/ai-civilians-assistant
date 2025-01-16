@@ -70,6 +70,29 @@ export class RealtimeChat {
     }
   }
 
+  async sendMessage(text: string) {
+    if (!this.dc || this.dc.readyState !== 'open') {
+      throw new Error('Data channel not ready');
+    }
+
+    const event = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [
+          {
+            type: 'input_text',
+            text
+          }
+        ]
+      }
+    };
+
+    this.dc.send(JSON.stringify(event));
+    this.dc.send(JSON.stringify({type: 'response.create'}));
+  }
+
   disconnect() {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
