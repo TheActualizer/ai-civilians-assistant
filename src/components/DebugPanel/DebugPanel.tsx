@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Toggle } from "@/components/ui/toggle";
+import { useToast } from "@/hooks/use-toast";
 import type { DebugPanelProps, PanelPosition, DragState } from "./types";
 
 const MIN_WIDTH = 400;
@@ -29,6 +30,7 @@ export function DebugPanel({
   onRetry,
   onMessageSubmit,
 }: DebugPanelProps) {
+  const { toast } = useToast();
   const [message, setMessage] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<"detailed" | "compact">("detailed");
@@ -180,6 +182,17 @@ export function DebugPanel({
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      toast({
+        title: "File selected",
+        description: `Selected file: ${file.name}`,
+      });
+      // Handle file upload logic here
+    }
+  };
+
   const toggleView = (view: string) => {
     setActiveViews(prev => 
       prev.includes(view) 
@@ -189,7 +202,7 @@ export function DebugPanel({
   };
 
   const getPositionClasses = () => {
-    const baseClasses = "fixed transition-all duration-300 ease-in-out bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50";
+    const baseClasses = "fixed transition-all duration-300 ease-in-out bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 shadow-xl z-50";
     
     if (isFullscreen) return `${baseClasses} inset-0 w-full h-full`;
     if (isMinimized) return `${baseClasses} ${position === 'right' ? 'right-0' : position === 'left' ? 'left-0' : 'bottom-0'} h-12`;
