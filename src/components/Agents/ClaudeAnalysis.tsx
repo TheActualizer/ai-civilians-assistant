@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause, Terminal } from 'lucide-react';
+import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause, Terminal, MousePointer, Send } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const [analysisInterval, setAnalysisInterval] = useState<number | null>(null);
   const [analysisCount, setAnalysisCount] = useState(0);
   const [commandInput, setCommandInput] = useState('');
+  const [showInstructions, setShowInstructions] = useState(false);
   const [systemHealth, setSystemHealth] = useState({
     claudeStatus: 'idle',
     geminiStatus: 'idle',
@@ -177,7 +178,14 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   }, [autoAnalysis]);
 
   const handleCommandSubmit = async () => {
-    if (!commandInput.trim()) return;
+    if (!commandInput.trim()) {
+      toast({
+        title: "Command Required",
+        description: "Please enter a command for Claude to process.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     console.log('Processing strategic command:', commandInput);
     setIsAnalyzing(true);
@@ -297,17 +305,35 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <label className="text-sm text-gray-400">Strategic Command Input</label>
-            <div className="flex gap-2">
-              <Textarea
-                value={commandInput}
-                onChange={(e) => setCommandInput(e.target.value)}
-                placeholder="Enter strategic directive for Claude..."
-                className="flex-1"
-              />
+            <div className="flex gap-2 relative">
+              <div 
+                className="flex-1 relative"
+                onMouseEnter={() => setShowInstructions(true)}
+                onMouseLeave={() => setShowInstructions(false)}
+              >
+                <Textarea
+                  value={commandInput}
+                  onChange={(e) => setCommandInput(e.target.value)}
+                  placeholder="Enter strategic directive for Claude..."
+                  className="flex-1 pr-10"
+                />
+                {showInstructions && (
+                  <div className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 p-3 rounded-md shadow-lg border border-gray-700 z-10">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
+                      <MousePointer className="h-4 w-4 text-blue-400 animate-pulse" />
+                      <span>Type your command here</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-300 mt-2">
+                      <Send className="h-4 w-4 text-green-400" />
+                      <span>Click Execute or press Enter to send</span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <Button 
                 onClick={handleCommandSubmit}
                 disabled={isAnalyzing}
-                className="self-start"
+                className="self-start relative group"
               >
                 {isAnalyzing ? (
                   <>
@@ -321,52 +347,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
                   </>
                 )}
               </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 gap-4">
-            <div className="p-4 bg-gray-800/30 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Brain className="h-4 w-4 text-purple-400" />
-                <span className="text-sm text-gray-300">Claude</span>
-              </div>
-              <Badge variant="outline" className={`
-                ${systemHealth.claudeStatus === 'active' && 'bg-green-500/10 text-green-400'}
-                ${systemHealth.claudeStatus === 'error' && 'bg-red-500/10 text-red-400'}
-                ${systemHealth.claudeStatus === 'idle' && 'bg-gray-500/10 text-gray-400'}
-              `}>
-                {systemHealth.claudeStatus}
-              </Badge>
-            </div>
-
-            <div className="p-4 bg-gray-800/30 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Cpu className="h-4 w-4 text-blue-400" />
-                <span className="text-sm text-gray-300">Gemini</span>
-              </div>
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
-                {systemHealth.geminiStatus}
-              </Badge>
-            </div>
-
-            <div className="p-4 bg-gray-800/30 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Network className="h-4 w-4 text-yellow-400" />
-                <span className="text-sm text-gray-300">Pro-01</span>
-              </div>
-              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400">
-                {systemHealth.proStatus}
-              </Badge>
-            </div>
-
-            <div className="p-4 bg-gray-800/30 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="h-4 w-4 text-green-400" />
-                <span className="text-sm text-gray-300">Sync Status</span>
-              </div>
-              <Badge variant="outline" className="bg-green-500/10 text-green-400">
-                {systemHealth.syncStatus}
-              </Badge>
             </div>
           </div>
 
