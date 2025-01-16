@@ -226,6 +226,127 @@ export type Database = {
         }
         Relationships: []
       }
+      api_blueprints: {
+        Row: {
+          blueprint_type: string
+          created_at: string | null
+          documentation_id: string | null
+          id: string
+          integration_points: Json | null
+          metadata: Json | null
+          name: string
+          specification: Json
+          updated_at: string | null
+          version: string
+        }
+        Insert: {
+          blueprint_type: string
+          created_at?: string | null
+          documentation_id?: string | null
+          id?: string
+          integration_points?: Json | null
+          metadata?: Json | null
+          name: string
+          specification?: Json
+          updated_at?: string | null
+          version: string
+        }
+        Update: {
+          blueprint_type?: string
+          created_at?: string | null
+          documentation_id?: string | null
+          id?: string
+          integration_points?: Json | null
+          metadata?: Json | null
+          name?: string
+          specification?: Json
+          updated_at?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_blueprints_documentation_id_fkey"
+            columns: ["documentation_id"]
+            isOneToOne: false
+            referencedRelation: "api_documentation"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_documentation: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          openapi_spec: Json
+          status: string | null
+          title: string
+          updated_at: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          openapi_spec?: Json
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          openapi_spec?: Json
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      api_integration_mappings: {
+        Row: {
+          blueprint_id: string | null
+          created_at: string | null
+          id: string
+          integration_type: string
+          last_sync: string | null
+          mapping_config: Json
+          sync_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          blueprint_id?: string | null
+          created_at?: string | null
+          id?: string
+          integration_type: string
+          last_sync?: string | null
+          mapping_config?: Json
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          blueprint_id?: string | null
+          created_at?: string | null
+          id?: string
+          integration_type?: string
+          last_sync?: string | null
+          mapping_config?: Json
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_integration_mappings_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "api_blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_performance_metrics: {
         Row: {
           endpoint: string
