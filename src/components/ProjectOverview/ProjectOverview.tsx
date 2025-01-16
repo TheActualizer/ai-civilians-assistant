@@ -4,9 +4,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Calculator, FileText, Map, Database, Code, Workflow } from "lucide-react";
+import { Building2, Calculator, FileText, Map, DatabaseIcon, Code, Workflow } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
 type KnowledgeBaseEntry = Database['public']['Tables']['knowledge_base']['Row'];
 
@@ -86,7 +86,7 @@ export function ProjectOverview() {
     <Card className="bg-gray-800/40 border-gray-700 backdrop-blur-sm shadow-lg">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-primary" />
+          <DatabaseIcon className="h-5 w-5 text-primary" />
           <CardTitle className="text-gray-100">Project Scope & Features</CardTitle>
         </div>
         <CardDescription className="text-gray-400">
@@ -128,7 +128,7 @@ export function ProjectOverview() {
                             <h3 className="text-lg font-medium text-gray-100">{entry.title}</h3>
                             <p className="mt-2 text-gray-400">{entry.content}</p>
                             <div className="mt-4 flex gap-2">
-                              {entry.tags.map(tag => (
+                              {entry.tags && entry.tags.map(tag => (
                                 <Badge key={tag} variant="secondary">{tag}</Badge>
                               ))}
                             </div>
@@ -150,4 +150,4 @@ export function ProjectOverview() {
       </CardContent>
     </Card>
   );
-};
+}
