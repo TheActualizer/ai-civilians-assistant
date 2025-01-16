@@ -96,6 +96,7 @@ const ParcelDetails = () => {
         if (propertyRequest.lightbox_data) {
           console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
           addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
+          // Explicitly cast the lightbox_data to LightBoxResponse
           setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
         } else {
           try {
@@ -132,6 +133,7 @@ const ParcelDetails = () => {
             } else {
               console.log('LightBox API response:', data);
               addToHistory("LightBox API call successful", data);
+              // Explicitly cast the API response to LightBoxResponse
               setLightboxData(data as LightBoxResponse);
               
               toast({
@@ -139,7 +141,7 @@ const ParcelDetails = () => {
                 description: "LightBox data fetched successfully"
               });
             }
-          } catch (apiError) {
+          } catch (apiError: any) {
             console.error('Error calling LightBox API:', apiError);
             setApiError({
               message: apiError.message || 'Error calling LightBox API',
@@ -150,7 +152,7 @@ const ParcelDetails = () => {
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Unexpected error:', error);
       addToHistory("Unexpected error occurred", error);
       setError('An unexpected error occurred');
