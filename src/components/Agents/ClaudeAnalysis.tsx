@@ -37,30 +37,69 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const initializePageAnalysis = async () => {
     console.log('Setting up continuous page analysis for:', pageRoute);
     try {
-      const { data: existingAnalysis, error } = await supabase
+      // First check if analysis exists
+      const { data: existingAnalysis, error: fetchError } = await supabase
         .from('debug_thread_analysis')
-        .update({
-          auto_analysis_enabled: true,
-          analysis_frequency: 20,
-          analysis_status: 'active',
-          analysis_data: {
-            continuous_improvement: true,
-            target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
-            improvement_focus: [
-              'UI/UX optimization',
-              'Component structure',
-              'Performance metrics',
-              'User engagement'
-            ]
-          }
-        })
+        .select('*')
         .eq('page_path', pageRoute)
-        .select()
         .maybeSingle();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      console.log('Page analysis initialized:', existingAnalysis);
+      if (!existingAnalysis) {
+        // Create new analysis if none exists
+        const { data: newAnalysis, error: insertError } = await supabase
+          .from('debug_thread_analysis')
+          .insert({
+            page_path: pageRoute,
+            thread_type: 'claude-analysis',
+            auto_analysis_enabled: true,
+            analysis_frequency: 20,
+            analysis_status: 'active',
+            analysis_data: {
+              continuous_improvement: true,
+              target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
+              improvement_focus: [
+                'UI/UX optimization',
+                'Component structure',
+                'Performance metrics',
+                'User engagement'
+              ]
+            }
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        console.log('Created new page analysis:', newAnalysis);
+        setThreadAnalysis(newAnalysis);
+      } else {
+        // Update existing analysis
+        const { data: updatedAnalysis, error: updateError } = await supabase
+          .from('debug_thread_analysis')
+          .update({
+            auto_analysis_enabled: true,
+            analysis_frequency: 20,
+            analysis_status: 'active',
+            analysis_data: {
+              continuous_improvement: true,
+              target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
+              improvement_focus: [
+                'UI/UX optimization',
+                'Component structure',
+                'Performance metrics',
+                'User engagement'
+              ]
+            }
+          })
+          .eq('page_path', pageRoute)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        console.log('Updated existing page analysis:', updatedAnalysis);
+        setThreadAnalysis(updatedAnalysis);
+      }
       
       toast({
         title: "Command Center Activated",
@@ -68,6 +107,11 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
       });
     } catch (error) {
       console.error('Error initializing page analysis:', error);
+      toast({
+        variant: "destructive",
+        title: "Initialization Error",
+        description: "Failed to setup command center. Retrying...",
+      });
     }
   };
 
