@@ -16,6 +16,11 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
   const [isMicActive, setIsMicActive] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [systemMetrics, setSystemMetrics] = useState({
+    cpu: 0,
+    memory: 0,
+    network: 0
+  });
 
   useEffect(() => {
     if (!sessionId) {
@@ -40,12 +45,39 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
       .on(
         'presence',
         { event: 'join' },
-        ({ key }) => {
-          console.log('User joined:', key);
+        ({ key, newPresences }) => {
+          console.log('User joined:', { key, newPresences });
           toast({
             title: "New user joined",
             description: `User ${key} joined the session`,
           });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'shared_computer_sessions',
+          filter: `session_id=eq.${sessionId}`
+        },
+        (payload) => {
+          console.log('Session state updated:', payload);
+          const { new: newState } = payload;
+          
+          // Update local state based on database changes
+          if (newState.screen_sharing) {
+            setIsSharing(newState.screen_sharing.active);
+          }
+          if (newState.voice_chat) {
+            setIsMicActive(newState.voice_chat.active);
+          }
+          if (newState.video_chat) {
+            setIsCameraActive(newState.video_chat.active);
+          }
+          if (newState.system_metrics) {
+            setSystemMetrics(newState.system_metrics);
+          }
         }
       )
       .subscribe(async (status) => {
@@ -76,7 +108,7 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
           data: {
             session_id: sessionId,
             state: {
-              screenSharing: {
+              screen_sharing: {
                 active: !isSharing,
                 userId: sessionId
               }
@@ -115,9 +147,11 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
           data: {
             session_id: sessionId,
             state: {
-              voiceChat: {
+              voice_chat: {
                 active: !isMicActive,
-                userId: sessionId
+                participants: isMicActive 
+                  ? activeUsers.filter(id => id !== sessionId)
+                  : [...activeUsers, sessionId]
               }
             }
           }
@@ -151,9 +185,11 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
           data: {
             session_id: sessionId,
             state: {
-              videoChat: {
+              video_chat: {
                 active: !isCameraActive,
-                userId: sessionId
+                participants: isCameraActive
+                  ? activeUsers.filter(id => id !== sessionId)
+                  : [...activeUsers, sessionId]
               }
             }
           }
@@ -192,6 +228,19 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
                 border: '1px solid rgba(59, 130, 246, 0.2)'
               }}
             />
+          </div>
+
+          {/* System metrics */}
+          <div className="absolute top-6 left-6 space-y-2">
+            <div className="px-3 py-1 bg-gray-800/90 rounded-full text-sm text-gray-300">
+              CPU: {systemMetrics.cpu.toFixed(1)}%
+            </div>
+            <div className="px-3 py-1 bg-gray-800/90 rounded-full text-sm text-gray-300">
+              Memory: {systemMetrics.memory.toFixed(1)}%
+            </div>
+            <div className="px-3 py-1 bg-gray-800/90 rounded-full text-sm text-gray-300">
+              Network: {systemMetrics.network.toFixed(1)}%
+            </div>
           </div>
 
           {/* Controls overlay */}

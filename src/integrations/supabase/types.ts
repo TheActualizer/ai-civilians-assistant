@@ -921,6 +921,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_computer_sessions: {
+        Row: {
+          active_users: Json | null
+          created_at: string | null
+          id: string
+          screen_sharing: Json | null
+          session_id: string
+          system_metrics: Json | null
+          updated_at: string | null
+          video_chat: Json | null
+          voice_chat: Json | null
+        }
+        Insert: {
+          active_users?: Json | null
+          created_at?: string | null
+          id?: string
+          screen_sharing?: Json | null
+          session_id: string
+          system_metrics?: Json | null
+          updated_at?: string | null
+          video_chat?: Json | null
+          voice_chat?: Json | null
+        }
+        Update: {
+          active_users?: Json | null
+          created_at?: string | null
+          id?: string
+          screen_sharing?: Json | null
+          session_id?: string
+          system_metrics?: Json | null
+          updated_at?: string | null
+          video_chat?: Json | null
+          voice_chat?: Json | null
+        }
+        Relationships: []
+      }
       system_events: {
         Row: {
           component: string

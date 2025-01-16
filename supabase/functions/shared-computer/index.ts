@@ -56,13 +56,13 @@ serve(async (req) => {
         const { user_id, session_id } = data
         console.log('User joining session:', { user_id, session_id });
         
-        const joinResult = await supabase.from('debug_sessions').upsert({
-          id: session_id,
-          name: 'shared-computer',
-          participants: [user_id],
-          session_data: {
-            lastActive: timestamp,
-            state: 'active'
+        const joinResult = await supabase.from('shared_computer_sessions').upsert({
+          session_id,
+          active_users: [user_id],
+          system_metrics: {
+            cpu: Math.random() * 100,
+            memory: Math.random() * 100,
+            network: Math.random() * 100
           }
         })
 
@@ -82,12 +82,10 @@ serve(async (req) => {
         const { session_id: sid, state } = data
         console.log('Updating session state:', { sid, state });
         
-        const updateResult = await supabase.from('debug_sessions').update({
-          session_data: {
-            ...state,
-            lastUpdated: timestamp
-          }
-        }).eq('id', sid)
+        const updateResult = await supabase.from('shared_computer_sessions').update({
+          ...state,
+          updated_at: timestamp
+        }).eq('session_id', sid)
 
         if (updateResult.error) {
           console.error('Error updating session state:', updateResult.error);
