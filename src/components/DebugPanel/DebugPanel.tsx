@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, Eye, EyeOff, Maximize2, Minimize2, Layout, LayoutGrid } from "lucide-react";
+import { Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, Eye, EyeOff, Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ export function DebugPanel({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<"detailed" | "compact">("detailed");
   const [activeViews, setActiveViews] = useState<string[]>(["history", "error", "request"]);
+  const [position, setPosition] = useState<"right" | "left" | "bottom">("right");
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +43,48 @@ export function DebugPanel({
     );
   };
 
+  const getPositionClasses = () => {
+    switch (position) {
+      case "left":
+        return "left-0";
+      case "right":
+        return "right-0";
+      case "bottom":
+        return "bottom-0 w-full h-[300px]";
+      default:
+        return "right-0";
+    }
+  };
+
+  const cyclePosition = () => {
+    const positions: ("right" | "left" | "bottom")[] = ["right", "left", "bottom"];
+    const currentIndex = positions.indexOf(position);
+    const nextIndex = (currentIndex + 1) % positions.length;
+    setPosition(positions[nextIndex]);
+  };
+
+  const getPositionIcon = () => {
+    switch (position) {
+      case "left":
+        return <ArrowLeft className="h-4 w-4" />;
+      case "right":
+        return <ArrowRight className="h-4 w-4" />;
+      case "bottom":
+        return <ArrowDown className="h-4 w-4" />;
+    }
+  };
+
   return (
-    <Sidebar className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-[600px]'} border-r border-gray-700/50`}>
-      <SidebarContent className="bg-gray-900/95 backdrop-blur-sm">
-        <div className="p-4 space-y-4">
-          <div className="flex justify-between items-center">
+    <div 
+      className={`fixed transition-all duration-300 ease-in-out ${getPositionClasses()} ${
+        isMinimized ? 'h-12' : position === 'bottom' ? 'h-[300px]' : 'h-screen'
+      } ${isCollapsed ? 'w-16' : position === 'bottom' ? 'w-full' : 'w-[600px]'} 
+      bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50
+      ${position === 'left' ? 'border-r' : position === 'right' ? 'border-l' : 'border-t'}`}
+    >
+      <div className="p-4 space-y-4 h-full flex flex-col">
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="sm"
@@ -55,7 +94,7 @@ export function DebugPanel({
               {isCollapsed ? <Layout className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
             </Button>
             {!isCollapsed && (
-              <div className="flex items-center gap-2">
+              <>
                 <Terminal className="h-5 w-5 text-primary animate-pulse" />
                 <h2 className="font-semibold text-gray-100">Debug Console</h2>
                 {error && (
@@ -64,12 +103,30 @@ export function DebugPanel({
                     Error
                   </Badge>
                 )}
-              </div>
+              </>
             )}
           </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cyclePosition}
+              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+            >
+              {getPositionIcon()}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+            >
+              {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
 
-          {!isCollapsed && (
-            <>
+        {!isMinimized && !isCollapsed && (
               <div className="flex justify-between items-center">
                 <div className="text-sm text-gray-400">
                   Request ID: <span className="font-mono">{requestId || 'Not available'}</span>
@@ -206,9 +263,8 @@ export function DebugPanel({
                 </Card>
               )}
             </>
-          )}
-        </div>
-      </SidebarContent>
-    </Sidebar>
+        )}
+      </div>
+    </div>
   );
 }
