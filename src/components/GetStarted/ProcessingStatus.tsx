@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Check, Loader2, MapPin, FileText, Building2, FileOutput, Database, Terminal, Code, History, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Check, Loader2, MapPin, FileText, Building2, FileOutput, Database, Terminal, Code, History, AlertCircle, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ProcessingStatusProps, PropertyRequest, FunctionLog } from "./types";
@@ -553,6 +555,20 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add sticky navigation button */}
+      <div className="sticky bottom-8 flex justify-end mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+        <Button
+          onClick={() => navigate('/address-validation')}
+          className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
+          size="lg"
+        >
+          Continue to Address Validation
+          <ArrowRight className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   );
 };
+
+export default ProcessingStatus;
