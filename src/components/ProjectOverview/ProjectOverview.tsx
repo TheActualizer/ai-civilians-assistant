@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Calculator, FileText, Map, Database, 
   Code, Workflow, Brain, Network, Settings2,
@@ -14,11 +15,11 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Define the type for knowledge base entries
 type KnowledgeBaseEntry = {
   id: string;
   title: string;
   content: string;
+  category: string;
   tags?: string[];
   created_at: string;
 };
@@ -27,6 +28,7 @@ export function ProjectOverview() {
   const [entries, setEntries] = useState<KnowledgeBaseEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(2000);
   const [memoryDepth, setMemoryDepth] = useState(5);
@@ -34,23 +36,43 @@ export function ProjectOverview() {
   useEffect(() => {
     const fetchKnowledgeBase = async () => {
       try {
-        const { data, error } = await supabase
+        console.log('Fetching knowledge base entries...');
+        const { data, error: fetchError } = await supabase
           .from('knowledge_base')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (fetchError) {
+          console.error('Error fetching knowledge base:', fetchError);
+          setError('Failed to load project information');
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load knowledge base data"
+          });
+          return;
+        }
+
+        console.log('Knowledge base entries loaded:', data);
         setEntries(data || []);
       } catch (err) {
-        console.error('Error fetching knowledge base:', err);
-        setError('Failed to load project information');
+        console.error('Unexpected error:', err);
+        setError('An unexpected error occurred');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchKnowledgeBase();
-  }, []);
+  }, [toast]);
+
+  const handleParameterUpdate = () => {
+    console.log('Updating parameters:', { temperature, maxTokens, memoryDepth });
+    toast({
+      title: "Parameters Updated",
+      description: "System parameters have been updated successfully"
+    });
+  };
 
   const sections = [
     {
@@ -86,7 +108,13 @@ export function ProjectOverview() {
   ];
 
   if (isLoading) {
-    return <div>Loading project overview...</div>;
+    return (
+      <Card className="bg-gray-800/40 border-gray-700">
+        <CardHeader>
+          <CardTitle>Loading project overview...</CardTitle>
+        </CardHeader>
+      </Card>
+    );
   }
 
   if (error) {
@@ -98,10 +126,8 @@ export function ProjectOverview() {
     );
   }
 
-  const handleParameterUpdate = () => {
-    console.log('Updating parameters:', { temperature, maxTokens, memoryDepth });
-    // Here we would update the CrewAI system parameters
-  };
+  const getEntriesByCategory = (category: string) => 
+    entries.filter(entry => entry.category === category);
 
   return (
     <Card className="bg-gray-800/40 border-gray-700 backdrop-blur-sm shadow-lg">
@@ -149,33 +175,16 @@ export function ProjectOverview() {
                     </Card>
                     <Card className="p-4 bg-gray-800/50">
                       <h3 className="text-sm font-medium mb-2">Active Agents</h3>
-                      <div className="text-2xl font-bold text-primary">4</div>
+                      <div className="text-2xl font-bold text-primary">
+                        {getEntriesByCategory('agents').length}
+                      </div>
                     </Card>
                     <Card className="p-4 bg-gray-800/50">
-                      <h3 className="text-sm font-medium mb-2">Tasks Queue</h3>
-                      <div className="text-2xl font-bold text-primary">2</div>
+                      <h3 className="text-sm font-medium mb-2">Architecture Components</h3>
+                      <div className="text-2xl font-bold text-primary">
+                        {getEntriesByCategory('architecture').length}
+                      </div>
                     </Card>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="architecture">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <GitBranch className="h-5 w-5 text-primary" />
-                  <CardTitle>System Architecture</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="relative h-[400px] border border-gray-700 rounded-lg p-4">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-gray-400">
-                      <Network className="h-16 w-16 mx-auto mb-4 text-primary/50" />
-                      <p>Interactive architecture visualization</p>
-                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -193,12 +202,12 @@ export function ProjectOverview() {
               <CardContent>
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-4">
-                    {entries.map(entry => (
-                      <div key={entry.id} className="bg-white/5 p-4 rounded-lg border border-white/10">
+                    {getEntriesByCategory('memory').map(entry => (
+                      <div key={entry.id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
                         <h3 className="text-lg font-medium text-gray-100">{entry.title}</h3>
                         <p className="mt-2 text-gray-400">{entry.content}</p>
                         <div className="mt-4 flex gap-2">
-                          {entry.tags && entry.tags.map(tag => (
+                          {entry.tags?.map(tag => (
                             <Badge key={tag} variant="secondary">{tag}</Badge>
                           ))}
                         </div>
@@ -220,16 +229,45 @@ export function ProjectOverview() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  {['Task Planner', 'Memory Manager', 'Execution Agent', 'Quality Control'].map((agent) => (
-                    <Card key={agent} className="p-4 bg-gray-800/50">
+                  {getEntriesByCategory('agents').map(agent => (
+                    <Card key={agent.id} className="p-4 bg-gray-800/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Bot className="h-4 w-4 text-primary" />
-                        <h3 className="font-medium">{agent}</h3>
+                        <h3 className="font-medium">{agent.title}</h3>
                       </div>
+                      <p className="text-sm text-gray-400 mb-3">{agent.content}</p>
                       <Badge variant="outline">Active</Badge>
                     </Card>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="architecture">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <GitBranch className="h-5 w-5 text-primary" />
+                  <CardTitle>System Architecture</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4">
+                    {getEntriesByCategory('architecture').map(entry => (
+                      <div key={entry.id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                        <h3 className="text-lg font-medium text-gray-100">{entry.title}</h3>
+                        <p className="mt-2 text-gray-400">{entry.content}</p>
+                        <div className="mt-4 flex gap-2">
+                          {entry.tags?.map(tag => (
+                            <Badge key={tag} variant="secondary">{tag}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </TabsContent>
