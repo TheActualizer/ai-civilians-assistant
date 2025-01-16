@@ -16,6 +16,7 @@ import { AdditionalTab } from "@/components/ParcelDetails/AdditionalTab";
 import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
 import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
+import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -181,12 +182,13 @@ const ParcelDetails = () => {
             </div>
 
             <Tabs defaultValue="property" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-1">
+              <TabsList className="grid w-full grid-cols-6 bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-1">
                 <TabsTrigger value="property">Property</TabsTrigger>
                 <TabsTrigger value="address">Address</TabsTrigger>
                 <TabsTrigger value="additional">Additional</TabsTrigger>
                 <TabsTrigger value="parsed">Parsed</TabsTrigger>
                 <TabsTrigger value="raw">Raw</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
               </TabsList>
 
               <div className="mt-6 space-y-6">
@@ -208,6 +210,10 @@ const ParcelDetails = () => {
 
                 <TabsContent value="raw">
                   <RawTab lightboxData={lightboxData} />
+                </TabsContent>
+
+                <TabsContent value="documents">
+                  <DocumentUpload />
                 </TabsContent>
 
                 <div className="sticky bottom-8 flex justify-end mt-8">
