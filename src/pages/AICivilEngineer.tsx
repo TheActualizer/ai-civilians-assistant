@@ -10,10 +10,13 @@ import { VersionSelector } from "@/components/VersionManagement/VersionSelector"
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
 import { AgentMetrics } from "@/components/Agents/AgentMetrics";
 import { AgentNetwork } from "@/components/Agents/AgentNetwork";
+import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
 import { ScreenshotButton } from "@/components/ScreenshotButton/ScreenshotButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { AgentMessage } from '@/types/agent';
+
+// ... keep existing code (imports and type definitions)
 
 const AICivilEngineer = () => {
   const session = useSession();
@@ -229,6 +232,20 @@ const AICivilEngineer = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
+              <ClaudeAnalysis 
+                pageRoute={window.location.pathname}
+                agentState={{
+                  agents: agentMessages,
+                  actions: apiCallHistory
+                }}
+              />
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
               <AgentsPanel
                 onMessage={handleAgentMessage}
                 onVoiceInput={(transcript) => handleAgentMessage(transcript, 'Quantum Voice Interface')}
@@ -240,14 +257,14 @@ const AICivilEngineer = () => {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <AgentMetrics />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <AgentNetwork />
               </motion.div>
@@ -258,7 +275,7 @@ const AICivilEngineer = () => {
             className="space-y-8"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
           >
             <VersionSwitcher />
             <DebugPanel
