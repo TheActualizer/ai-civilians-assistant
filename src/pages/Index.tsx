@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, Sparkles, Zap } from "lucide-react";
+import { Brain, Sparkles, Zap, Building2, FileText, Settings, Database, Network, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Features from "@/components/Features";
@@ -13,8 +13,26 @@ const Index = () => {
     console.log('Index page mounted');
   }, []);
 
+  const enterpriseRoutes = [
+    { path: "/enterprise/overview", label: "Overview", icon: Building2 },
+    { path: "/enterprise/analytics", label: "Analytics", icon: FileText },
+    { path: "/enterprise/system-analytics", label: "System Analytics", icon: Settings },
+  ];
+
+  const infrastructureRoutes = [
+    { path: "/infrastructure/overview", label: "Overview", icon: Database },
+    { path: "/infrastructure/network-management", label: "Network", icon: Network },
+    { path: "/infrastructure/security-monitoring", label: "Security", icon: Settings },
+  ];
+
+  const technologyRoutes = [
+    { path: "/technology/overview", label: "Overview", icon: Code },
+    { path: "/technology/innovation", label: "Innovation", icon: Sparkles },
+    { path: "/technology/research", label: "Research", icon: Brain },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="container mx-auto px-4 pt-20 pb-12">
         {/* Main Content */}
         <div className="text-center mb-12">
@@ -29,13 +47,12 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="mt-4 text-xl text-gray-600"
+            className="mt-4 text-xl text-gray-400"
           >
             Revolutionizing property analysis with advanced AI
           </motion.p>
         </div>
 
-        {/* Rest of the content */}
         {/* Main AI Assistant Button */}
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}
@@ -54,16 +71,32 @@ const Index = () => {
           </Link>
         </motion.div>
 
-        {/* Feature Grid */}
+        {/* Hub Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <HubSection 
+            title="Enterprise" 
+            icon={Building2}
+            routes={enterpriseRoutes}
+          />
+          <HubSection 
+            title="Infrastructure" 
+            icon={Database}
+            routes={infrastructureRoutes}
+          />
+          <HubSection 
+            title="Technology" 
+            icon={Code}
+            routes={technologyRoutes}
+          />
+        </div>
+
+        {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           <Features />
         </div>
 
         {/* Core Features Section */}
         <CoreFeatures />
-
-        {/* Hub Navigation Section */}
-        <HubSection />
 
         {/* Enterprise Features */}
         <motion.div
