@@ -806,11 +806,16 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          integration_data: Json | null
           is_active: boolean | null
           metadata: Json | null
           name: string
+          parent_version_id: string | null
+          performance_metrics: Json | null
           route: string
           updated_at: string | null
+          version_tags: string[] | null
+          version_type: string | null
         }
         Insert: {
           component_data?: Json
@@ -818,11 +823,16 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          integration_data?: Json | null
           is_active?: boolean | null
           metadata?: Json | null
           name: string
+          parent_version_id?: string | null
+          performance_metrics?: Json | null
           route: string
           updated_at?: string | null
+          version_tags?: string[] | null
+          version_type?: string | null
         }
         Update: {
           component_data?: Json
@@ -830,11 +840,16 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          integration_data?: Json | null
           is_active?: boolean | null
           metadata?: Json | null
           name?: string
+          parent_version_id?: string | null
+          performance_metrics?: Json | null
           route?: string
           updated_at?: string | null
+          version_tags?: string[] | null
+          version_type?: string | null
         }
         Relationships: [
           {
@@ -842,6 +857,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ui_versions_parent_version_id_fkey"
+            columns: ["parent_version_id"]
+            isOneToOne: false
+            referencedRelation: "ui_versions"
             referencedColumns: ["id"]
           },
         ]

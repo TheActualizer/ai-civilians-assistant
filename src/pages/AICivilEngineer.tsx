@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 import { VersionSwitcher } from "@/components/VersionSwitcher/VersionSwitcher";
+import { VersionSelector } from "@/components/VersionManagement/VersionSelector";
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
 import { AgentMetrics } from "@/components/Agents/AgentMetrics";
 import { AgentNetwork } from "@/components/Agents/AgentNetwork";
@@ -80,11 +81,14 @@ const AICivilEngineer = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <AgentsPanel
-              onMessage={handleAgentMessage}
-              onVoiceInput={(transcript) => handleAgentMessage(transcript, 'Voice Assistant')}
-              messages={agentMessages}
-            />
+            <VersionSelector />
+            <div className="mt-8">
+              <AgentsPanel
+                onMessage={handleAgentMessage}
+                onVoiceInput={(transcript) => handleAgentMessage(transcript, 'Voice Assistant')}
+                messages={agentMessages}
+              />
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
               <AgentMetrics />
               <AgentNetwork />
