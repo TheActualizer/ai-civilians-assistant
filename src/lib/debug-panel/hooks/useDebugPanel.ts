@@ -5,7 +5,7 @@ export const useDebugPanel = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<"detailed" | "compact">("detailed");
   const [position, setPosition] = useState<"right" | "left" | "bottom">("right");
-  const [isMinimized, setIsMinimized] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false); // Changed to false to show by default
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const debug = useDebug();
@@ -20,12 +20,10 @@ export const useDebugPanel = () => {
 
   const handleRetry = useCallback(() => {
     debug.addToHistory("Retry requested");
-    // Additional retry logic can be implemented here
   }, [debug]);
 
   const handleMessageSubmit = useCallback((message: string) => {
     debug.addToHistory("Debug message sent", { message });
-    // Additional message handling logic can be implemented here
   }, [debug]);
 
   return {
