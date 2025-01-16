@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowRight, FileText, Database, Terminal, Info, Building2, Code } from "lucide-react";
-import { PropertyRequest, AssessmentData } from '@/components/GetStarted/types';
+import { PropertyRequest, AssessmentData, LightBoxResponse } from '@/components/GetStarted/types';
 import { DebugPanel } from '@/components/DebugPanel/DebugPanel';
 
 const Assessment = () => {
@@ -21,6 +21,11 @@ const Assessment = () => {
   const [propertyRequest, setPropertyRequest] = useState<PropertyRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<{
+    message: string;
+    details?: any;
+    timestamp: string;
+  } | null>(null);
   const [apiCallHistory, setApiCallHistory] = useState<Array<{
     timestamp: string;
     event: string;
@@ -74,6 +79,11 @@ const Assessment = () => {
           console.error('Error fetching request:', fetchError);
           addToHistory("Error fetching property request", fetchError);
           setError('Failed to fetch property request');
+          setApiError({
+            message: 'Failed to fetch property request',
+            details: fetchError,
+            timestamp: new Date().toISOString()
+          });
           return;
         }
 
@@ -90,7 +100,6 @@ const Assessment = () => {
             addToHistory("No assessment data found, fetching from API");
             const assessmentData = await fetchAssessmentData(typedRequest.id);
             
-            // Refresh the property request to get the updated data
             const { data: updatedRequest } = await supabase
               .from('property_requests')
               .select('*')
@@ -109,6 +118,11 @@ const Assessment = () => {
         console.error('Unexpected error:', error);
         addToHistory("Unexpected error occurred", error);
         setError('An unexpected error occurred');
+        setApiError({
+          message: 'An unexpected error occurred',
+          details: error,
+          timestamp: new Date().toISOString()
+        });
       } finally {
         setIsLoading(false);
       }
@@ -219,10 +233,15 @@ const Assessment = () => {
         <DebugPanel
           isLoading={isLoading}
           error={error}
-          requestId={propertyRequest?.id}
+          requestId={propertyRequest?.id || null}
+          lightboxData={propertyRequest?.lightbox_data as LightBoxResponse || null}
           apiCallHistory={apiCallHistory}
+          apiError={apiError}
           onRetry={() => window.location.reload()}
-          onMessageSubmit={(message) => console.log('Debug message:', message)}
+          onMessageSubmit={(message) => {
+            console.log('Debug message:', message);
+            addToHistory("Debug message sent", { message });
+          }}
         />
       </div>
     );
@@ -241,20 +260,26 @@ const Assessment = () => {
         <DebugPanel
           isLoading={isLoading}
           error={error}
-          requestId={propertyRequest?.id}
+          requestId={propertyRequest?.id || null}
+          lightboxData={propertyRequest?.lightbox_data as LightBoxResponse || null}
           apiCallHistory={apiCallHistory}
+          apiError={apiError}
           onRetry={() => window.location.reload()}
-          onMessageSubmit={(message) => console.log('Debug message:', message)}
+          onMessageSubmit={(message) => {
+            console.log('Debug message:', message);
+            addToHistory("Debug message sent", { message });
+          }}
         />
       </div>
     );
   }
 
+  // ... keep existing code (main render JSX)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
       <div className="container mx-auto pt-24 px-4 pb-8">
-        <div className="flex flex-col gap-8">
           {/* Compact Header with Property Info */}
           <div className="bg-white p-4 rounded-lg shadow-sm">
             <div className="flex justify-between items-center">
@@ -404,10 +429,15 @@ const Assessment = () => {
       <DebugPanel
         isLoading={isLoading}
         error={error}
-        requestId={propertyRequest?.id}
+        requestId={propertyRequest?.id || null}
+        lightboxData={propertyRequest?.lightbox_data as LightBoxResponse || null}
         apiCallHistory={apiCallHistory}
+        apiError={apiError}
         onRetry={() => window.location.reload()}
-        onMessageSubmit={(message) => console.log('Debug message:', message)}
+        onMessageSubmit={(message) => {
+          console.log('Debug message:', message);
+          addToHistory("Debug message sent", { message });
+        }}
       />
     </div>
   );
