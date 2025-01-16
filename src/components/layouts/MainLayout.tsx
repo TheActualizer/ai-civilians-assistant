@@ -8,10 +8,7 @@ import { DebugPanel } from "../DebugPanel/DebugPanel";
 import { ClaudeAnalysis } from "../Agents/ClaudeAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface MainLayoutProps {
-  children: React.ReactNode;
-}
+import type { MainLayoutProps } from '@/types/agent';
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   const session = useSession();

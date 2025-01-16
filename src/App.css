@@ -1,59 +1,9 @@
-#root {
-  margin: 0 auto;
-  text-align: center;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@layer utilities {
+  .glass-morphism {
+    @apply bg-opacity-20 backdrop-blur-lg bg-white/10 border border-white/20;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  @apply p-6 glass-morphism rounded-xl shadow-lg hover:shadow-xl transition-all duration-300;
-}
-
-.read-the-docs {
-  @apply text-secondary-foreground/70;
-}
-
-/* Enhanced layout utilities */
-.page-container {
-  @apply min-h-screen bg-gradient-to-b from-background to-secondary-light dark:from-gray-900 dark:to-gray-800;
-}
-
-.content-wrapper {
-  @apply px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12;
-}
-
-.grid-layout {
-  @apply grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3;
-}
-
-.flex-layout {
-  @apply flex flex-col sm:flex-row gap-6 sm:gap-8;
 }
