@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle, Bug } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -112,17 +112,16 @@ const ParcelDetails = () => {
                   timestamp: new Date().toISOString()
                 });
                 addToHistory("LightBox API call failed", apiError);
-                throw apiError;
+              } else {
+                console.log('LightBox API response:', data);
+                addToHistory("LightBox API call successful", data);
+                setLightboxData(data as LightBoxResponse);
+                
+                toast({
+                  title: "Success",
+                  description: "LightBox data fetched successfully"
+                });
               }
-
-              console.log('LightBox API response:', data);
-              addToHistory("LightBox API call successful", data);
-              setLightboxData(data as LightBoxResponse);
-              
-              toast({
-                title: "Success",
-                description: "LightBox data fetched successfully"
-              });
             } catch (apiError) {
               console.error('Error calling LightBox API:', apiError);
               setApiError({
@@ -131,12 +130,6 @@ const ParcelDetails = () => {
                 timestamp: new Date().toISOString()
               });
               addToHistory("Error in LightBox API call", apiError);
-              setError('Failed to fetch LightBox data');
-              toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to fetch LightBox data"
-              });
             }
           }
         }
@@ -144,9 +137,9 @@ const ParcelDetails = () => {
         console.error('Unexpected error:', error);
         addToHistory("Unexpected error occurred", error);
         setError('An unexpected error occurred');
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     fetchLatestRequest();
@@ -168,77 +161,33 @@ const ParcelDetails = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar session={session} />
-        <div className="container mx-auto pt-24 px-4">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </div>
-      </div>
-    );
-  }
-
-  const renderPropertyDetails = () => {
-    if (!lightboxData?.propertyDetails) return null;
-    
-    const details = lightboxData.propertyDetails;
-    const detailsArray = Object.entries(details).map(([key, value]) => ({
-      key: key.split(/(?=[A-Z])/).join(' ').toLowerCase(),
-      value: value || 'Not available'
-    }));
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {detailsArray.map(({ key, value }) => (
-          <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500 capitalize">{key}</h3>
-            <p className="mt-1 text-lg">{value}</p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderAdditionalDetails = () => {
-    if (!lightboxData?.rawResponse) return null;
-    
-    const rawData = lightboxData.rawResponse;
-    const additionalFields = Object.entries(rawData).filter(([key]) => 
-      !['parcelId', 'address', 'propertyDetails'].includes(key)
-    );
-
-    return (
-      <div className="space-y-6">
-        {additionalFields.map(([key, value]) => (
-          <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500 capitalize">
-              {key.replace(/([A-Z])/g, ' $1').trim()}
-            </h3>
-            <p className="mt-1 whitespace-pre-wrap">
-              {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-            </p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
       <div className="container mx-auto pt-24 px-4 pb-8">
         <div className="flex flex-col gap-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">LightBox Property Analysis</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold text-gray-900">Debug Dashboard</h1>
+              {error && (
+                <Badge variant="destructive" className="animate-pulse">
+                  <Bug className="w-4 h-4 mr-1" />
+                  Error Detected
+                </Badge>
+              )}
+            </div>
             <div className="text-sm text-gray-500">
-              Request ID: {requestId}
+              Request ID: {requestId || 'Not available'}
             </div>
           </div>
+
+          {error && (
+            <Alert variant="destructive" className="animate-fade-in">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           <Tabs defaultValue="api-debug" className="w-full">
             <TabsList className="grid w-full grid-cols-6">
