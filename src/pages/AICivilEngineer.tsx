@@ -17,6 +17,7 @@ import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
 import { RawTab } from "@/components/ParcelDetails/RawTab";
 import { ProjectOverview } from "@/components/ProjectOverview/ProjectOverview";
 import { DocumentUpload } from "@/components/ParcelDetails/DocumentUpload";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AICivilEngineer = () => {
   const session = useSession();
@@ -73,7 +74,7 @@ const AICivilEngineer = () => {
         .select('*, lightbox_data, status_details')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (fetchError) {
         console.error('Error fetching request:', fetchError);
@@ -87,64 +88,85 @@ const AICivilEngineer = () => {
         return;
       }
 
-      if (propertyRequest) {
-        console.log('Latest request found:', propertyRequest);
-        addToHistory("Latest property request found", {
-          id: propertyRequest.id,
-          address: `${propertyRequest.street_address}, ${propertyRequest.city}, ${propertyRequest.state} ${propertyRequest.zip_code}`
+      if (!propertyRequest) {
+        console.log('No property requests found');
+        addToHistory("No property requests found");
+        setError('No property requests found');
+        toast({
+          variant: "destructive",
+          title: "No Data",
+          description: "No property requests found. Please create a new request."
         });
+        return;
+      }
+
+      console.log('Latest request found:', propertyRequest);
+      addToHistory("Latest property request found", {
+        id: propertyRequest.id,
+        address: `${propertyRequest.street_address}, ${propertyRequest.city}, ${propertyRequest.state} ${propertyRequest.zip_code}`
+      });
+      
+      setRequestId(propertyRequest.id);
+      
+      // Increment view count
+      const { error: updateError } = await supabase
+        .from('property_requests')
+        .update({ view_count: (propertyRequest.view_count || 0) + 1 })
+        .eq('id', propertyRequest.id);
+
+      if (updateError) {
+        console.error('Error updating view count:', updateError);
+        addToHistory("Error updating view count", updateError);
+      }
+      
+      if (propertyRequest.lightbox_data) {
+        console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
+        addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
         
-        setRequestId(propertyRequest.id);
-        
-        if (propertyRequest.lightbox_data) {
-          console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
-          addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
+        const typedLightboxData = propertyRequest.lightbox_data as unknown as LightBoxResponse;
+        setLightboxData(typedLightboxData);
+      } else {
+        try {
+          const address = propertyRequest.street_address;
+          const city = propertyRequest.city;
+          const state = propertyRequest.state;
+          const zip = propertyRequest.zip_code;
+
+          console.log('Calling LightBox API with address:', { address, city, state, zip });
+          addToHistory("Initiating LightBox API call", { address, city, state, zip });
           
-          const typedLightboxData = propertyRequest.lightbox_data as unknown as LightBoxResponse;
-          setLightboxData(typedLightboxData);
-        } else {
-          try {
-            const address = propertyRequest.street_address;
-            const city = propertyRequest.city;
-            const state = propertyRequest.state;
-            const zip = propertyRequest.zip_code;
+          const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
+            body: { address, city, state, zip }
+          });
 
-            console.log('Calling LightBox API with address:', { address, city, state, zip });
-            addToHistory("Initiating LightBox API call", { address, city, state, zip });
-            
-            const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
-              body: { address, city, state, zip }
-            });
-
-            if (apiError) {
-              console.error('LightBox API call error:', apiError);
-              setApiError({
-                message: apiError.message || 'Error calling LightBox API',
-                details: apiError,
-                timestamp: new Date().toISOString()
-              });
-              addToHistory("LightBox API call failed", apiError);
-            } else {
-              console.log('LightBox API response:', data);
-              addToHistory("LightBox API call successful", data);
-              
-              const typedData = data as unknown as LightBoxResponse;
-              setLightboxData(typedData);
-              
-              toast({
-                title: "Success",
-                description: "LightBox data fetched successfully"
-              });
-            }
-          } catch (apiError: any) {
-            console.error('Error calling LightBox API:', apiError);
+          if (apiError) {
+            console.error('LightBox API call error:', apiError);
             setApiError({
               message: apiError.message || 'Error calling LightBox API',
               details: apiError,
               timestamp: new Date().toISOString()
             });
-            addToHistory("Error in LightBox API call", apiError);
+            addToHistory("LightBox API call failed", apiError);
+          } else {
+            console.log('LightBox API response:', data);
+            addToHistory("LightBox API call successful", data);
+            
+            const typedData = data as unknown as LightBoxResponse;
+            setLightboxData(typedData);
+            
+            toast({
+              title: "Success",
+              description: "LightBox data fetched successfully"
+            });
           }
+        } catch (apiError: any) {
+          console.error('Error calling LightBox API:', apiError);
+          setApiError({
+            message: apiError.message || 'Error calling LightBox API',
+            details: apiError,
+            timestamp: new Date().toISOString()
+          });
+          addToHistory("Error in LightBox API call", apiError);
         }
       }
     } catch (error: any) {
@@ -158,7 +180,43 @@ const AICivilEngineer = () => {
 
   useEffect(() => {
     fetchLatestRequest();
-  }, [toast]);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+        <Navbar session={session} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+        <Navbar session={session} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h3 className="text-red-800 font-medium">Error</h3>
+            <p className="text-red-600 mt-1">{error}</p>
+            <Button
+              onClick={handleRetry}
+              variant="outline"
+              className="mt-4"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">

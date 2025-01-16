@@ -159,6 +159,7 @@ export type Database = {
           street_address: string
           updated_at: string
           user_id: string | null
+          view_count: number | null
           zip_code: string
         }
         Insert: {
@@ -185,6 +186,7 @@ export type Database = {
           street_address: string
           updated_at?: string
           user_id?: string | null
+          view_count?: number | null
           zip_code: string
         }
         Update: {
@@ -211,6 +213,7 @@ export type Database = {
           street_address?: string
           updated_at?: string
           user_id?: string | null
+          view_count?: number | null
           zip_code?: string
         }
         Relationships: [
