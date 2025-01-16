@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Cpu, Network, Database } from 'lucide-react';
+import { Activity, Cpu, Network, Database, Info } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 import type { AgentMetricsData } from '@/types/agent';
 
 const initialMetrics: AgentMetricsData = {
@@ -16,9 +17,9 @@ const initialMetrics: AgentMetricsData = {
   successRate: 0,
   totalInteractions: 0,
   system_load: {
-    cpu_threads: [],
-    io_operations: [],
-    memory_allocation: []
+    cpu: 0,
+    memory: 0,
+    network: 0
   },
   networkMetrics: {
     bandwidth_usage: [],

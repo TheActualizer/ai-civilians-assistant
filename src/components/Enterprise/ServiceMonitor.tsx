@@ -114,7 +114,7 @@ export const ServiceMonitor = () => {
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-100">Service Health</h2>
-          <Badge variant={services?.every(s => s.health_score >= 90) ? "success" : "warning"}>
+          <Badge variant={services?.every(s => s.health_score >= 90) ? "default" : "secondary"}>
             {services?.every(s => s.health_score >= 90) ? "All Systems Operational" : "Degraded Performance"}
           </Badge>
         </div>
