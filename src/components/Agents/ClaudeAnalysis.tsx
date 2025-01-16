@@ -30,8 +30,82 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   });
   const [isConnected, setIsConnected] = useState(false);
 
+  const startClaudeAnalysis = async () => {
+    if (isAnalyzing) return;
+    
+    console.log('Starting Claude analysis...');
+    setIsAnalyzing(true);
+    
+    try {
+      const { data: analysisData, error } = await supabase.functions.invoke('claude-compute', {
+        body: {
+          messages: [{ 
+            role: 'user', 
+            content: 'Analyze current system state and suggest improvements' 
+          }],
+          systemPrompt: `You are analyzing the system state for route: ${pageRoute}
+                        Current evolution phase: ${analysisCount + 1}
+                        Previous insights: ${JSON.stringify(threadAnalysis?.analysis_data || {})}`
+        }
+      });
+
+      if (error) throw error;
+
+      console.log('Claude analysis response:', analysisData);
+
+      const { data: threadUpdate, error: updateError } = await supabase
+        .from('debug_thread_analysis')
+        .upsert({
+          page_path: pageRoute,
+          thread_type: 'claude-analysis',
+          analysis_data: {
+            ...analysisData,
+            iteration: analysisCount + 1,
+            timestamp: new Date().toISOString()
+          },
+          analysis_status: 'completed',
+          last_analysis_timestamp: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      setThreadAnalysis(threadUpdate);
+      setAnalysisCount(prev => prev + 1);
+      
+      toast({
+        title: "Analysis Complete",
+        description: `System evolution phase ${analysisCount + 1} completed.`,
+      });
+
+      setSystemHealth(prev => ({
+        ...prev,
+        claudeStatus: 'active',
+        syncStatus: 'synced'
+      }));
+
+    } catch (error) {
+      console.error('Error in Claude analysis:', error);
+      toast({
+        variant: "destructive",
+        title: "Analysis Error",
+        description: "Failed to complete system analysis.",
+      });
+      
+      setSystemHealth(prev => ({
+        ...prev,
+        claudeStatus: 'error',
+        syncStatus: 'error'
+      }));
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   useEffect(() => {
     console.log('Initializing Claude system...');
+    
     let retryCount = 0;
     const maxRetries = 3;
 
@@ -86,17 +160,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             .update({
               auto_analysis_enabled: true,
               analysis_frequency: 20,
-              analysis_status: 'active',
-              analysis_data: {
-                continuous_improvement: true,
-                target_pages: ['/', '/learn-more', '/ai-civil-engineer'],
-                improvement_focus: [
-                  'UI/UX optimization',
-                  'Component structure',
-                  'Performance metrics',
-                  'User engagement'
-                ]
-              }
+              analysis_status: 'active'
             })
             .eq('page_path', pageRoute)
             .select()
@@ -117,6 +181,9 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           claudeStatus: 'active',
           syncStatus: 'connected'
         }));
+
+        // Start initial analysis
+        await startClaudeAnalysis();
 
       } catch (error) {
         console.error('Error initializing Claude system:', error);
@@ -140,46 +207,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     };
 
     initSystem();
-    startClaudeAnalysis();
   }, [pageRoute]);
-
-  useEffect(() => {
-    console.log('Initializing thread analysis subscription...');
-    const channel = supabase
-      .channel('thread-analysis')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'debug_thread_analysis',
-          filter: `page_path=eq.${pageRoute}`
-        },
-        (payload) => {
-          console.log('Thread analysis update:', payload);
-          setThreadAnalysis(payload.new);
-          
-          if (payload.new.connection_score > (payload.old?.connection_score || 0)) {
-            toast({
-              title: "Quantum Thread Connected! 🎯",
-              description: `System Evolution Score: ${payload.new.connection_score}`,
-            });
-          }
-
-          setSystemHealth(prev => ({
-            ...prev,
-            claudeStatus: 'active',
-            syncStatus: 'syncing'
-          }));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up thread analysis subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [pageRoute, toast]);
 
   useEffect(() => {
     if (autoAnalysis && !analysisInterval) {
@@ -367,6 +395,62 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           </div>
         </div>
 
+        {/* Claude Activity Log */}
+        <div className="p-4 bg-gray-800/50 rounded-lg space-y-2">
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="h-4 w-4 text-primary" />
+            <h4 className="font-medium text-gray-300">Claude Activity Log</h4>
+          </div>
+          <ScrollArea className="h-[200px] border border-gray-700 rounded-md p-2">
+            {threadAnalysis?.analysis_data?.execution_time && (
+              <div className="text-sm text-gray-400">
+                <div className="flex items-center gap-2">
+                  <span>Start: {threadAnalysis.analysis_data.execution_time.start}</span>
+                  <span>End: {threadAnalysis.analysis_data.execution_time.end}</span>
+                </div>
+                <div className="mt-2">
+                  Command: {threadAnalysis.analysis_data.command}
+                </div>
+                <pre className="mt-2 whitespace-pre-wrap">
+                  {JSON.stringify(threadAnalysis.analysis_data, null, 2)}
+                </pre>
+              </div>
+            )}
+            {!threadAnalysis?.analysis_data?.execution_time && (
+              <div className="text-center text-gray-500 py-4">
+                No Claude activity logged yet. Try sending a command.
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+
+        {/* System Status */}
+        {threadAnalysis && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
+                Score: {threadAnalysis.connection_score || 0}
+              </Badge>
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-400">
+                Status: {threadAnalysis.analysis_status}
+              </Badge>
+              {autoAnalysis && (
+                <Badge variant="outline" className="bg-green-500/10 text-green-400">
+                  Auto Analysis Active
+                </Badge>
+              )}
+            </div>
+
+            <div className="p-4 bg-gray-800/50 rounded-lg">
+              <h4 className="font-medium text-gray-300 mb-2">Analysis Progress</h4>
+              <Progress value={analysisCount * 10} className="h-2" />
+              <p className="text-sm text-gray-400 mt-2">
+                Completed Iterations: {analysisCount}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <label className="text-sm text-gray-400">Strategic Command Input</label>
@@ -415,62 +499,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
               </Button>
             </div>
           </div>
-
-          {/* Claude Activity Log */}
-          <div className="p-4 bg-gray-800/50 rounded-lg space-y-2">
-            <div className="flex items-center gap-2 mb-3">
-              <Activity className="h-4 w-4 text-primary" />
-              <h4 className="font-medium text-gray-300">Claude Activity Log</h4>
-            </div>
-            <ScrollArea className="h-[200px] border border-gray-700 rounded-md p-2">
-              {threadAnalysis?.analysis_data?.execution_time && (
-                <div className="text-sm text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <span>Start: {threadAnalysis.analysis_data.execution_time.start}</span>
-                    <span>End: {threadAnalysis.analysis_data.execution_time.end}</span>
-                  </div>
-                  <div className="mt-2">
-                    Command: {threadAnalysis.analysis_data.command}
-                  </div>
-                  <pre className="mt-2 whitespace-pre-wrap">
-                    {JSON.stringify(threadAnalysis.analysis_data, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {!threadAnalysis?.analysis_data?.execution_time && (
-                <div className="text-center text-gray-500 py-4">
-                  No Claude activity logged yet. Try sending a command.
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-
-          {/* System Status */}
-          {threadAnalysis && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
-                  Score: {threadAnalysis.connection_score || 0}
-                </Badge>
-                <Badge variant="outline" className="bg-purple-500/10 text-purple-400">
-                  Status: {threadAnalysis.analysis_status}
-                </Badge>
-                {autoAnalysis && (
-                  <Badge variant="outline" className="bg-green-500/10 text-green-400">
-                    Auto Analysis Active
-                  </Badge>
-                )}
-              </div>
-
-              <div className="p-4 bg-gray-800/50 rounded-lg">
-                <h4 className="font-medium text-gray-300 mb-2">Analysis Progress</h4>
-                <Progress value={analysisCount * 10} className="h-2" />
-                <p className="text-sm text-gray-400 mt-2">
-                  Completed Iterations: {analysisCount}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </ScrollArea>
