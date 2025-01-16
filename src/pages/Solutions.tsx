@@ -5,32 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Building2, FileText, LineChart, Ruler } from "lucide-react";
-import { NotificationFeed } from "@/components/notifications/NotificationFeed";
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 const Solutions = () => {
   const session = useSession();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Log initial page load to debug_logs
-    const logPageLoad = async () => {
-      try {
-        await supabase.from('debug_logs').insert({
-          level: 'info',
-          message: 'Solutions page initialized',
-          source: 'solutions_page',
-          context: { timestamp: new Date().toISOString() }
-        });
-      } catch (error) {
-        console.error('Error logging page load:', error);
-      }
-    };
-
-    logPageLoad();
-  }, []);
 
   const solutions = [
     {
@@ -112,11 +89,6 @@ const Solutions = () => {
             ))}
           </div>
         </section>
-
-        {/* Notification Feed */}
-        <div className="fixed bottom-8 right-8 z-50">
-          <NotificationFeed />
-        </div>
 
         {/* CTA Section */}
         <section className="mt-16 text-center px-4">

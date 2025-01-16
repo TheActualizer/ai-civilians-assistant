@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { DifyAgent, AgentMetricsData } from "@/types/agent";
+import type { DifyAgent, AgentMetrics } from "@/types/agent";
 
 class AgentMonitoringService {
   private static instance: AgentMonitoringService;
@@ -42,7 +42,7 @@ class AgentMonitoringService {
   async updateAgentStatus(
     agentId: string, 
     status: 'idle' | 'processing' | 'completed' | 'error',
-    metrics?: AgentMetricsData
+    metrics?: AgentMetrics
   ) {
     console.log(`Updating agent ${agentId} status:`, status);
     try {

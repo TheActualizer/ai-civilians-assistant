@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { Terminal, Activity, AlertCircle, Settings, Brain } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,7 +10,6 @@ import { VoiceControls } from "@/components/DebugPanel/VoiceControls";
 import { MessageHistory } from "@/components/DebugPanel/MessageHistory";
 import { GamifiedMetrics } from "@/components/DebugPanel/GamifiedMetrics";
 import { AgentControl } from "@/components/DebugPanel/AgentControl";
-import { SystemIntelligencePanel } from "@/components/SystemIntelligence/SystemIntelligencePanel";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { DebugPanelProps } from "./types";
@@ -27,24 +25,11 @@ export function DebugPanel({
   onMessageSubmit,
 }: DebugPanelProps) {
   const { toast } = useToast();
-  const location = useLocation();
   const [message, setMessage] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [position, setPosition] = useState<"right" | "left" | "bottom">("right");
   const [isMinimized, setIsMinimized] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [activeTab, setActiveTab] = useState("agents");
-
-  useEffect(() => {
-    // Adjust active tab based on current route
-    if (location.pathname.includes('enterprise')) {
-      setActiveTab('metrics');
-    } else if (location.pathname.includes('infrastructure')) {
-      setActiveTab('system');
-    } else if (location.pathname.includes('technology')) {
-      setActiveTab('intelligence');
-    }
-  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,7 +163,6 @@ export function DebugPanel({
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
             <TabsTrigger value="system">System</TabsTrigger>
-            <TabsTrigger value="intelligence">Intelligence</TabsTrigger>
           </TabsList>
 
           <div className="mt-6 space-y-6">
@@ -231,10 +215,6 @@ export function DebugPanel({
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            <TabsContent value="intelligence">
-              <SystemIntelligencePanel />
             </TabsContent>
           </div>
         </Tabs>

@@ -1,4 +1,0 @@
-project_id = "aocjoukjdsoynvbuzvas"
-
-[rtc-signaling]
-verify_jwt = true

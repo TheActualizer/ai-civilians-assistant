@@ -27,20 +27,14 @@ export default {
         primary: {
           DEFAULT: "#1E40AF",
           foreground: "#FFFFFF",
-          muted: "#E5DEFF",
-          light: "#D3E4FD"
         },
         secondary: {
           DEFAULT: "#64748B",
           foreground: "#FFFFFF",
-          muted: "#F1F0FB",
-          light: "#F3F3F3"
         },
         accent: {
           DEFAULT: "#0EA5E9",
           foreground: "#FFFFFF",
-          muted: "#FDE1D3",
-          light: "#FEF7CD"
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -66,12 +60,6 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.3s ease-out",
-        "fade-out": "fade-out 0.3s ease-out",
       },
     },
   },

@@ -41,7 +41,8 @@ export function VersionSwitcher() {
         if (error) throw error;
 
         console.log('Portal dimensions synchronized:', data);
-        setVersions(data || []);
+        const typedData = (data || []) as UIVersion[];
+        setVersions(typedData);
         
         // Simulate portal energy accumulation
         let energy = 0;

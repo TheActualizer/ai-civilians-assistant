@@ -1,18 +1,21 @@
-import { useState } from 'react';
-import { Activity } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Brain, Activity, AlertCircle, Settings, FileText, Network, Cpu, Database, Workflow, Mic } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VoiceControls } from "@/components/DebugPanel/VoiceControls";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeAgentFlow, queryAgentContext, subscribeToAgentUpdates } from '@/utils/agentFlow';
 import { ClaudeAnalysis } from './ClaudeAnalysis';
+import type { DifyAgent, AgentAction, AgentState, AgentsPanelProps } from './types';
 import { AgentMetrics } from './AgentMetrics';
 import { AgentNetwork } from './AgentNetwork';
-import { AgentCard } from './AgentCard';
-import { AgentControls } from './AgentControls';
-import { AgentDialog } from './AgentDialog';
-import type { DifyAgent, AgentAction, AgentState, AgentsPanelProps } from './types';
 
 const INITIAL_AGENTS: DifyAgent[] = [
   {
@@ -227,12 +230,25 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
             <Activity className="h-5 w-5 text-primary animate-pulse" />
             <CardTitle className="text-gray-100">AI Agent Network</CardTitle>
           </div>
-          <AgentControls 
-            isProcessing={state.isProcessing}
-            isSpeaking={isSpeaking}
-            onSpeakingToggle={() => setIsSpeaking(!isSpeaking)}
-            onSpeakingChange={handleSpeakingChange}
-          />
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              size="lg"
+              className={`rounded-full p-4 transition-all duration-200 ${
+                isSpeaking ? 'bg-green-500/20 border-green-500' : 'hover:bg-primary/20'
+              }`}
+              onClick={() => setIsSpeaking(!isSpeaking)}
+            >
+              <Mic className={`h-6 w-6 ${isSpeaking ? 'text-green-500 animate-pulse' : 'text-primary'}`} />
+              <span className="sr-only">Toggle voice input</span>
+            </Button>
+            <VoiceControls onSpeakingChange={handleSpeakingChange} />
+            {state.isProcessing && (
+              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-400/50">
+                Processing
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -261,12 +277,52 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
             <ScrollArea className="h-[500px]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {state.agents.map(agent => (
-                  <AgentCard 
-                    key={agent.id}
-                    agent={agent}
-                    onSelect={setSelectedAgent}
-                    getStatusColor={getStatusColor}
-                  />
+                  <div 
+                    key={agent.id} 
+                    className="p-4 border border-gray-700 rounded-lg bg-gray-800/50 hover:bg-gray-800/70 transition-colors cursor-pointer"
+                    onClick={() => setSelectedAgent(agent)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Brain className={`h-5 w-5 ${getStatusColor(agent.status)}`} />
+                        <h3 className="font-medium text-gray-200">{agent.name}</h3>
+                      </div>
+                      <Badge 
+                        variant={agent.status === 'completed' ? 'default' : 'secondary'}
+                        className={`${getStatusColor(agent.status)}`}
+                      >
+                        {agent.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-400 mb-2">{agent.role}</p>
+                    {agent.progress !== undefined && (
+                      <Progress value={agent.progress} className="h-1" />
+                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-gray-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAgent(agent);
+                        }}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Configure
+                      </Button>
+                      {agent.documents && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-gray-300"
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          View Docs
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </ScrollArea>
@@ -284,7 +340,7 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
                     key={action.id}
                     className="flex items-center gap-2 text-sm p-2 rounded-md bg-gray-800/30"
                   >
-                    <Activity className="h-4 w-4 text-gray-400" />
+                    <AlertCircle className="h-4 w-4 text-gray-400" />
                     <span className="text-gray-300">{action.description}</span>
                     <span className="text-gray-500 text-xs ml-auto">
                       {new Date(action.timestamp).toLocaleTimeString()}
@@ -300,12 +356,36 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
           </TabsContent>
         </Tabs>
 
-        <AgentDialog
-          agent={selectedAgent}
-          customInstructions={customInstructions}
-          onInstructionsChange={setCustomInstructions}
-          onInstructionsSubmit={handleCustomInstructions}
-        />
+        {selectedAgent && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="mt-4">Configure Agent</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-900 text-gray-100">
+              <DialogHeader>
+                <DialogTitle>{selectedAgent.name} Configuration</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Backstory</h4>
+                  <p className="text-sm text-gray-400">{selectedAgent.backstory}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Custom Instructions</h4>
+                  <Textarea
+                    value={customInstructions}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    placeholder="Enter custom instructions for this agent..."
+                    className="h-32"
+                  />
+                </div>
+                <Button onClick={handleCustomInstructions}>
+                  Update Instructions
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardContent>
     </Card>
   );

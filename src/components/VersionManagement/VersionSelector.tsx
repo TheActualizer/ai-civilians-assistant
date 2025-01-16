@@ -36,7 +36,7 @@ export function VersionSelector() {
           id: item.id,
           name: item.name,
           route: item.route,
-          component_data: item.component_data as Record<string, any>,
+          component_data: (item.component_data as Record<string, any>) || {},
           version_type: item.version_type || 'page',
           version_tags: item.version_tags || [],
           performance_metrics: {
@@ -50,10 +50,6 @@ export function VersionSelector() {
             data_flow: ((item.integration_data as any)?.data_flow || []) as string[],
           },
           created_at: item.created_at,
-          is_active: item.is_active,
-          description: item.description,
-          metadata: item.metadata as Record<string, any>,
-          created_by: item.created_by,
         }));
 
         setVersions(transformedData);
@@ -71,6 +67,7 @@ export function VersionSelector() {
 
     fetchVersions();
 
+    // Subscribe to real-time updates
     const channel = supabase
       .channel('ui-versions')
       .on(
@@ -84,8 +81,27 @@ export function VersionSelector() {
         (payload) => {
           console.log('Version update received:', payload);
           if (payload.eventType === 'INSERT') {
-            const newVersion = payload.new as UIVersion;
-            setVersions(prev => [newVersion, ...prev]);
+            const newVersion = payload.new;
+            const transformedVersion: UIVersion = {
+              id: newVersion.id,
+              name: newVersion.name,
+              route: newVersion.route,
+              component_data: (newVersion.component_data as Record<string, any>) || {},
+              version_type: newVersion.version_type || 'page',
+              version_tags: newVersion.version_tags || [],
+              performance_metrics: {
+                api_latency: ((newVersion.performance_metrics as any)?.api_latency || []) as number[],
+                render_time: ((newVersion.performance_metrics as any)?.render_time || []) as number[],
+                memory_usage: ((newVersion.performance_metrics as any)?.memory_usage || []) as number[],
+              },
+              integration_data: {
+                connected_services: ((newVersion.integration_data as any)?.connected_services || []) as string[],
+                api_dependencies: ((newVersion.integration_data as any)?.api_dependencies || []) as string[],
+                data_flow: ((newVersion.integration_data as any)?.data_flow || []) as string[],
+              },
+              created_at: newVersion.created_at,
+            };
+            setVersions(prev => [transformedVersion, ...prev]);
           }
         }
       )

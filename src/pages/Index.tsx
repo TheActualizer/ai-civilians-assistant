@@ -1,68 +1,85 @@
-import { useEffect } from "react";
-import { useSystemLogger } from "@/hooks/useSystemLogger";
+import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import { LazyLoadedSection } from "@/components/home/LazyLoadedSection";
-import { NewsTable } from "@/components/news/NewsTable";
-
-const mockNewsData = [
-  {
-    id: "1",
-    title: "New Zoning Laws Impact Urban Development",
-    category: "Urban Planning",
-    date: "2024-01-16",
-    author: "Jane Smith",
-    summary: "Recent changes in zoning regulations are reshaping how cities approach urban development...",
-    readTime: "5 min",
-    bookmarked: false
-  },
-  {
-    id: "2",
-    title: "Sustainable Building Materials on the Rise",
-    category: "Sustainability",
-    date: "2024-01-15",
-    author: "John Doe",
-    summary: "The construction industry is seeing a significant shift towards eco-friendly materials...",
-    readTime: "4 min",
-    bookmarked: true
-  },
-  {
-    id: "3",
-    title: "AI Integration in Construction Planning",
-    category: "Technology",
-    date: "2024-01-14",
-    author: "Sarah Johnson",
-    summary: "Artificial intelligence is revolutionizing how construction projects are planned and executed...",
-    readTime: "6 min",
-    bookmarked: false
-  }
-];
+import Features from "@/components/Features";
+import OrderHistory from "@/components/OrderHistory";
+import AccountInfo from "@/components/AccountInfo";
+import { useSession } from "@supabase/auth-helpers-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const { logSystemEvent } = useSystemLogger();
+  const session = useSession();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    logSystemEvent("User accessed microservices dashboard", {
-      component: 'Index',
-      route: '/',
-      metrics: {
-        executionTime: performance.now(),
-        memoryUsage: 0,
-        apiLatency: 0
-      }
-    });
-  }, [logSystemEvent]);
+  console.log("🔄 Index page rendering...", { isAuthenticated: !!session });
+
+  const handleLogout = async () => {
+    try {
+      console.log("🔄 Starting logout process...");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      console.log("✅ Logout successful");
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+      
+      navigate("/login");
+    } catch (error) {
+      console.error("❌ Error during logout:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "There was a problem logging out",
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <LazyLoadedSection>
-        <Hero />
-      </LazyLoadedSection>
-      
-      <LazyLoadedSection delay={0.2}>
-        <div className="container mx-auto px-4 py-12">
-          <NewsTable initialData={mockNewsData} />
-        </div>
-      </LazyLoadedSection>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar session={session} />
+      <div className="pt-24">
+        {!session ? (
+          <>
+            <Hero />
+            <Features />
+          </>
+        ) : (
+          <div className="container mx-auto px-4 pb-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
+                <p className="text-gray-600 mt-1">
+                  Welcome back, {session.user.email}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+            
+            <div className="grid gap-8">
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <AccountInfo />
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <OrderHistory />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
