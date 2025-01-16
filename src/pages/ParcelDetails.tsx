@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
+import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -9,11 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle, Bug, CheckCircle2, RefreshCw, Send } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -23,7 +23,6 @@ const ParcelDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
   const [apiCallHistory, setApiCallHistory] = useState<Array<{
     timestamp: string;
     event: string;
@@ -51,11 +50,9 @@ const ParcelDetails = () => {
     await fetchLatestRequest();
   };
 
-  const handleMessageSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleMessageSubmit = (message: string) => {
     if (message.trim()) {
       addToHistory("User message", { message });
-      setMessage('');
       toast({
         title: "Message sent",
         description: "Your message has been logged for debugging purposes",
@@ -222,83 +219,24 @@ const ParcelDetails = () => {
     );
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar session={session} />
-        <div className="container mx-auto pt-24 px-4">
-          <div className="flex items-center justify-center gap-2">
-            <div className="animate-spin">
-              <Terminal className="h-5 w-5 text-primary" />
-            </div>
-            <p className="text-gray-600">Loading parcel details...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
-      <div className="container mx-auto pt-24 px-4 pb-8">
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-sm">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <h1 className="text-3xl font-bold text-gray-900">Debug Dashboard</h1>
-                {error && (
-                  <Badge variant="destructive" className="animate-pulse">
-                    <Bug className="w-4 h-4 mr-1" />
-                    Error Detected
-                  </Badge>
-                )}
-              </div>
-              <div className="text-sm text-gray-500">
-                Request ID: {requestId || 'Not available'}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button 
-                onClick={handleRetry} 
-                variant="outline"
-                className="gap-2"
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Retry API Call
-              </Button>
-              
-              <form onSubmit={handleMessageSubmit} className="flex-1 flex gap-2">
-                <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your debug message here..."
-                  className="flex-1"
-                />
-                <Button type="submit" variant="secondary" className="gap-2">
-                  <Send className="h-4 w-4" />
-                  Send
-                </Button>
-              </form>
-            </div>
-          </div>
-
-          {error && (
-            <Alert variant="destructive" className="animate-fade-in">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Tabs defaultValue="api-debug" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="api-debug" className="gap-2">
-                <Terminal className="h-4 w-4" />
-                API Debug
-              </TabsTrigger>
+      <div className="flex">
+        <DebugPanel
+          isLoading={isLoading}
+          error={error}
+          requestId={requestId}
+          lightboxData={lightboxData}
+          apiCallHistory={apiCallHistory}
+          apiError={apiError}
+          onRetry={handleRetry}
+          onMessageSubmit={handleMessageSubmit}
+        />
+        
+        <div className="flex-1 pt-24 px-4 pb-8">
+          <Tabs defaultValue="property" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="property">
                 <Building2 className="h-4 w-4 mr-2" />
                 Property
@@ -320,65 +258,6 @@ const ParcelDetails = () => {
                 Raw
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="api-debug">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Terminal className="h-5 w-5 text-primary" />
-                    <CardTitle>API Integration Debug</CardTitle>
-                  </div>
-                  <CardDescription>Real-time API integration monitoring</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {apiError && (
-                      <div className="animate-fade-in bg-red-50 border border-red-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <XCircle className="h-5 w-5 text-red-500" />
-                          <h3 className="font-semibold text-red-700">API Error</h3>
-                          <Badge variant="outline" className="animate-pulse bg-red-100 text-red-700">
-                            {new Date(apiError.timestamp).toLocaleTimeString()}
-                          </Badge>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-red-700">{apiError.message}</p>
-                          {apiError.details && (
-                            <ScrollArea className="h-[100px] w-full rounded-md border border-red-200 bg-red-50/50 p-4">
-                              <pre className="text-sm text-red-800">
-                                {JSON.stringify(apiError.details, null, 2)}
-                              </pre>
-                            </ScrollArea>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <ScrollArea className="h-[400px] w-full rounded-md border">
-                      <div className="p-4 space-y-4">
-                        {apiCallHistory.map((entry, index) => (
-                          <div key={index} className={`border-l-2 pl-4 py-2 ${entry.event.includes('Error') ? 'border-red-500 bg-red-50' : 'border-blue-500'}`}>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={entry.event.includes('Error') ? 'bg-red-100' : ''}>
-                                {new Date(entry.timestamp).toLocaleTimeString()}
-                              </Badge>
-                              <span className={`font-medium ${entry.event.includes('Error') ? 'text-red-700' : ''}`}>
-                                {entry.event}
-                              </span>
-                            </div>
-                            {entry.details && (
-                              <pre className={`mt-2 text-sm p-2 rounded overflow-auto ${entry.event.includes('Error') ? 'bg-red-50' : 'bg-gray-50'}`}>
-                                {JSON.stringify(entry.details, null, 2)}
-                              </pre>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
             <TabsContent value="property">
               <Card>
@@ -517,18 +396,18 @@ const ParcelDetails = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
 
-          <div className="sticky bottom-8 flex justify-end mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
-            <Button
-              onClick={() => navigate('/assessment')}
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
-              size="lg"
-            >
-              Proceed to Assessment Data
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </div>
+            <div className="sticky bottom-8 flex justify-end mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+              <Button
+                onClick={() => navigate('/assessment')}
+                className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
+                size="lg"
+              >
+                Proceed to Assessment Data
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </Tabs>
         </div>
       </div>
     </div>
