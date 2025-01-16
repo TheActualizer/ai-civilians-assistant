@@ -1,10 +1,14 @@
-import { useState } from "react";
-import { Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, Eye, EyeOff, Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from "lucide-react";
+import { useState, useCallback } from "react";
+import { 
+  Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, 
+  Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, 
+  ArrowRight, ArrowDown, Rocket, CircuitBoard, Dna, Infinity
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Toggle } from "@/components/ui/toggle";
 import type { DebugPanelProps } from "./types";
@@ -25,6 +29,9 @@ export function DebugPanel({
   const [activeViews, setActiveViews] = useState<string[]>(["history", "error", "request"]);
   const [position, setPosition] = useState<"right" | "left" | "bottom">("right");
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
+  const [expandedFeatures, setExpandedFeatures] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +80,66 @@ export function DebugPanel({
     }
   };
 
+  const handleFullscreenToggle = useCallback(() => {
+    setIsFullscreen(prev => !prev);
+    if (!isFullscreen) {
+      setExpandedFeatures(true);
+      setActiveTab('advanced');
+    }
+  }, [isFullscreen]);
+
+  const renderAdvancedControls = () => (
+    <div className="grid grid-cols-2 gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+      <Button
+        variant="outline"
+        className="flex items-center gap-2 h-20 bg-gray-900/50 hover:bg-primary/20 transition-all"
+        onClick={() => console.log("Advanced analysis initiated")}
+      >
+        <Rocket className="h-6 w-6 text-primary animate-pulse" />
+        <div className="text-left">
+          <div className="font-semibold">Advanced Analysis</div>
+          <div className="text-xs text-gray-400">Deep system inspection</div>
+        </div>
+      </Button>
+
+      <Button
+        variant="outline"
+        className="flex items-center gap-2 h-20 bg-gray-900/50 hover:bg-blue-500/20 transition-all"
+        onClick={() => console.log("Precision debugging enabled")}
+      >
+        <CircuitBoard className="h-6 w-6 text-blue-400 animate-pulse" />
+        <div className="text-left">
+          <div className="font-semibold">Precision Debug</div>
+          <div className="text-xs text-gray-400">Microsecond accuracy</div>
+        </div>
+      </Button>
+
+      <Button
+        variant="outline"
+        className="flex items-center gap-2 h-20 bg-gray-900/50 hover:bg-green-500/20 transition-all"
+        onClick={() => console.log("Pattern analysis started")}
+      >
+        <Dna className="h-6 w-6 text-green-400 animate-pulse" />
+        <div className="text-left">
+          <div className="font-semibold">Pattern Analysis</div>
+          <div className="text-xs text-gray-400">Complex pattern detection</div>
+        </div>
+      </Button>
+
+      <Button
+        variant="outline"
+        className="flex items-center gap-2 h-20 bg-gray-900/50 hover:bg-purple-500/20 transition-all"
+        onClick={() => console.log("Quantum analysis initiated")}
+      >
+        <Infinity className="h-6 w-6 text-purple-400 animate-pulse" />
+        <div className="text-left">
+          <div className="font-semibold">Quantum Analysis</div>
+          <div className="text-xs text-gray-400">State prediction engine</div>
+        </div>
+      </Button>
+    </div>
+  );
+
   const renderContent = () => {
     if (isMinimized || isCollapsed) return null;
 
@@ -82,16 +149,18 @@ export function DebugPanel({
           <div className="text-sm text-gray-400">
             Request ID: <span className="font-mono">{requestId || 'Not available'}</span>
           </div>
-          <ToggleGroup type="multiple" variant="outline" className="border border-gray-700 rounded-lg p-1 bg-gray-800/50">
-            <ToggleGroupItem 
-              value="compact" 
-              aria-label="Toggle compact view" 
-              onClick={() => setViewMode(prev => prev === "detailed" ? "compact" : "detailed")}
-            >
-              {viewMode === "detailed" ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-            </ToggleGroupItem>
+          <ToggleGroup 
+            type="single" 
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as 'basic' | 'advanced')}
+            className="border border-gray-700 rounded-lg p-1 bg-gray-800/50"
+          >
+            <ToggleGroupItem value="basic">Basic</ToggleGroupItem>
+            <ToggleGroupItem value="advanced">Advanced</ToggleGroupItem>
           </ToggleGroup>
         </div>
+
+        {activeTab === 'advanced' && renderAdvancedControls()}
 
         <div className="flex flex-wrap gap-2">
           <Toggle 
@@ -223,11 +292,12 @@ export function DebugPanel({
 
   return (
     <div 
-      className={`fixed transition-all duration-300 ease-in-out ${getPositionClasses()} ${
-        isMinimized ? 'h-12' : position === 'bottom' ? 'h-[300px]' : 'h-screen'
-      } ${isCollapsed ? 'w-16' : position === 'bottom' ? 'w-full' : 'w-[600px]'} 
-      bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50
-      ${position === 'left' ? 'border-r' : position === 'right' ? 'border-l' : 'border-t'}`}
+      className={`fixed transition-all duration-300 ease-in-out 
+        ${isFullscreen ? 'inset-0 w-full h-full' : `${getPositionClasses()} ${
+          isMinimized ? 'h-12' : position === 'bottom' ? 'h-[300px]' : 'h-screen'
+        } ${isCollapsed ? 'w-16' : position === 'bottom' ? 'w-full' : 'w-[600px]'}`}
+        bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50
+        ${!isFullscreen && (position === 'left' ? 'border-r' : position === 'right' ? 'border-l' : 'border-t')}`}
     >
       <div className="p-4 space-y-4 h-full flex flex-col">
         <div className="flex justify-between items-center gap-2">
@@ -243,7 +313,7 @@ export function DebugPanel({
             {!isCollapsed && (
               <>
                 <Terminal className="h-5 w-5 text-primary animate-pulse" />
-                <h2 className="font-semibold text-gray-100">Debug Console</h2>
+                <h2 className="font-semibold text-gray-100">Advanced Debug Console</h2>
                 {error && (
                   <Badge variant="destructive" className="animate-pulse">
                     <Bug className="w-4 h-4 mr-1" />
@@ -257,18 +327,10 @@ export function DebugPanel({
             <Button
               variant="ghost"
               size="sm"
-              onClick={cyclePosition}
+              onClick={handleFullscreenToggle}
               className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
             >
-              {getPositionIcon()}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMinimized(!isMinimized)}
-              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
-            >
-              {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </Button>
           </div>
         </div>
