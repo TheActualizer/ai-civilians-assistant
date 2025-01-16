@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from '@supabase/auth-helpers-react';
-import { Versions, History, AlertCircle } from 'lucide-react';
+import { History, AlertCircle, GitBranch } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,7 +39,9 @@ export function VersionSwitcher() {
         if (error) throw error;
 
         console.log('Fetched versions:', data);
-        setVersions(data || []);
+        // Explicitly type the data to match UIVersion interface
+        const typedData = (data || []) as UIVersion[];
+        setVersions(typedData);
       } catch (error) {
         console.error('Error fetching versions:', error);
         toast({
@@ -118,7 +120,7 @@ export function VersionSwitcher() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Versions className="h-5 w-5 text-primary" />
+            <GitBranch className="h-5 w-5 text-primary" />
             <CardTitle className="text-sm text-gray-200">UI Versions</CardTitle>
           </div>
           <Button
