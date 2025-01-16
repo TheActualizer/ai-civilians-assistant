@@ -15,6 +15,8 @@ import {
   MessagesSquare, GitBranch, Bot, Zap, Activity
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { RealtimeChat } from '@/utils/RealtimeAudio';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 type KnowledgeBaseEntry = {
   id: string;
@@ -30,6 +32,55 @@ export function ProjectOverview() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [realtimeMessages, setRealtimeMessages] = useState<Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+  }>>([]);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+  const chatRef = useRef<RealtimeChat | null>(null);
+
+  const handleRealtimeMessage = useCallback((event: any) => {
+    console.log('Received realtime message:', event);
+    
+    if (event.type === 'conversation.message') {
+      setRealtimeMessages(prev => [...prev, {
+        role: event.message.role,
+        content: event.message.content,
+        timestamp: new Date().toISOString()
+      }]);
+    }
+  }, []);
+
+  const startRealtimeSession = async () => {
+    try {
+      chatRef.current = new RealtimeChat(handleRealtimeMessage);
+      await chatRef.current.init();
+      setIsRealtimeConnected(true);
+      toast({
+        title: "Connected",
+        description: "Realtime session started successfully",
+      });
+    } catch (error) {
+      console.error('Error starting realtime session:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to start realtime session',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const endRealtimeSession = () => {
+    chatRef.current?.disconnect();
+    setIsRealtimeConnected(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      chatRef.current?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchKnowledgeBase = async () => {
@@ -92,6 +143,13 @@ export function ProjectOverview() {
       content: 'System parameters and configuration.'
     }
   ];
+
+  sections.push({
+    id: 'realtime',
+    title: 'Realtime Chat',
+    icon: MessagesSquare,
+    content: 'Real-time conversation analysis and debugging.'
+  });
 
   if (isLoading) {
     return (
@@ -438,6 +496,81 @@ export function ProjectOverview() {
                       Update Parameters
                     </Button>
                   </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="realtime">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-500/10 rounded-lg">
+                        <MessagesSquare className="h-5 w-5 text-blue-400" />
+                      </div>
+                      <CardTitle>Realtime Conversation</CardTitle>
+                    </div>
+                    {!isRealtimeConnected ? (
+                      <Button 
+                        onClick={startRealtimeSession}
+                        className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300"
+                      >
+                        Start Session
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={endRealtimeSession}
+                        variant="destructive"
+                        className="bg-red-500/20"
+                      >
+                        End Session
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-4">
+                      {realtimeMessages.map((message, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 * index }}
+                        >
+                          <Card className={`border-gray-800 ${
+                            message.role === 'assistant' 
+                              ? 'bg-blue-500/5 hover:bg-blue-500/10' 
+                              : 'bg-green-500/5 hover:bg-green-500/10'
+                          } transition-colors duration-200`}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge 
+                                  variant="outline" 
+                                  className={message.role === 'assistant' 
+                                    ? 'bg-blue-500/10 text-blue-400 border-blue-400/20'
+                                    : 'bg-green-500/10 text-green-400 border-green-400/20'
+                                  }
+                                >
+                                  {message.role}
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(message.timestamp).toLocaleTimeString()}
+                                </span>
+                              </div>
+                              <p className="text-gray-300">{message.content}</p>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </CardContent>
               </Card>
             </motion.div>
