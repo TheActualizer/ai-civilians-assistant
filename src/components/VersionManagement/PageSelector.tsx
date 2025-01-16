@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Check, Code, FileCode, GitBranch } from "lucide-react";
+import { Check, Code, FileCode, GitBranch, Package, Puzzle, Link } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 interface PageVersion {
   version_id: string;
@@ -15,6 +21,8 @@ interface PageVersion {
   implementation_details: any;
   layout_type: string;
   page_category: string;
+  integration_points?: string[];
+  component_registry?: Record<string, any>;
 }
 
 export function PageSelector() {
@@ -62,45 +70,21 @@ export function PageSelector() {
     console.log('Selected versions:', Array.from(newSelected));
   };
 
-  const initiateRebuild = async () => {
-    if (selectedVersions.size === 0) {
-      toast({
-        title: "Selection Required",
-        description: "Please select at least one page to rebuild",
-      });
-      return;
-    }
-
-    try {
-      const selectedData = versions.filter(v => selectedVersions.has(v.version_id));
-      console.log('Initiating rebuild for:', selectedData);
-
-      toast({
-        title: "Rebuild Initiated",
-        description: `Starting rebuild for ${selectedVersions.size} pages`,
-      });
-
-      // Here we'll add the actual rebuild logic later
-    } catch (error) {
-      console.error('Error initiating rebuild:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to initiate rebuild"
-      });
-    }
-  };
-
   return (
     <Card className="w-full bg-white shadow-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GitBranch className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Page Selection</CardTitle>
+            <CardTitle className="text-lg">Page Implementation Details</CardTitle>
           </div>
           <Button
-            onClick={initiateRebuild}
+            onClick={() => {
+              toast({
+                title: "Coming Soon",
+                description: "Rebuild functionality will be implemented in the next update"
+              });
+            }}
             className="gap-2"
             disabled={selectedVersions.size === 0}
           >
@@ -123,29 +107,82 @@ export function PageSelector() {
           <ScrollArea className="h-[400px]">
             <div className="space-y-2">
               {versions.map((version) => (
-                <div
-                  key={version.version_id}
-                  className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer"
-                  onClick={() => toggleVersionSelection(version.version_id)}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-medium">{version.version_name}</h4>
-                      {selectedVersions.has(version.version_id) && (
-                        <Check className="h-4 w-4 text-green-500" />
-                      )}
+                <Accordion type="single" collapsible key={version.version_id}>
+                  <AccordionItem value={version.version_id}>
+                    <div 
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer"
+                      onClick={() => toggleVersionSelection(version.version_id)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-medium">{version.version_name}</h4>
+                          {selectedVersions.has(version.version_id) && (
+                            <Check className="h-4 w-4 text-green-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">{version.route}</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {version.layout_type}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {version.page_category}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500">{version.route}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        {version.layout_type}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {version.page_category}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
+                    <AccordionContent className="px-4 py-2">
+                      <div className="space-y-4">
+                        {/* Components Section */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <Puzzle className="h-4 w-4" />
+                            <span>Components</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {version.component_registry && Object.keys(version.component_registry).map((comp) => (
+                              <Badge key={comp} variant="secondary" className="text-xs">
+                                {comp}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Integration Points */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <Link className="h-4 w-4" />
+                            <span>Integration Points</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {version.integration_points?.map((point) => (
+                              <Badge key={point} variant="outline" className="text-xs">
+                                {point}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Dependencies */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <Package className="h-4 w-4" />
+                            <span>Dependencies</span>
+                          </div>
+                          {version.implementation_details?.dependencies && (
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(version.implementation_details.dependencies).map(([name, version]) => (
+                                <Badge key={name} variant="secondary" className="text-xs">
+                                  {name}@{version}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               ))}
             </div>
           </ScrollArea>
