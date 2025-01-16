@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, AlertCircle, XCircle } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -237,33 +236,7 @@ const ParcelDetails = () => {
             </div>
           </div>
 
-          {apiError && (
-            <div className="animate-fade-in">
-              <Alert variant="destructive" className="mb-6 border-red-500">
-                <XCircle className="h-5 w-5" />
-                <AlertTitle className="flex items-center gap-2">
-                  API Error
-                  <Badge variant="outline" className="ml-2 animate-pulse bg-red-100">
-                    {new Date(apiError.timestamp).toLocaleTimeString()}
-                  </Badge>
-                </AlertTitle>
-                <AlertDescription className="mt-2">
-                  <div className="space-y-2">
-                    <p className="font-medium">{apiError.message}</p>
-                    {apiError.details && (
-                      <ScrollArea className="h-[100px] w-full rounded-md border border-red-200 bg-red-50 p-4">
-                        <pre className="text-sm text-red-800">
-                          {JSON.stringify(apiError.details, null, 2)}
-                        </pre>
-                      </ScrollArea>
-                    )}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-
-          <Tabs defaultValue="property" className="w-full">
+          <Tabs defaultValue="api-debug" className="w-full">
             <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="property">Property Details</TabsTrigger>
               <TabsTrigger value="address">Address Info</TabsTrigger>
@@ -272,6 +245,65 @@ const ParcelDetails = () => {
               <TabsTrigger value="parsed">Parsed Data</TabsTrigger>
               <TabsTrigger value="raw">Raw Response</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="api-debug">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Terminal className="h-5 w-5 text-primary" />
+                    <CardTitle>API Integration Debug</CardTitle>
+                  </div>
+                  <CardDescription>Real-time API integration monitoring</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {apiError && (
+                      <div className="animate-fade-in bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <XCircle className="h-5 w-5 text-red-500" />
+                          <h3 className="font-semibold text-red-700">API Error</h3>
+                          <Badge variant="outline" className="animate-pulse bg-red-100 text-red-700">
+                            {new Date(apiError.timestamp).toLocaleTimeString()}
+                          </Badge>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-red-700">{apiError.message}</p>
+                          {apiError.details && (
+                            <ScrollArea className="h-[100px] w-full rounded-md border border-red-200 bg-red-50/50 p-4">
+                              <pre className="text-sm text-red-800">
+                                {JSON.stringify(apiError.details, null, 2)}
+                              </pre>
+                            </ScrollArea>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <ScrollArea className="h-[400px] w-full rounded-md border">
+                      <div className="p-4 space-y-4">
+                        {apiCallHistory.map((entry, index) => (
+                          <div key={index} className={`border-l-2 pl-4 py-2 ${entry.event.includes('Error') ? 'border-red-500 bg-red-50' : 'border-blue-500'}`}>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={entry.event.includes('Error') ? 'bg-red-100' : ''}>
+                                {new Date(entry.timestamp).toLocaleTimeString()}
+                              </Badge>
+                              <span className={`font-medium ${entry.event.includes('Error') ? 'text-red-700' : ''}`}>
+                                {entry.event}
+                              </span>
+                            </div>
+                            {entry.details && (
+                              <pre className={`mt-2 text-sm p-2 rounded overflow-auto ${entry.event.includes('Error') ? 'bg-red-50' : 'bg-gray-50'}`}>
+                                {JSON.stringify(entry.details, null, 2)}
+                              </pre>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="property">
               <Card>
@@ -333,39 +365,6 @@ const ParcelDetails = () => {
                 </CardHeader>
                 <CardContent>
                   {renderAdditionalDetails()}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="api-debug">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Terminal className="h-5 w-5 text-primary" />
-                    <CardTitle>API Integration Debug</CardTitle>
-                  </div>
-                  <CardDescription>Real-time API integration monitoring</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[400px] w-full rounded-md border">
-                    <div className="p-4 space-y-4">
-                      {apiCallHistory.map((entry, index) => (
-                        <div key={index} className="border-l-2 border-blue-500 pl-4 py-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">
-                              {new Date(entry.timestamp).toLocaleTimeString()}
-                            </Badge>
-                            <span className="font-medium">{entry.event}</span>
-                          </div>
-                          {entry.details && (
-                            <pre className="mt-2 text-sm bg-gray-50 p-2 rounded overflow-auto">
-                              {JSON.stringify(entry.details, null, 2)}
-                            </pre>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
                 </CardContent>
               </Card>
             </TabsContent>
