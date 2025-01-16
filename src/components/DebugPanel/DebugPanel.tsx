@@ -179,6 +179,12 @@ export function DebugPanel({
     if (message.trim()) {
       onMessageSubmit(message);
       setMessage("");
+      
+      // Add a toast notification for message submission
+      toast({
+        title: "Debug Message Sent",
+        description: "Your message has been logged to the debug console",
+      });
     }
   };
 
@@ -189,7 +195,8 @@ export function DebugPanel({
         title: "File selected",
         description: `Selected file: ${file.name}`,
       });
-      // Handle file upload logic here
+      // Add to API call history
+      onMessageSubmit(`File uploaded: ${file.name}`);
     }
   };
 
@@ -363,20 +370,22 @@ export function DebugPanel({
         </div>
 
         <div className="space-y-4">
-          {activeViews.includes('error') && apiError && (
+          {activeViews.includes('error') && (apiError || error) && (
             <Card className="bg-red-900/20 border-red-800/50 transition-colors hover:bg-red-900/30">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <XCircle className="h-5 w-5 text-red-400" />
-                  <CardTitle className="text-red-300">API Error</CardTitle>
+                  <CardTitle className="text-red-300">
+                    {apiError ? 'API Error' : 'Error'}
+                  </CardTitle>
                   <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700">
-                    {new Date(apiError.timestamp).toLocaleTimeString()}
+                    {new Date(apiError?.timestamp || Date.now()).toLocaleTimeString()}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-red-300">{apiError.message}</p>
-                {apiError.details && viewMode === "detailed" && (
+                <p className="text-red-300">{apiError?.message || error}</p>
+                {apiError?.details && viewMode === "detailed" && (
                   <ScrollArea className="h-[100px] mt-2 rounded-md border border-red-800/30 bg-red-900/10 p-4">
                     <pre className="text-sm font-mono text-red-300">
                       {JSON.stringify(apiError.details, null, 2)}
@@ -387,7 +396,7 @@ export function DebugPanel({
             </Card>
           )}
 
-          {activeViews.includes('history') && (
+          {activeViews.includes('history') && apiCallHistory.length > 0 && (
             <Card className="bg-gray-800/40 border-gray-700 transition-colors hover:bg-gray-800/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-300">API Call History</CardTitle>
