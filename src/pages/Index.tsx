@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Database, Cloud, Workflow, Shield, Cpu, Network, Brain, Zap } from "lucide-react";
+import { Database, Cloud, Workflow, Shield, Brain, Network } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import Hero from "@/components/Hero";
 import { EngineerMessages } from "@/components/AICivilEngineer/EngineerMessages";
 import { useSystemLogger } from "@/hooks/useSystemLogger";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { LazyLoadedSection } from "@/components/home/LazyLoadedSection";
 
 const MicroserviceCard = ({ icon: Icon, title, description, className = "" }) => (
   <motion.div
@@ -37,7 +38,9 @@ export default function Index() {
         component: 'Index',
         route: '/',
         metrics: {
-          timestamp: new Date().toISOString()
+          executionTime: performance.now(),
+          memoryUsage: window.performance?.memory?.usedJSHeapSize,
+          apiLatency: 0
         }
       }
     });
@@ -84,30 +87,39 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <Hero />
+      <Suspense fallback={<div className="animate-pulse">Loading...</div>}>
+        <Hero />
+      </Suspense>
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="container mx-auto px-4 py-12"
       >
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gradient-primary mb-4">
-            Microservices Architecture
-          </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Explore our distributed system of specialized services working together to provide
-            a seamless building analysis experience.
-          </p>
-        </div>
+        <LazyLoadedSection>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gradient-primary mb-4">
+              Microservices Architecture
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Explore our distributed system of specialized services working together to provide
+              a seamless building analysis experience.
+            </p>
+          </div>
+        </LazyLoadedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {microservices.map((service, index) => (
-            <MicroserviceCard key={index} {...service} />
+            <LazyLoadedSection key={index} delay={index * 0.1}>
+              <MicroserviceCard {...service} />
+            </LazyLoadedSection>
           ))}
         </div>
 
-        <EngineerMessages />
+        <LazyLoadedSection delay={0.3}>
+          <EngineerMessages />
+        </LazyLoadedSection>
       </motion.div>
     </div>
   );
