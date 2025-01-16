@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mic, Camera, Monitor, Users, Globe, Brain, Gauge } from 'lucide-react';
+import { Mic, Camera, Monitor, Users, Globe, Brain, Gauge, Terminal } from 'lucide-react';
 import type { SharedComputerState } from '@/types/agent';
 
 interface SharedComputerProps {
@@ -14,32 +14,32 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [computerState, setComputerState] = useState<SharedComputerState>({
-    activeUsers: [],
-    screenSharing: {
+    active_users: [],
+    screen_sharing: {
       active: false,
       resolution: '4K',
       frameRate: 60
     },
-    voiceChat: {
+    voice_chat: {
       active: false,
       participants: [],
       quality: 'high'
     },
-    videoChat: {
+    video_chat: {
       active: false,
       participants: [],
       quality: 'high'
     },
-    systemLoad: {
+    system_load: {
       cpu: 0,
       memory: 0,
       network: 0
     },
-    browserState: {
+    browser_state: {
       url: 'https://lovable.ai',
-      title: 'Lovable AI Interface',
-      isClaudeActive: true,
-      lastInteraction: new Date().toISOString()
+      title: 'Claude Terminal Interface',
+      is_claude_active: true,
+      last_interaction: new Date().toISOString()
     }
   });
 
@@ -49,7 +49,7 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
       return;
     }
 
-    console.log('Initializing shared computer view:', { sessionId });
+    console.log('Initializing Claude terminal view:', { sessionId });
 
     // Subscribe to session updates
     const channel = supabase
@@ -62,44 +62,15 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
           console.log('Presence state updated:', state);
           setComputerState(prev => ({
             ...prev,
-            activeUsers: Object.keys(state)
-          }));
-        }
-      )
-      .on(
-        'presence',
-        { event: 'join' },
-        ({ key, newPresences }) => {
-          console.log('User joined:', { key, newPresences });
-          toast({
-            title: "New user joined",
-            description: `User ${key} joined the session`,
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'shared_computer_sessions',
-          filter: `session_id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('Session state updated:', payload);
-          const { new: newState } = payload;
-          setComputerState(prev => ({
-            ...prev,
-            ...newState
+            active_users: Object.keys(state)
           }));
         }
       )
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to updates');
+          console.log('Successfully subscribed to Claude terminal updates');
           setIsConnected(true);
           
-          // Track our presence
           await channel.track({
             user_id: sessionId,
             online_at: new Date().toISOString(),
@@ -109,84 +80,46 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
               quality: 'ultra'
             }
           });
+
+          toast({
+            title: "Claude Terminal Connected",
+            description: "Live terminal view is now active",
+          });
         }
       });
 
-    // Initialize system metrics update
-    const metricsInterval = setInterval(() => {
-      setComputerState(prev => ({
-        ...prev,
-        systemLoad: {
-          cpu: Math.random() * 100,
-          memory: Math.random() * 100,
-          network: Math.random() * 100
-        }
-      }));
-    }, 2000);
-
     return () => {
-      console.log('Cleaning up shared computer subscriptions');
-      clearInterval(metricsInterval);
+      console.log('Cleaning up Claude terminal subscriptions');
       supabase.removeChannel(channel);
     };
   }, [sessionId, toast]);
-
-  const toggleSharing = async () => {
-    console.log('Toggling screen sharing:', { currentState: computerState.screenSharing });
-    try {
-      const { data, error } = await supabase.functions.invoke('shared-computer', {
-        body: {
-          action: 'update_state',
-          data: {
-            session_id: sessionId,
-            screenSharing: {
-              active: !computerState.screenSharing.active,
-              userId: sessionId,
-              resolution: '4K',
-              frameRate: 60
-            }
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: computerState.screenSharing.active ? "Screen sharing stopped" : "Screen sharing started",
-        description: `High performance mode: 4K @ 60fps`,
-      });
-    } catch (error) {
-      console.error('Error toggling screen share:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to toggle screen sharing",
-      });
-    }
-  };
 
   return (
     <Card className="bg-gray-900/50 border-gray-700">
       <CardContent className="p-0">
         <div className="relative w-full h-[800px] rounded-xl overflow-hidden">
-          {/* Main view - High Performance Browser */}
+          {/* Terminal View */}
           <div className="absolute inset-0 bg-gray-800/50 backdrop-blur-sm">
             <div className="w-full h-12 bg-gray-900/90 border-b border-gray-700 flex items-center px-4 gap-4">
-              <Globe className="h-5 w-5 text-blue-400" />
-              <span className="text-gray-300">{computerState.browserState.url}</span>
+              <Terminal className="h-5 w-5 text-green-400" />
+              <span className="text-gray-300">Claude Terminal Interface</span>
               <div className="ml-auto flex items-center gap-2">
                 <Brain className="h-5 w-5 text-green-400" />
-                <span className="text-green-400">Claude Active</span>
+                <span className="text-green-400">Active</span>
               </div>
             </div>
-            <iframe 
-              src="about:blank"
-              className="w-full h-[calc(100%-3rem)]"
-              style={{ 
-                backgroundColor: 'transparent',
-                border: '1px solid rgba(59, 130, 246, 0.2)'
-              }}
-            />
+            
+            {/* Terminal iframe */}
+            <div className="w-full h-[calc(100%-3rem)] bg-black/90 p-4">
+              <iframe 
+                src={`https://terminal.lovable.ai/${sessionId}`}
+                className="w-full h-full rounded-lg border border-gray-700"
+                style={{ 
+                  backgroundColor: 'black',
+                  fontFamily: 'monospace'
+                }}
+              />
+            </div>
           </div>
 
           {/* System metrics */}
@@ -199,15 +132,15 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-gray-400">CPU</span>
-                  <span className="text-blue-400">{computerState.systemLoad.cpu.toFixed(1)}%</span>
+                  <span className="text-blue-400">{computerState.system_load.cpu.toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-gray-400">Memory</span>
-                  <span className="text-purple-400">{computerState.systemLoad.memory.toFixed(1)}%</span>
+                  <span className="text-purple-400">{computerState.system_load.memory.toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-gray-400">Network</span>
-                  <span className="text-green-400">{computerState.systemLoad.network.toFixed(1)}%</span>
+                  <span className="text-green-400">{computerState.system_load.network.toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -217,26 +150,25 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 bg-gray-800/90 px-6 py-3 rounded-full border border-gray-700/50 backdrop-blur-xl">
             <Button
               variant="ghost"
-              className={`${computerState.screenSharing.active ? 'text-green-400' : 'text-gray-400'} hover:text-green-300`}
-              onClick={toggleSharing}
+              className={`${computerState.screen_sharing.active ? 'text-green-400' : 'text-gray-400'} hover:text-green-300`}
             >
               <Monitor className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
-              className={`${computerState.videoChat.active ? 'text-blue-400' : 'text-gray-400'} hover:text-blue-300`}
+              className={`${computerState.video_chat.active ? 'text-blue-400' : 'text-gray-400'} hover:text-blue-300`}
             >
               <Camera className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
-              className={`${computerState.voiceChat.active ? 'text-purple-400' : 'text-gray-400'} hover:text-purple-300`}
+              className={`${computerState.voice_chat.active ? 'text-purple-400' : 'text-gray-400'} hover:text-purple-300`}
             >
               <Mic className="h-5 w-5" />
             </Button>
             <div className="flex items-center space-x-2 px-3 py-1 bg-gray-700/50 rounded-full">
               <Users className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-300">{computerState.activeUsers.length}</span>
+              <span className="text-sm text-gray-300">{computerState.active_users.length}</span>
             </div>
           </div>
 

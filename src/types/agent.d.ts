@@ -60,27 +60,32 @@ export interface AgentMessage {
 }
 
 export interface SharedComputerState {
-  id?: string;
-  session_id?: string;
+  active_users: string[];
   screen_sharing: {
     active: boolean;
-    userId: string | null;
+    resolution: string;
+    frameRate: number;
   };
   voice_chat: {
     active: boolean;
     participants: string[];
+    quality: string;
   };
   video_chat: {
     active: boolean;
     participants: string[];
+    quality: string;
   };
-  active_users: string[];
-  system_metrics: SystemLoad;
-  browser_state?: {
+  system_load: {
+    cpu: number;
+    memory: number;
+    network: number;
+  };
+  browser_state: {
     url: string;
     title: string;
-    isClaudeActive: boolean;
-    lastInteraction: string;
+    is_claude_active: boolean;
+    last_interaction: string;
   };
 }
 
