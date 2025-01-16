@@ -1,34 +1,4 @@
-export interface CommunicationSession {
-  id: string;
-  session_type: 'video' | 'audio' | 'screen_share';
-  participants: string[];
-  session_data: {
-    room_id?: string;
-    stream_ids?: string[];
-    settings?: {
-      video?: boolean;
-      audio?: boolean;
-      screen?: boolean;
-    };
-  };
-  started_at: string;
-  ended_at?: string;
-  metrics: {
-    bandwidth_usage: number[];
-    quality_metrics: {
-      video_quality?: number;
-      audio_quality?: number;
-      latency?: number;
-    };
-    participant_stats: {
-      id: string;
-      connection_quality: number;
-      speaking_time: number;
-    }[];
-  };
-  created_at: string;
-  updated_at: string;
-}
+import { Json } from '@/integrations/supabase/types';
 
 export interface SystemLoad {
   cpu: number;
@@ -63,33 +33,27 @@ export interface ThreadAnalysis {
   agent_states: Record<string, any>;
 }
 
+export interface AgentMessage {
+  role: string;
+  content: string;
+  agent?: string;
+  message?: string;
+  timestamp?: string;
+}
+
 export interface SiteStructurePage {
   id: string;
   page_path: string;
   title: string;
   description?: string;
-  hub_name?: string;
   component_data: {
-    sections: Array<{
-      title: string;
-      content: string;
-    }>;
-    features: Array<{
-      title: string;
-      description: string;
-    }>;
+    sections: string[];
+    features: string[];
     integrations: string[];
   };
-  layout_type?: string;
-  page_category?: string;
-}
-
-export interface MainLayoutProps {
-  children: React.ReactNode;
 }
 
 export interface ApiMetric {
-  id: string;
   service_name: string;
   endpoint: string;
   response_time: number;
@@ -97,15 +61,10 @@ export interface ApiMetric {
   error_count: number;
   total_requests: number;
   performance_data: Record<string, any>;
-  system_metrics: SystemLoad;
 }
 
 export interface ServiceMetrics {
-  id: string;
   service_name: string;
-  service_type: string;
-  status: string;
-  health_score: number;
   performance_metrics: {
     response_times: number[];
     error_rates: number[];
@@ -116,49 +75,33 @@ export interface ServiceMetrics {
       network: number[];
     };
   };
-  dependencies: string[];
 }
 
-export interface AgentMessage {
-  role: string;
-  content: string;
-  agent?: string;
-  message?: string;
-  timestamp?: string;
+export interface MainLayoutProps {
+  children: React.ReactNode;
 }
 
-export interface VideoSynthesis {
+export interface CommunicationSession {
   id: string;
-  prompt: string;
-  status: string;
-  duration: number;
-  segment_count: number;
-  raw_segments: any[];
-  synthesized_output: {
-    url: string;
-    duration: number;
-    timestamp: string;
-    quality_score: number;
-  };
-  generation_metrics: Record<string, any>;
-  metadata: Record<string, any>;
+  session_type: string;
+  participants: string[];
+  session_data: Record<string, any>;
+}
+
+export interface DifyAgent {
+  id: string;
+  name: string;
+  role: string;
+  backstory: string;
+  status: 'idle' | 'processing' | 'completed' | 'error';
+  lastAction: string;
 }
 
 export interface UIVersion {
   id: string;
   name: string;
-  description?: string;
-  route: string;
   component_data: Record<string, any>;
   component_registry: Record<string, any>;
-  version_type: string;
-  feature_list: string[];
-  integration_points: string[];
-  performance_metrics: {
-    api_latency: number[];
-    render_time: number[];
-    memory_usage: number[];
-  };
 }
 
 export interface PageVersion {
@@ -173,22 +116,48 @@ export interface PageVersion {
   component_registry: Record<string, any>;
 }
 
-export interface AgentMetricsData {
+export interface VideoSynthesis {
   id: string;
-  timestamp: string;
+  prompt: string;
+  status: string;
+  duration: number;
+  segment_count: number;
+  synthesized_output: {
+    url: string;
+    duration: number;
+    timestamp: string;
+    quality_score: number;
+  };
+}
+
+export interface LogComparison {
+  frontend_logs: string[];
+  backend_logs: string[];
+  matching_percentage: number;
+}
+
+export interface SystemAnalysis {
+  id: string;
+  analysis_type: string;
+  insights: string[];
+  metrics: Record<string, any>;
+}
+
+export interface AgentMetricsData {
   cpuUsage: number;
   memoryUsage: number;
   networkLatency: number;
   activeFlows: number;
   successRate: number;
   totalInteractions: number;
+  system_load: SystemLoad;
+  networkMetrics: NetworkStats;
+  performanceMetrics: PerformanceMetrics;
 }
 
-export interface DifyAgent {
-  id: string;
-  name: string;
-  role: string;
-  backstory: string;
-  status: 'idle' | 'processing' | 'completed' | 'error';
-  lastAction: string;
+export interface NavItem {
+  path: string;
+  label: string;
+  icon?: JSX.Element;
+  children?: { path: string; label: string; }[];
 }
