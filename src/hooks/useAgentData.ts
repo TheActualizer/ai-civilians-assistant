@@ -4,23 +4,24 @@ import type { AgentMetricsData } from '@/types/agent';
 import { useToast } from "@/hooks/use-toast";
 
 const initialMetrics: AgentMetricsData = {
-  cpuUsage: 0,
-  memoryUsage: 0,
-  networkLatency: 0,
-  activeFlows: 0,
-  successRate: 0,
-  totalInteractions: 0,
-  systemLoad: {
+  timestamp: new Date().toISOString(),
+  cpu_usage: 0,
+  memory_usage: 0,
+  network_latency: 0,
+  active_flows: 0,
+  success_rate: 0,
+  total_interactions: 0,
+  system_load: {
     cpu_threads: [],
     io_operations: [],
     memory_allocation: []
   },
-  networkMetrics: {
+  network_metrics: {
     bandwidth_usage: [],
     connection_pool: [],
     latency_history: []
   },
-  performanceIndicators: {
+  performance_indicators: {
     error_rate: [],
     throughput: [],
     response_times: []
@@ -49,37 +50,38 @@ export function useAgentData() {
           console.log('New metrics received:', payload);
           setLastUpdate(new Date().toISOString());
           
-          const systemLoad = typeof payload.new.system_load === 'string' 
+          const system_load = typeof payload.new.system_load === 'string' 
             ? JSON.parse(payload.new.system_load)
-            : payload.new.system_load || initialMetrics.systemLoad;
+            : payload.new.system_load || initialMetrics.system_load;
 
-          const networkMetrics = typeof payload.new.network_metrics === 'string'
+          const network_metrics = typeof payload.new.network_metrics === 'string'
             ? JSON.parse(payload.new.network_metrics)
-            : payload.new.network_metrics || initialMetrics.networkMetrics;
+            : payload.new.network_metrics || initialMetrics.network_metrics;
 
-          const performanceIndicators = typeof payload.new.performance_indicators === 'string'
+          const performance_indicators = typeof payload.new.performance_indicators === 'string'
             ? JSON.parse(payload.new.performance_indicators)
-            : payload.new.performance_indicators || initialMetrics.performanceIndicators;
+            : payload.new.performance_indicators || initialMetrics.performance_indicators;
 
           const newMetrics: AgentMetricsData = {
-            cpuUsage: payload.new.cpu_usage || 0,
-            memoryUsage: payload.new.memory_usage || 0,
-            networkLatency: payload.new.network_latency || 0,
-            activeFlows: payload.new.active_flows || 0,
-            successRate: payload.new.success_rate || 0,
-            totalInteractions: payload.new.total_interactions || 0,
-            systemLoad,
-            networkMetrics,
-            performanceIndicators
+            timestamp: payload.new.timestamp,
+            cpu_usage: payload.new.cpu_usage || 0,
+            memory_usage: payload.new.memory_usage || 0,
+            network_latency: payload.new.network_latency || 0,
+            active_flows: payload.new.active_flows || 0,
+            success_rate: payload.new.success_rate || 0,
+            total_interactions: payload.new.total_interactions || 0,
+            system_load,
+            network_metrics,
+            performance_indicators
           };
 
           setMetrics(newMetrics);
           
           setHistoricalData(prev => [...prev, {
             timestamp: new Date().toISOString(),
-            cpu: newMetrics.cpuUsage,
-            memory: newMetrics.memoryUsage,
-            network: newMetrics.networkLatency
+            cpu: newMetrics.cpu_usage,
+            memory: newMetrics.memory_usage,
+            network: newMetrics.network_latency
           }].slice(-20));
         }
       )
@@ -91,7 +93,7 @@ export function useAgentData() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching metrics:', error);
@@ -104,28 +106,29 @@ export function useAgentData() {
       }
 
       if (data) {
-        const systemLoad = typeof data.system_load === 'string' 
+        const system_load = typeof data.system_load === 'string' 
           ? JSON.parse(data.system_load)
-          : data.system_load || initialMetrics.systemLoad;
+          : data.system_load || initialMetrics.system_load;
 
-        const networkMetrics = typeof data.network_metrics === 'string'
+        const network_metrics = typeof data.network_metrics === 'string'
           ? JSON.parse(data.network_metrics)
-          : data.network_metrics || initialMetrics.networkMetrics;
+          : data.network_metrics || initialMetrics.network_metrics;
 
-        const performanceIndicators = typeof data.performance_indicators === 'string'
+        const performance_indicators = typeof data.performance_indicators === 'string'
           ? JSON.parse(data.performance_indicators)
-          : data.performance_indicators || initialMetrics.performanceIndicators;
+          : data.performance_indicators || initialMetrics.performance_indicators;
 
         const initialData: AgentMetricsData = {
-          cpuUsage: data.cpu_usage || 0,
-          memoryUsage: data.memory_usage || 0,
-          networkLatency: data.network_latency || 0,
-          activeFlows: data.active_flows || 0,
-          successRate: data.success_rate || 0,
-          totalInteractions: data.total_interactions || 0,
-          systemLoad,
-          networkMetrics,
-          performanceIndicators
+          timestamp: data.timestamp,
+          cpu_usage: data.cpu_usage || 0,
+          memory_usage: data.memory_usage || 0,
+          network_latency: data.network_latency || 0,
+          active_flows: data.active_flows || 0,
+          success_rate: data.success_rate || 0,
+          total_interactions: data.total_interactions || 0,
+          system_load,
+          network_metrics,
+          performance_indicators
         };
         setMetrics(initialData);
       }

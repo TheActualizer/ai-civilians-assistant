@@ -29,7 +29,7 @@ class AgentMonitoringService {
           name: agent.agent_id,
           role: 'Unknown',
           status: agent.status as 'idle' | 'processing' | 'completed' | 'error',
-          lastAction: agent.last_action
+          last_action: agent.last_action
         });
       });
 

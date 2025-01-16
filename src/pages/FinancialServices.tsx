@@ -1,6 +1,6 @@
 import { useSession } from "@supabase/auth-helpers-react";
 import { motion } from "framer-motion";
-import { Brain, Activity, AlertCircle, Settings, FileText, Network, Cpu, Database, Workflow, Mic } from 'lucide-react';
+import { Brain, Activity, AlertCircle, Settings, FileText, Network, Cpu, Database, Workflow, Mic, Terminal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
