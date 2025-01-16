@@ -15,29 +15,32 @@ import Assessment from "./pages/Assessment";
 import AgentMonitoring from "./pages/AgentMonitoring";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
+import { DebugProvider } from "@/lib/debug-panel/context/DebugContext";
 
 function App() {
   return (
     <SessionContextProvider supabaseClient={supabase}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/get-started" element={<GetStarted />} />
-          <Route path="/learn-more" element={<LearnMore />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/solutions" element={<Solutions />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/new-report" element={<NewReport />} />
-          <Route path="/calculations" element={<Calculations />} />
-          <Route path="/address-validation" element={<AddressValidation />} />
-          <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
-          <Route path="/assessment" element={<Assessment />} />
-          <Route path="/agent-monitoring" element={<AgentMonitoring />} />
-          <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
-        </Routes>
-        <Toaster />
-      </Router>
+      <DebugProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/get-started" element={<GetStarted />} />
+            <Route path="/learn-more" element={<LearnMore />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/solutions" element={<Solutions />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/new-report" element={<NewReport />} />
+            <Route path="/calculations" element={<Calculations />} />
+            <Route path="/address-validation" element={<AddressValidation />} />
+            <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
+            <Route path="/assessment" element={<Assessment />} />
+            <Route path="/agent-monitoring" element={<AgentMonitoring />} />
+            <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </DebugProvider>
     </SessionContextProvider>
   );
 }
