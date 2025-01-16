@@ -52,6 +52,9 @@ export interface PropertyRequest {
     historical_tax_completed: boolean;
     historical_assessment_completed: boolean;
   };
+  lightbox_data?: any;
+  lightbox_processed_at?: string;
+  lightbox_request_id?: string;
 }
 
 export interface AssessmentData {
