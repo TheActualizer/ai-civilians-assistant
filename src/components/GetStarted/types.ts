@@ -86,8 +86,20 @@ export interface LightBoxResponse {
   };
   rawResponse?: any;
   timestamp?: string;
-  lightbox_processed?: boolean;
-  processed_at?: string;
+  lightbox_processed: boolean;
+  processed_at: string;
+  status?: string;
+  lightbox_request_id?: string;
+  api_progress?: {
+    parcel_completed: boolean;
+    zoning_completed: boolean;
+    geocoding_completed: boolean;
+    assessment_completed: boolean;
+    structures_completed: boolean;
+    transactions_completed: boolean;
+    historical_tax_completed: boolean;
+    historical_assessment_completed: boolean;
+  };
 }
 
 export interface FunctionLog {

@@ -9,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle, Bug, CheckCircle2 } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle, Bug, CheckCircle2, RefreshCw, Send } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -22,6 +23,7 @@ const ParcelDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
   const [apiCallHistory, setApiCallHistory] = useState<Array<{
     timestamp: string;
     event: string;
@@ -42,209 +44,125 @@ const ParcelDetails = () => {
     }]);
   };
 
-  const renderPropertyDetails = () => {
-    if (!lightboxData) {
-      return (
-        <div className="text-center py-8">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No property data available yet</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {lightboxData.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
-            <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="text-sm font-medium text-gray-500 capitalize">
-                {key.replace(/([A-Z])/g, ' $1').trim()}
-              </h3>
-              <p className="mt-1 text-lg">{value || 'Not available'}</p>
-            </div>
-          ))}
-        </div>
-
-        {lightboxData.parcelId && (
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">Parcel ID</h3>
-            <p className="mt-1 text-lg">{lightboxData.parcelId}</p>
-          </div>
-        )}
-
-        {lightboxData.status && (
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">Processing Status</h3>
-            <Badge className="mt-2" variant={lightboxData.status === 'completed' ? 'default' : 'secondary'}>
-              {lightboxData.status}
-            </Badge>
-          </div>
-        )}
-      </div>
-    );
+  const handleRetry = async () => {
+    setIsLoading(true);
+    setError(null);
+    addToHistory("Retrying API call");
+    await fetchLatestRequest();
   };
 
-  const renderAdditionalDetails = () => {
-    if (!lightboxData) {
-      return (
-        <div className="text-center py-8">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No additional data available yet</p>
-        </div>
-      );
+  const handleMessageSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      addToHistory("User message", { message });
+      setMessage('');
+      toast({
+        title: "Message sent",
+        description: "Your message has been logged for debugging purposes",
+      });
     }
-
-    const additionalInfo = [
-      { label: 'Processing Status', value: lightboxData.status || 'Pending' },
-      { label: 'Last Updated', value: lightboxData.lightbox_processed_at ? new Date(lightboxData.lightbox_processed_at).toLocaleString() : 'Not processed yet' },
-      { label: 'Request ID', value: lightboxData.lightbox_request_id || 'Not available' },
-    ];
-
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {additionalInfo.map((info, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="text-sm font-medium text-gray-500">{info.label}</h3>
-              {info.label === 'Processing Status' ? (
-                <Badge className="mt-2" variant={info.value === 'completed' ? 'default' : 'secondary'}>
-                  {info.value}
-                </Badge>
-              ) : (
-                <p className="mt-1 text-lg">{info.value}</p>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {lightboxData.api_progress && (
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">API Progress</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(lightboxData.api_progress).map(([key, value]) => (
-                <div key={key} className="flex items-center gap-2 bg-white p-4 rounded-lg shadow-sm">
-                  {value ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-yellow-500" />
-                  )}
-                  <div>
-                    <h4 className="text-sm font-medium capitalize">
-                      {key.replace(/_/g, ' ')}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      {value ? 'Completed' : 'Pending'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
   };
 
-  useEffect(() => {
-    const fetchLatestRequest = async () => {
-      addToHistory("Starting to fetch latest property request");
-      console.log("Fetching latest property request...");
-      
-      try {
-        const { data: propertyRequest, error: fetchError } = await supabase
-          .from('property_requests')
-          .select('*, lightbox_data, status_details')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+  const fetchLatestRequest = async () => {
+    addToHistory("Starting to fetch latest property request");
+    console.log("Fetching latest property request...");
+    
+    try {
+      const { data: propertyRequest, error: fetchError } = await supabase
+        .from('property_requests')
+        .select('*, lightbox_data, status_details')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-        if (fetchError) {
-          console.error('Error fetching request:', fetchError);
-          addToHistory("Error fetching property request", fetchError);
-          setError('Failed to fetch property request');
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to fetch property request data"
-          });
-          return;
-        }
+      if (fetchError) {
+        console.error('Error fetching request:', fetchError);
+        addToHistory("Error fetching property request", fetchError);
+        setError('Failed to fetch property request');
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch property request data"
+        });
+        return;
+      }
 
-        if (propertyRequest) {
-          console.log('Latest request found:', propertyRequest);
-          addToHistory("Latest property request found", {
-            id: propertyRequest.id,
-            address: `${propertyRequest.street_address}, ${propertyRequest.city}, ${propertyRequest.state} ${propertyRequest.zip_code}`
-          });
-          
-          setRequestId(propertyRequest.id);
-          
-          if (propertyRequest.lightbox_data) {
-            console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
-            addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
-            setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
-          } else {
-            try {
-              const address = propertyRequest.street_address;
-              const city = propertyRequest.city;
-              const state = propertyRequest.state;
-              const zip = propertyRequest.zip_code;
+      if (propertyRequest) {
+        console.log('Latest request found:', propertyRequest);
+        addToHistory("Latest property request found", {
+          id: propertyRequest.id,
+          address: `${propertyRequest.street_address}, ${propertyRequest.city}, ${propertyRequest.state} ${propertyRequest.zip_code}`
+        });
+        
+        setRequestId(propertyRequest.id);
+        
+        if (propertyRequest.lightbox_data) {
+          console.log('Using existing LightBox data:', propertyRequest.lightbox_data);
+          addToHistory("Using cached LightBox data", propertyRequest.lightbox_data);
+          setLightboxData(propertyRequest.lightbox_data as LightBoxResponse);
+        } else {
+          try {
+            const address = propertyRequest.street_address;
+            const city = propertyRequest.city;
+            const state = propertyRequest.state;
+            const zip = propertyRequest.zip_code;
 
-              console.log('Calling LightBox API with address:', { address, city, state, zip });
-              addToHistory("Initiating LightBox API call", {
+            console.log('Calling LightBox API with address:', { address, city, state, zip });
+            addToHistory("Initiating LightBox API call", {
+              address,
+              city,
+              state,
+              zip
+            });
+            
+            const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
+              body: {
                 address,
                 city,
                 state,
                 zip
-              });
-              
-              const { data, error: apiError } = await supabase.functions.invoke('lightbox-parcel', {
-                body: {
-                  address,
-                  city,
-                  state,
-                  zip
-                }
-              });
-
-              if (apiError) {
-                console.error('LightBox API call error:', apiError);
-                setApiError({
-                  message: apiError.message || 'Error calling LightBox API',
-                  details: apiError,
-                  timestamp: new Date().toISOString()
-                });
-                addToHistory("LightBox API call failed", apiError);
-              } else {
-                console.log('LightBox API response:', data);
-                addToHistory("LightBox API call successful", data);
-                setLightboxData(data as LightBoxResponse);
-                
-                toast({
-                  title: "Success",
-                  description: "LightBox data fetched successfully"
-                });
               }
-            } catch (apiError) {
-              console.error('Error calling LightBox API:', apiError);
+            });
+
+            if (apiError) {
+              console.error('LightBox API call error:', apiError);
               setApiError({
                 message: apiError.message || 'Error calling LightBox API',
                 details: apiError,
                 timestamp: new Date().toISOString()
               });
-              addToHistory("Error in LightBox API call", apiError);
+              addToHistory("LightBox API call failed", apiError);
+            } else {
+              console.log('LightBox API response:', data);
+              addToHistory("LightBox API call successful", data);
+              setLightboxData(data as LightBoxResponse);
+              
+              toast({
+                title: "Success",
+                description: "LightBox data fetched successfully"
+              });
             }
+          } catch (apiError) {
+            console.error('Error calling LightBox API:', apiError);
+            setApiError({
+              message: apiError.message || 'Error calling LightBox API',
+              details: apiError,
+              timestamp: new Date().toISOString()
+            });
+            addToHistory("Error in LightBox API call", apiError);
           }
         }
-      } catch (error) {
-        console.error('Unexpected error:', error);
-        addToHistory("Unexpected error occurred", error);
-        setError('An unexpected error occurred');
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      addToHistory("Unexpected error occurred", error);
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchLatestRequest();
   }, [toast]);
 
@@ -269,18 +187,45 @@ const ParcelDetails = () => {
       <Navbar session={session} />
       <div className="container mx-auto pt-24 px-4 pb-8">
         <div className="flex flex-col gap-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold text-gray-900">Debug Dashboard</h1>
-              {error && (
-                <Badge variant="destructive" className="animate-pulse">
-                  <Bug className="w-4 h-4 mr-1" />
-                  Error Detected
-                </Badge>
-              )}
+          <div className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-sm">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl font-bold text-gray-900">Debug Dashboard</h1>
+                {error && (
+                  <Badge variant="destructive" className="animate-pulse">
+                    <Bug className="w-4 h-4 mr-1" />
+                    Error Detected
+                  </Badge>
+                )}
+              </div>
+              <div className="text-sm text-gray-500">
+                Request ID: {requestId || 'Not available'}
+              </div>
             </div>
-            <div className="text-sm text-gray-500">
-              Request ID: {requestId || 'Not available'}
+
+            <div className="flex items-center gap-4">
+              <Button 
+                onClick={handleRetry} 
+                variant="outline"
+                className="gap-2"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Retry API Call
+              </Button>
+              
+              <form onSubmit={handleMessageSubmit} className="flex-1 flex gap-2">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type your debug message here..."
+                  className="flex-1"
+                />
+                <Button type="submit" variant="secondary" className="gap-2">
+                  <Send className="h-4 w-4" />
+                  Send
+                </Button>
+              </form>
             </div>
           </div>
 
