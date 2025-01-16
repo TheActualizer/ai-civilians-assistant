@@ -261,6 +261,44 @@ export type Database = {
           },
         ]
       }
+      computation_registry: {
+        Row: {
+          assigned_service: string | null
+          complexity_score: number | null
+          computation_type: string
+          created_at: string | null
+          execution_stats: Json | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_service?: string | null
+          complexity_score?: number | null
+          computation_type: string
+          created_at?: string | null
+          execution_stats?: Json | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_service?: string | null
+          complexity_score?: number | null
+          computation_type?: string
+          created_at?: string | null
+          execution_stats?: Json | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "computation_registry_assigned_service_fkey"
+            columns: ["assigned_service"]
+            isOneToOne: false
+            referencedRelation: "microservice_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debug_agent_monitoring: {
         Row: {
           agent_id: string
@@ -629,6 +667,42 @@ export type Database = {
           },
         ]
       }
+      microservice_registry: {
+        Row: {
+          created_at: string | null
+          dependencies: Json | null
+          health_score: number | null
+          id: string
+          performance_metrics: Json | null
+          service_name: string
+          service_type: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dependencies?: Json | null
+          health_score?: number | null
+          id?: string
+          performance_metrics?: Json | null
+          service_name: string
+          service_type: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dependencies?: Json | null
+          health_score?: number | null
+          id?: string
+          performance_metrics?: Json | null
+          service_name?: string
+          service_type?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -962,6 +1036,54 @@ export type Database = {
           uptime_percentage?: number | null
         }
         Relationships: []
+      }
+      service_interactions: {
+        Row: {
+          created_at: string | null
+          data_volume: number | null
+          id: string
+          interaction_type: string
+          latency: number | null
+          source_service: string | null
+          success_rate: number | null
+          target_service: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_volume?: number | null
+          id?: string
+          interaction_type: string
+          latency?: number | null
+          source_service?: string | null
+          success_rate?: number | null
+          target_service?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_volume?: number | null
+          id?: string
+          interaction_type?: string
+          latency?: number | null
+          source_service?: string | null
+          success_rate?: number | null
+          target_service?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_interactions_source_service_fkey"
+            columns: ["source_service"]
+            isOneToOne: false
+            referencedRelation: "microservice_registry"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_interactions_target_service_fkey"
+            columns: ["target_service"]
+            isOneToOne: false
+            referencedRelation: "microservice_registry"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shared_computer_sessions: {
         Row: {

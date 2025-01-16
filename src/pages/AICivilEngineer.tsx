@@ -1,37 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Brain, Zap, Crown } from 'lucide-react';
+import { Crown, Brain } from 'lucide-react';
 import Navbar from "@/components/Navbar";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
-import { VersionSwitcher } from "@/components/VersionSwitcher/VersionSwitcher";
-import { VersionSelector } from "@/components/VersionManagement/VersionSelector";
 import { AgentsPanel } from "@/components/Agents/AgentsPanel";
-import { AgentMetrics } from "@/components/Agents/AgentMetrics";
-import { AgentNetwork } from "@/components/Agents/AgentNetwork";
-import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
+import { ServiceMonitor } from "@/components/Enterprise/ServiceMonitor";
 import { ApiMetricsPanel } from "@/components/Enterprise/ApiMetricsPanel";
-import { IntegrationMetricsPanel } from '@/components/Enterprise/IntegrationMetricsPanel';
-import { ScreenshotButton } from "@/components/ScreenshotButton/ScreenshotButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { AgentMessage } from '@/types/agent';
 
 const AICivilEngineer = () => {
   const session = useSession();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [requestId, setRequestId] = useState<string | null>(null);
   const [connectionScore, setConnectionScore] = useState(0);
   const [portalEnergy, setPortalEnergy] = useState(0);
-  const [apiCallHistory, setApiCallHistory] = useState<Array<{
-    timestamp: string;
-    event: string;
-    details?: any;
-  }>>([]);
   const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
 
   useEffect(() => {
@@ -61,21 +47,10 @@ const AICivilEngineer = () => {
         console.log('Portal connection initialized:', connectionData);
         setConnectionScore(connectionData.connection_score || 0);
         
-        // Start portal energy accumulation
         const energyInterval = setInterval(() => {
-          setPortalEnergy(prev => {
-            const newEnergy = Math.min(prev + 0.5, 100);
-            if (newEnergy === 100) {
-              toast({
-                title: "Portal Energy Maximized! ⚡",
-                description: "Reality manipulation capabilities at peak performance",
-              });
-            }
-            return newEnergy;
-          });
+          setPortalEnergy(prev => Math.min(prev + 0.5, 100));
         }, 1000);
 
-        // Subscribe to connection updates
         const channel = supabase
           .channel('thread-connections')
           .on(
@@ -89,13 +64,6 @@ const AICivilEngineer = () => {
             (payload) => {
               console.log('Portal connection update:', payload);
               setConnectionScore(payload.new.connection_score);
-              
-              if (payload.new.connection_score % 5 === 0) {
-                toast({
-                  title: "Reality Branch Achievement! 🌟",
-                  description: `Portal Mastery Level ${payload.new.connection_score} Attained!`,
-                });
-              }
             }
           )
           .subscribe();
@@ -111,53 +79,12 @@ const AICivilEngineer = () => {
           title: "Portal Disruption",
           description: "Failed to establish quantum thread connections"
         });
-      }
-    };
-
-    const fetchInitialData = async () => {
-      try {
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        const { data, error } = await supabase
-          .from('property_assessments')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (data) {
-          setRequestId(data.id);
-          // Update connection metadata with property context
-          if (session?.user?.id) {
-            await supabase
-              .from('auth_thread_connections')
-              .update({
-                metadata: {
-                  property_context: data.id,
-                  last_activity: new Date().toISOString()
-                }
-              })
-              .eq('user_id', session.user.id)
-              .eq('connection_type', 'ai_civil_engineer');
-          }
-        }
-      } catch (error: any) {
-        console.error('Error in fetchInitialData:', error);
-        setError(error.message);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load initial data"
-        });
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeThreadConnections();
-    fetchInitialData();
   }, [session, toast]);
 
   const handleAgentMessage = async (message: string, agent: string) => {
@@ -193,6 +120,7 @@ const AICivilEngineer = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-800">
       <Navbar session={session} />
+      
       <div className="container mx-auto px-4 py-8">
         <AnimatePresence>
           {connectionScore > 0 && (
@@ -200,51 +128,35 @@ const AICivilEngineer = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="mb-4 text-center"
+              className="mb-4"
             >
-              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 text-white font-semibold">
-                <Crown className="h-5 w-5 text-yellow-300" />
-                <span>Portal Mastery Level: {connectionScore}</span>
-                <div className="ml-2 h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-blue-400 to-purple-400"
-                    style={{ width: `${portalEnergy}%` }}
-                  />
+              <div className="flex items-center justify-center gap-4 flex-wrap">
+                <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 text-white font-semibold">
+                  <Crown className="h-5 w-5 text-yellow-300" />
+                  <span>Portal Mastery Level: {connectionScore}</span>
+                  <div className="ml-2 h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-blue-400 to-purple-400"
+                      style={{ width: `${portalEnergy}%` }}
+                    />
+                  </div>
                 </div>
-                <ScreenshotButton />
+                
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700">
+                  <Brain className="h-5 w-5 text-blue-400" />
+                  <span className="text-gray-200">Active Neural Links: {agentMessages.length}</span>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-8">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-            >
-              <VersionSelector />
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <ClaudeAnalysis 
-                pageRoute={window.location.pathname}
-                agentState={{
-                  agents: agentMessages,
-                  actions: apiCallHistory
-                }}
-              />
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
             >
               <AgentsPanel
                 onMessage={handleAgentMessage}
@@ -252,60 +164,46 @@ const AICivilEngineer = () => {
                 messages={agentMessages}
               />
             </motion.div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-              >
-                <AgentMetrics />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-              >
-                <AgentNetwork />
-              </motion.div>
-            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <ServiceMonitor />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
             >
               <ApiMetricsPanel />
             </motion.div>
           </div>
           
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-          >
-            <VersionSwitcher />
-            <DebugPanel
-              isLoading={isLoading}
-              error={error}
-              requestId={requestId}
-              lightboxData={null}
-              apiError={null}
-              apiCallHistory={apiCallHistory}
-              onRetry={() => setIsLoading(true)}
-              onMessageSubmit={(message) => {
-                if (message.trim()) {
-                  setApiCallHistory(prev => [...prev, {
-                    timestamp: new Date().toISOString(),
-                    event: "Portal Message Transmission",
-                    details: { message }
-                  }]);
-                }
-              }}
-            />
-            <IntegrationMetricsPanel />
-          </motion.div>
+          <div className="lg:col-span-4">
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <DebugPanel
+                isLoading={isLoading}
+                error={error}
+                requestId={null}
+                lightboxData={null}
+                apiError={null}
+                apiCallHistory={[]}
+                onRetry={() => setIsLoading(true)}
+                onMessageSubmit={(message) => {
+                  if (message.trim()) {
+                    handleAgentMessage(message, 'Debug Console');
+                  }
+                }}
+              />
+            </motion.div>
+          </div>
         </div>
       </div>
     </div>
