@@ -35,15 +35,28 @@ export function PageSelector() {
     console.log('Initializing page selector...');
     const fetchVersions = async () => {
       try {
-        const { data, error } = await supabase
-          .from('code_implementation_mapping')
+        const { data: siteStructure, error: siteError } = await supabase
+          .from('site_structure')
           .select('*')
-          .order('route');
+          .eq('is_active', true);
 
-        if (error) throw error;
+        if (siteError) throw siteError;
 
-        console.log('Fetched versions:', data);
-        setVersions(data);
+        // Transform site structure data into PageVersion format
+        const transformedData: PageVersion[] = siteStructure.map(page => ({
+          version_id: page.id,
+          version_name: page.title,
+          route: page.page_path,
+          components: page.component_data?.sections || [],
+          implementation_details: page.metadata || {},
+          layout_type: page.layout_type || 'standard',
+          page_category: page.page_category || 'general',
+          integration_points: page.integration_points || [],
+          component_registry: page.component_data || {}
+        }));
+
+        console.log('Transformed page data:', transformedData);
+        setVersions(transformedData);
       } catch (error) {
         console.error('Error fetching versions:', error);
         toast({
@@ -133,14 +146,13 @@ export function PageSelector() {
                     </div>
                     <AccordionContent className="px-4 py-2">
                       <div className="space-y-4">
-                        {/* Components Section */}
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm font-medium">
                             <Puzzle className="h-4 w-4" />
                             <span>Components</span>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
-                            {version.component_registry && Object.keys(version.component_registry).map((comp) => (
+                            {Object.keys(version.component_registry || {}).map((comp) => (
                               <Badge key={comp} variant="secondary" className="text-xs">
                                 {comp}
                               </Badge>
@@ -148,7 +160,6 @@ export function PageSelector() {
                           </div>
                         </div>
 
-                        {/* Integration Points */}
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm font-medium">
                             <Link className="h-4 w-4" />
@@ -161,23 +172,6 @@ export function PageSelector() {
                               </Badge>
                             ))}
                           </div>
-                        </div>
-
-                        {/* Dependencies */}
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                            <Package className="h-4 w-4" />
-                            <span>Dependencies</span>
-                          </div>
-                          {version.implementation_details?.dependencies && (
-                            <div className="grid grid-cols-2 gap-2">
-                              {Object.entries(version.implementation_details.dependencies).map(([name, version]) => (
-                                <Badge key={name} variant="secondary" className="text-xs">
-                                  {name}@{version}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </AccordionContent>
