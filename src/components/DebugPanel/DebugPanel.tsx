@@ -14,6 +14,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Toggle } from "@/components/ui/toggle";
 import type { DebugPanelProps } from "./types";
 import { VoiceControls } from './VoiceControls';
+import { TestControls } from "./TestControls";
 
 export function DebugPanel({
   isLoading,
@@ -318,6 +319,21 @@ export function DebugPanel({
             </CardContent>
           </Card>
         )}
+        
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="metrics">Metrics</TabsTrigger>
+            <TabsTrigger value="agents">Agents</TabsTrigger>
+            <TabsTrigger value="network">Network</TabsTrigger>
+            <TabsTrigger value="logs">Logs</TabsTrigger>
+            <TabsTrigger value="tests">Tests</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tests">
+            <TestControls />
+          </TabsContent>
+        </Tabs>
       </>
     );
   };
