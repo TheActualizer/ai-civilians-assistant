@@ -56,9 +56,12 @@ export interface AgentMessage {
   content: string;
   timestamp?: string;
   agent?: string;
+  message?: string;
 }
 
 export interface SharedComputerState {
+  id?: string;
+  session_id?: string;
   screen_sharing: {
     active: boolean;
     userId: string | null;
@@ -72,13 +75,13 @@ export interface SharedComputerState {
     participants: string[];
   };
   active_users: string[];
-  browser_state: {
+  system_metrics: SystemLoad;
+  browser_state?: {
     url: string;
     title: string;
     isClaudeActive: boolean;
     lastInteraction: string;
   };
-  system_load: SystemLoad;
 }
 
 export interface DifyAgent {
@@ -89,13 +92,22 @@ export interface DifyAgent {
   capabilities?: string[];
 }
 
+export interface SystemAnalysis {
+  metrics: Record<string, any>;
+  patterns: Record<string, any>;
+  insights: string[];
+  correlations: any[];
+  predictions: any[];
+  recommendations: any[];
+}
+
 export interface SiteStructurePage {
   id: string;
   page_path: string;
   title: string;
-  description: string;
-  hub_name: string;
-  parent_path: string;
+  description?: string;
+  hub_name?: string;
+  parent_path?: string;
   is_active: boolean;
   requires_auth: boolean;
   page_type: string;
@@ -105,6 +117,18 @@ export interface SiteStructurePage {
     features: any[];
     integrations: any[];
   };
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+}
+
+export interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
 }

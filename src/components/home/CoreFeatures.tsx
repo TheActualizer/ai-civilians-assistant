@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calculator, LayoutGrid, MapPin, UserCheck, FileText, FileBarChart, ShoppingCart } from "lucide-react";
+import { Calculator, LayoutGrid, MapPin, UserCheck, FileText, FileBarChart, ShoppingCart, ChevronRight } from "lucide-react";
 
 export const CoreFeatures = () => {
   const navigate = useNavigate();
