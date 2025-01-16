@@ -8,14 +8,20 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Building2, Calculator, FileText, Map, DatabaseIcon, 
+  Building2, Calculator, FileText, Map, Database, 
   Code, Workflow, Brain, Network, Settings2,
   MessagesSquare, GitBranch, Bot
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
-type KnowledgeBaseEntry = Database['public']['Tables']['knowledge_base']['Row'];
+// Define the type for knowledge base entries
+type KnowledgeBaseEntry = {
+  id: string;
+  title: string;
+  content: string;
+  tags?: string[];
+  created_at: string;
+};
 
 export function ProjectOverview() {
   const [entries, setEntries] = useState<KnowledgeBaseEntry[]>([]);
@@ -165,7 +171,6 @@ export function ProjectOverview() {
               </CardHeader>
               <CardContent>
                 <div className="relative h-[400px] border border-gray-700 rounded-lg p-4">
-                  {/* Architecture visualization would go here */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center text-gray-400">
                       <Network className="h-16 w-16 mx-auto mb-4 text-primary/50" />
