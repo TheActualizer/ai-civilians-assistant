@@ -7,26 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface UIVersion {
-  id: string;
-  name: string;
-  route: string;
-  component_data: Record<string, any>;
-  version_type: string;
-  version_tags: string[];
-  performance_metrics: {
-    api_latency: number[];
-    render_time: number[];
-    memory_usage: number[];
-  };
-  integration_data: {
-    connected_services: string[];
-    api_dependencies: string[];
-    data_flow: string[];
-  };
-  created_at: string;
-}
+import type { UIVersion } from "@/components/GetStarted/types";
 
 export function VersionSelector() {
   const session = useSession();
@@ -49,7 +30,29 @@ export function VersionSelector() {
         if (error) throw error;
 
         console.log('Fetched versions:', data);
-        setVersions(data as UIVersion[]);
+        
+        // Transform the data to match UIVersion interface
+        const transformedData: UIVersion[] = (data || []).map(item => ({
+          id: item.id,
+          name: item.name,
+          route: item.route,
+          component_data: item.component_data || {},
+          version_type: item.version_type || 'page',
+          version_tags: item.version_tags || [],
+          performance_metrics: {
+            api_latency: (item.performance_metrics?.api_latency || []) as number[],
+            render_time: (item.performance_metrics?.render_time || []) as number[],
+            memory_usage: (item.performance_metrics?.memory_usage || []) as number[],
+          },
+          integration_data: {
+            connected_services: (item.integration_data?.connected_services || []) as string[],
+            api_dependencies: (item.integration_data?.api_dependencies || []) as string[],
+            data_flow: (item.integration_data?.data_flow || []) as string[],
+          },
+          created_at: item.created_at,
+        }));
+
+        setVersions(transformedData);
       } catch (error) {
         console.error('Error fetching versions:', error);
         toast({
@@ -78,7 +81,27 @@ export function VersionSelector() {
         (payload) => {
           console.log('Version update received:', payload);
           if (payload.eventType === 'INSERT') {
-            setVersions(prev => [payload.new as UIVersion, ...prev]);
+            const newVersion = payload.new;
+            const transformedVersion: UIVersion = {
+              id: newVersion.id,
+              name: newVersion.name,
+              route: newVersion.route,
+              component_data: newVersion.component_data || {},
+              version_type: newVersion.version_type || 'page',
+              version_tags: newVersion.version_tags || [],
+              performance_metrics: {
+                api_latency: (newVersion.performance_metrics?.api_latency || []) as number[],
+                render_time: (newVersion.performance_metrics?.render_time || []) as number[],
+                memory_usage: (newVersion.performance_metrics?.memory_usage || []) as number[],
+              },
+              integration_data: {
+                connected_services: (newVersion.integration_data?.connected_services || []) as string[],
+                api_dependencies: (newVersion.integration_data?.api_dependencies || []) as string[],
+                data_flow: (newVersion.integration_data?.data_flow || []) as string[],
+              },
+              created_at: newVersion.created_at,
+            };
+            setVersions(prev => [transformedVersion, ...prev]);
           }
         }
       )

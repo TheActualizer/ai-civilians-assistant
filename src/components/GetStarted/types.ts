@@ -149,3 +149,23 @@ export interface ApiExecutionLog {
   message: string;
   details?: any;
 }
+
+export interface UIVersion {
+  id: string;
+  name: string;
+  route: string;
+  component_data: Record<string, any>;
+  version_type: string;
+  version_tags: string[];
+  performance_metrics: {
+    api_latency: number[];
+    render_time: number[];
+    memory_usage: number[];
+  };
+  integration_data: {
+    connected_services: string[];
+    api_dependencies: string[];
+    data_flow: string[];
+  };
+  created_at: string;
+}
