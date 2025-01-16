@@ -1,11 +1,3 @@
-export interface AgentMessage {
-  role: string;
-  content: string;
-  agent?: string;
-  message?: string;
-  timestamp?: string;
-}
-
 export interface SystemLoad {
   cpu: number;
   memory: number;
@@ -36,26 +28,22 @@ export interface AgentMetricsData {
   };
 }
 
+export interface AgentMessage {
+  role: string;
+  content: string;
+  agent?: string;
+  message?: string;
+  timestamp?: string;
+}
+
 export interface ThreadAnalysis {
   id: string;
   page_path: string;
   thread_type: string;
   connection_status: string;
-  analysis_data: Record<string, any>;
-  suggested_connections: any[];
-  claude_feedback: string | null;
-  connection_score: number;
-  created_at: string;
-  updated_at: string;
   analysis_status: string;
-  last_analysis_timestamp: string | null;
-  analysis_frequency: number;
-  agent_feedback: Record<string, any>;
-  auto_analysis_enabled: boolean;
-  analysis_interval: number;
-  last_agent_sync: string;
+  analysis_data: Record<string, any>;
   system_load: SystemLoad;
-  agent_states: Record<string, string>;
   performance_metrics: {
     error_rate: number[];
     success_rate: number[];
@@ -66,4 +54,11 @@ export interface ThreadAnalysis {
     bandwidth: number[];
     connections: number[];
   };
+  agent_states: {
+    pro: string;
+    claude: string;
+    gemini: string;
+  };
+  last_analysis_timestamp: string;
+  connection_score?: number;
 }
