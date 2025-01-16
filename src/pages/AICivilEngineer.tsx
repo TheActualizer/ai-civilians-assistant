@@ -271,11 +271,20 @@ const AICivilEngineer = () => {
           
           <div className="flex-1 pt-16 px-6 pb-8">
             <div className="mb-8">
-              <AgentsPanel 
-                onMessage={handleAgentMessage}
-                onVoiceInput={handleVoiceInput}
-                messages={agentMessages}
-              />
+              <div className="flex items-center justify-between">
+                <AgentsPanel 
+                  onMessage={handleAgentMessage}
+                  onVoiceInput={handleVoiceInput}
+                  messages={agentMessages}
+                />
+                <Button
+                  onClick={() => navigate('/agent-monitoring')}
+                  className="ml-4 gap-2 bg-primary hover:bg-primary/90"
+                >
+                  Advanced Monitoring
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <Tabs defaultValue="property" className="w-full">

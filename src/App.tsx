@@ -12,6 +12,7 @@ import Calculations from "./pages/Calculations";
 import AddressValidation from "./pages/AddressValidation";
 import AICivilEngineer from "./pages/AICivilEngineer";
 import Assessment from "./pages/Assessment";
+import AgentMonitoring from "./pages/AgentMonitoring";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,7 +33,7 @@ function App() {
           <Route path="/address-validation" element={<AddressValidation />} />
           <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
           <Route path="/assessment" element={<Assessment />} />
-          {/* Add redirect from old route to new route */}
+          <Route path="/agent-monitoring" element={<AgentMonitoring />} />
           <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
         </Routes>
         <Toaster />
