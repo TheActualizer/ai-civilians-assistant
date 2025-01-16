@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { SiteStructureService, SiteStructurePage } from "@/services/site-structure/SiteStructureService";
+import { siteStructureService } from "@/services/site-structure/SiteStructureService";
+import type { SiteStructurePage } from "@/types/agent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -14,7 +15,7 @@ export function DynamicPage() {
     const loadPageData = async () => {
       try {
         console.log("🔄 Loading page data...", { hubName, pagePath });
-        const pages = await SiteStructureService.getPages();
+        const pages = await siteStructureService.getPages();
         const currentPage = pages.find(p => 
           (hubName && p.hub_name?.toLowerCase() === hubName.toLowerCase()) ||
           (pagePath && p.page_path === `/${pagePath}`)

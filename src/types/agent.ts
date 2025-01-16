@@ -54,9 +54,45 @@ export interface ThreadAnalysis {
 export interface AgentMessage {
   role: string;
   content: string;
-  timestamp: string;
+  timestamp?: string;
   agent?: string;
   message?: string;
+}
+
+export interface SystemAnalysis {
+  metrics: Record<string, any>;
+  patterns: Record<string, any>;
+  insights: string[];
+  correlations: any[];
+  predictions: any[];
+  recommendations: any[];
+}
+
+export interface SharedComputerState {
+  id: string;
+  session_id: string;
+  screen_sharing: {
+    active: boolean;
+    userId: string | null;
+  };
+  voice_chat: {
+    active: boolean;
+    participants: string[];
+  };
+  video_chat: {
+    active: boolean;
+    participants: string[];
+  };
+  active_users: string[];
+  system_metrics: SystemLoad;
+}
+
+export interface DifyAgent {
+  id: string;
+  name: string;
+  status: string;
+  type: string;
+  capabilities: string[];
 }
 
 export interface SiteStructurePage {
@@ -79,11 +115,14 @@ export interface SiteStructurePage {
   updated_at?: string;
 }
 
-export interface SystemAnalysis {
-  metrics: Record<string, any>;
-  patterns: Record<string, any>;
-  insights: string[];
-  correlations: any[];
-  predictions: any[];
-  recommendations: any[];
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+}
+
+export interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
 }

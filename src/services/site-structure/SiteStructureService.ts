@@ -25,12 +25,23 @@ class SiteStructureService {
 
       pagesData?.forEach(page => {
         const structuredPage: SiteStructurePage = {
-          ...page,
+          id: page.id,
+          page_path: page.page_path,
+          title: page.title,
+          description: page.description || '',
+          hub_name: page.hub_name || '',
+          parent_path: page.parent_path || '',
+          is_active: page.is_active || true,
+          requires_auth: page.requires_auth || false,
+          page_type: page.page_type || 'content',
+          metadata: page.metadata || {},
           component_data: {
             sections: page.component_data?.sections || [],
             features: page.component_data?.features || [],
             integrations: page.component_data?.integrations || []
-          }
+          },
+          created_at: page.created_at,
+          updated_at: page.updated_at
         };
         this.pages.set(page.page_path, structuredPage);
       });
@@ -41,26 +52,36 @@ class SiteStructureService {
     }
   }
 
-  async getPagesByHub(hubName: string): Promise<SiteStructurePage[]> {
+  async getPages(): Promise<SiteStructurePage[]> {
     try {
       const { data: pagesData, error } = await supabase
         .from('site_structure')
         .select('*')
-        .eq('hub_name', hubName)
         .eq('is_active', true);
 
       if (error) throw error;
 
       return pagesData.map(page => ({
-        ...page,
+        id: page.id,
+        page_path: page.page_path,
+        title: page.title,
+        description: page.description || '',
+        hub_name: page.hub_name || '',
+        parent_path: page.parent_path || '',
+        is_active: page.is_active || true,
+        requires_auth: page.requires_auth || false,
+        page_type: page.page_type || 'content',
+        metadata: page.metadata || {},
         component_data: {
           sections: page.component_data?.sections || [],
           features: page.component_data?.features || [],
           integrations: page.component_data?.integrations || []
-        }
+        },
+        created_at: page.created_at,
+        updated_at: page.updated_at
       }));
     } catch (error) {
-      console.error('Error fetching pages by hub:', error);
+      console.error('Error fetching pages:', error);
       return [];
     }
   }

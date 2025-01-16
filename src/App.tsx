@@ -7,21 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 import { DynamicPage } from "./components/DynamicPage/DynamicPage";
 
-// Preserve direct imports for critical pages
-import LearnMore from "./pages/LearnMore";
-import AICivilEngineer from "./pages/AICivilEngineer";
-import AreaCalculations from "./pages/AreaCalculations";
-
-// Legacy Pages
-import LegacyParcelAnalysis from "./pages/legacy/ParcelAnalysis";
-import LegacyPropertyDetails from "./pages/legacy/PropertyDetails";
-import LegacyAssessmentView from "./pages/legacy/AssessmentView";
-import LegacyAgentDashboard from "./pages/legacy/AgentDashboard";
-import LegacyDebugConsole from "./pages/legacy/DebugConsole";
-import LegacySystemIntelligence from "./pages/legacy/SystemIntelligence";
-import LegacySharedComputer from "./pages/legacy/SharedComputer";
-
-// Lazy loaded pages
+// Lazy load all pages
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
@@ -33,6 +19,18 @@ const Calculations = lazy(() => import("./pages/Calculations"));
 const AddressValidation = lazy(() => import("./pages/AddressValidation"));
 const Assessment = lazy(() => import("./pages/Assessment"));
 const AgentMonitoring = lazy(() => import("./pages/AgentMonitoring"));
+const LearnMore = lazy(() => import("./pages/LearnMore"));
+const AICivilEngineer = lazy(() => import("./pages/AICivilEngineer"));
+const AreaCalculations = lazy(() => import("./pages/AreaCalculations"));
+
+// Legacy Pages
+const LegacyParcelAnalysis = lazy(() => import("./pages/legacy/ParcelAnalysis"));
+const LegacyPropertyDetails = lazy(() => import("./pages/legacy/PropertyDetails"));
+const LegacyAssessmentView = lazy(() => import("./pages/legacy/AssessmentView"));
+const LegacyAgentDashboard = lazy(() => import("./pages/legacy/AgentDashboard"));
+const LegacyDebugConsole = lazy(() => import("./pages/legacy/DebugConsole"));
+const LegacySystemIntelligence = lazy(() => import("./pages/legacy/SystemIntelligence"));
+const LegacySharedComputer = lazy(() => import("./pages/legacy/SharedComputer"));
 
 // Enterprise Hub
 const EnterpriseOverview = lazy(() => import("./pages/enterprise/Overview"));
@@ -66,7 +64,18 @@ function App() {
         <Router>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
-              {/* Core Routes - Not Lazy Loaded */}
+              {/* Core Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/get-started" element={<GetStarted />} />
+              <Route path="/solutions" element={<Solutions />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/new-report" element={<NewReport />} />
+              <Route path="/calculations" element={<Calculations />} />
+              <Route path="/address-validation" element={<AddressValidation />} />
+              <Route path="/assessment" element={<Assessment />} />
+              <Route path="/agent-monitoring" element={<AgentMonitoring />} />
               <Route path="/learn-more" element={<LearnMore />} />
               <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
               <Route path="/area-calculations" element={<AreaCalculations />} />
@@ -85,18 +94,6 @@ function App() {
                 <Route index element={<DynamicPage />} />
                 <Route path=":pagePath" element={<DynamicPage />} />
               </Route>
-
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/get-started" element={<GetStarted />} />
-              <Route path="/solutions" element={<Solutions />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/new-report" element={<NewReport />} />
-              <Route path="/calculations" element={<Calculations />} />
-              <Route path="/address-validation" element={<AddressValidation />} />
-              <Route path="/assessment" element={<Assessment />} />
-              <Route path="/agent-monitoring" element={<AgentMonitoring />} />
 
               {/* Enterprise Hub */}
               <Route path="/enterprise">
