@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ChevronDown, Brain, Building2, Database, Shield, Network, Cloud, Code, Robot, BarChart2, Users, Briefcase, TrendingUp, Truck, CheckSquare, Lightbulb } from "lucide-react";
+import { ChevronDown, Brain, Building2, Database, Shield, Network, Cloud, Code, Bot, BarChart2, Users, Briefcase, TrendingUp, Truck, CheckSquare, Lightbulb } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
