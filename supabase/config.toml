@@ -25,6 +25,10 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions]]
+[functions.claude-health]
+verify_jwt = false
+
+[[functions]]
 [functions.gemini-compute]
 verify_jwt = false
 
