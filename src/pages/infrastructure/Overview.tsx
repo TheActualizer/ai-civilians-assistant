@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { testSystemLogs } from "@/utils/logTesting";
 import { Activity, AlertCircle, CheckCircle } from 'lucide-react';
+import { InfrastructureDashboard } from '@/components/Infrastructure/InfrastructureDashboard';
 
 export default function InfrastructureOverview() {
   const { toast } = useToast();
@@ -38,6 +39,8 @@ export default function InfrastructureOverview() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-100">Infrastructure Overview</h1>
       </div>
+
+      <InfrastructureDashboard />
 
       <Card className="bg-gray-900/50 border-gray-700">
         <CardHeader>
