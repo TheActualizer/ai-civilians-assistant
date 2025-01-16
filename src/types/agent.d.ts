@@ -5,19 +5,27 @@ export interface SystemLoad {
 }
 
 export interface AgentMetricsData {
-  system_load: SystemLoad;
-  performance_metrics: {
-    response_time: number[];
-    success_rate: number[];
-    error_rate: number[];
+  cpuUsage: number;
+  memoryUsage: number;
+  networkLatency: number;
+  activeFlows: number;
+  successRate: number;
+  totalInteractions: number;
+  system_load: {
+    cpu_threads: number[];
+    io_operations: number[];
+    memory_allocation: number[];
   };
-}
-
-export interface AgentMessage {
-  role: string;
-  content: string;
-  agent?: string;
-  timestamp?: string;
+  networkMetrics: {
+    bandwidth_usage: number[];
+    connection_pool: number[];
+    latency_history: number[];
+  };
+  performanceIndicators: {
+    error_rate: number[];
+    throughput: number[];
+    response_times: number[];
+  };
 }
 
 export interface ThreadAnalysis {
@@ -30,9 +38,24 @@ export interface ThreadAnalysis {
     success_rate: number[];
     error_rate: number[];
   };
+  network_stats: {
+    latency: number[];
+    bandwidth: number[];
+    connections: number[];
+  };
+  analysis_status: string;
+  last_analysis_timestamp: string;
+  connection_status: string;
+  connection_score: number;
   analysis_data: Record<string, any>;
   agent_states: Record<string, string>;
-  connection_score: number;
+}
+
+export interface AgentMessage {
+  role: string;
+  content: string;
+  timestamp?: string;
+  agent?: string;
 }
 
 export interface SharedComputerState {
@@ -49,31 +72,21 @@ export interface SharedComputerState {
     participants: string[];
   };
   active_users: string[];
-  browser_state: Record<string, any>;
+  browser_state: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
+  };
   system_load: SystemLoad;
-}
-
-export interface SystemAnalysis {
-  id: string;
-  analysis_type: string;
-  analysis_layer: string;
-  insights: string[];
-  metrics: Record<string, any>;
-  patterns: Record<string, any>;
-  correlations: string[];
-  predictions: string[];
-  recommendations: string[];
 }
 
 export interface DifyAgent {
   id: string;
   name: string;
   status: 'idle' | 'processing' | 'completed' | 'error';
-  backstory?: string;
-  systemPrompt?: string;
-  model?: string;
-  progress?: number;
-  documents?: boolean;
+  type?: string;
+  capabilities?: string[];
 }
 
 export interface SiteStructurePage {

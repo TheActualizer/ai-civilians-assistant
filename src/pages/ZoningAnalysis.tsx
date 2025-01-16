@@ -1,8 +1,38 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ZoningAnalysis() {
-  console.log('Rendering Zoning Analysis page');
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    console.log('Initializing Zoning Analysis page');
+    
+    const fetchZoningData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('property_requests')
+          .select('*')
+          .eq('status', 'completed')
+          .limit(1);
+
+        if (error) throw error;
+
+        console.log('Fetched zoning data:', data);
+      } catch (error) {
+        console.error('Error fetching zoning data:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load zoning data"
+        });
+      }
+    };
+
+    fetchZoningData();
+  }, [toast]);
   
   return (
     <div className="container mx-auto p-6">
