@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { motion, useAnimation, useInView } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion, useAnimation } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
 
 interface LazyLoadedSectionProps {
   children: React.ReactNode;
@@ -9,14 +10,13 @@ interface LazyLoadedSectionProps {
 
 export const LazyLoadedSection = ({ children, className = "", delay = 0 }: LazyLoadedSectionProps) => {
   const controls = useAnimation();
-  const ref = useRef(null);
-  const isInView = useInView(ref, {
-    once: true,
-    margin: "0px 0px -10% 0px"
+  const [ref, inView] = useInView({
+    threshold: 0.1,
+    triggerOnce: true
   });
 
   useEffect(() => {
-    if (isInView) {
+    if (inView) {
       controls.start({
         y: 0,
         opacity: 1,
@@ -27,7 +27,7 @@ export const LazyLoadedSection = ({ children, className = "", delay = 0 }: LazyL
         }
       });
     }
-  }, [isInView, controls, delay]);
+  }, [inView, controls, delay]);
 
   return (
     <motion.div

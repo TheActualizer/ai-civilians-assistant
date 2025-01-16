@@ -29,7 +29,7 @@ const Index = () => {
       route: '/',
       metrics: {
         executionTime: performance.now(),
-        memoryUsage: window.performance?.memory?.usedJSHeapSize || 0,
+        memoryUsage: 0, // Remove window.performance.memory access as it's not standard
         apiLatency: 0
       }
     });
