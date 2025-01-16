@@ -6,7 +6,6 @@ import { ProcessingStatus } from "@/components/GetStarted/ProcessingStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
 
 const Calculations = () => {
   const session = useSession();
@@ -69,7 +68,6 @@ const Calculations = () => {
           )}
         </div>
       </div>
-      <DebugPanel />
     </div>
   );
 };
