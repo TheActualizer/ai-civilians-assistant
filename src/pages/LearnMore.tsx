@@ -16,37 +16,37 @@ const LearnMore = () => {
     <div className="min-h-screen bg-gray-900">
       <Navbar session={session} />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Main content area with video call style layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
+      {/* Main workspace with video call quality layout */}
+      <div className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 min-h-[calc(100vh-8rem)]">
           
-          {/* Left panel - Command Center (2/3 width) */}
-          <div className="xl:col-span-2 space-y-4">
+          {/* Main Content Panel (2/3 width) - Command Center */}
+          <div className="xl:col-span-2 space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700/50"
+              className="bg-gray-800/50 backdrop-blur-xl rounded-xl p-8 border border-gray-700/50 shadow-2xl"
             >
-              <h1 className="text-3xl font-bold text-gray-100 mb-2">
+              <h1 className="text-4xl font-bold text-gray-100 mb-3">
                 System Command Center
               </h1>
-              <p className="text-lg text-gray-400">
+              <p className="text-xl text-gray-400">
                 Direct interface with Claude, CTO of our trillion-dollar tech company
               </p>
             </motion.div>
 
-            {/* Main video/content area */}
-            <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700/50 h-[calc(100vh-24rem)]">
-              <CardContent className="p-6 h-full">
+            {/* Main Command Interface */}
+            <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50 shadow-2xl min-h-[calc(100vh-24rem)]">
+              <CardContent className="p-8 h-full">
                 <Tabs defaultValue="command-center" className="h-full">
-                  <TabsList className="grid w-full grid-cols-3 bg-gray-900/50 backdrop-blur-sm border border-gray-700">
-                    <TabsTrigger value="command-center">Command Center</TabsTrigger>
-                    <TabsTrigger value="system-analysis">System Analysis</TabsTrigger>
-                    <TabsTrigger value="agent-coordination">Agent Coordination</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-3 bg-gray-900/50 backdrop-blur-xl border border-gray-700 rounded-xl">
+                    <TabsTrigger value="command-center" className="text-lg py-3">Command Center</TabsTrigger>
+                    <TabsTrigger value="system-analysis" className="text-lg py-3">System Analysis</TabsTrigger>
+                    <TabsTrigger value="agent-coordination" className="text-lg py-3">Agent Coordination</TabsTrigger>
                   </TabsList>
 
-                  <div className="mt-6 h-[calc(100%-4rem)] overflow-auto">
+                  <div className="mt-8 h-[calc(100%-5rem)] overflow-auto">
                     <TabsContent value="command-center" className="h-full">
                       <ClaudeAnalysis 
                         pageRoute="/learn-more"
@@ -60,18 +60,18 @@ const LearnMore = () => {
 
                     <TabsContent value="system-analysis">
                       <div className="text-center text-gray-400 h-full flex items-center justify-center">
-                        <div className="space-y-4">
-                          <Terminal className="h-12 w-12 mx-auto text-gray-500" />
-                          <p>System analysis module will be activated soon...</p>
+                        <div className="space-y-6">
+                          <Terminal className="h-16 w-16 mx-auto text-gray-500" />
+                          <p className="text-xl">System analysis module will be activated soon...</p>
                         </div>
                       </div>
                     </TabsContent>
 
                     <TabsContent value="agent-coordination">
                       <div className="text-center text-gray-400 h-full flex items-center justify-center">
-                        <div className="space-y-4">
-                          <Network className="h-12 w-12 mx-auto text-gray-500" />
-                          <p>Agent coordination module will be activated soon...</p>
+                        <div className="space-y-6">
+                          <Network className="h-16 w-16 mx-auto text-gray-500" />
+                          <p className="text-xl">Agent coordination module will be activated soon...</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -81,35 +81,35 @@ const LearnMore = () => {
             </Card>
           </div>
 
-          {/* Right panel - Metrics & Controls (1/3 width) */}
-          <div className="space-y-4">
-            {/* Quick action cards */}
-            <div className="grid grid-cols-2 xl:grid-cols-1 gap-4">
-              <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
-                <CardHeader className="flex flex-row items-center gap-2 p-4">
-                  <Terminal className="h-5 w-5 text-green-400" />
-                  <CardTitle className="text-sm text-gray-100">Command Interface</CardTitle>
+          {/* Right Panel (1/3 width) - Metrics & Controls */}
+          <div className="space-y-6">
+            {/* Quick Action Cards */}
+            <div className="grid grid-cols-2 xl:grid-cols-1 gap-6">
+              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+                <CardHeader className="flex flex-row items-center gap-3 p-6">
+                  <Terminal className="h-6 w-6 text-green-400" />
+                  <CardTitle className="text-lg text-gray-100">Command Interface</CardTitle>
                 </CardHeader>
               </Card>
 
-              <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
-                <CardHeader className="flex flex-row items-center gap-2 p-4">
-                  <Network className="h-5 w-5 text-blue-400" />
-                  <CardTitle className="text-sm text-gray-100">Thread Analysis</CardTitle>
+              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+                <CardHeader className="flex flex-row items-center gap-3 p-6">
+                  <Network className="h-6 w-6 text-blue-400" />
+                  <CardTitle className="text-lg text-gray-100">Thread Analysis</CardTitle>
                 </CardHeader>
               </Card>
             </div>
 
-            {/* Metrics panel */}
+            {/* Metrics Panel */}
             {activeThreadId && (
-              <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
+              <Card className="bg-gray-800/50 backdrop-blur-xl border-gray-700/50 shadow-2xl">
                 <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Cpu className="h-5 w-5 text-purple-400" />
-                    <CardTitle className="text-gray-100">System Metrics</CardTitle>
+                  <div className="flex items-center gap-3 p-2">
+                    <Cpu className="h-6 w-6 text-purple-400" />
+                    <CardTitle className="text-lg text-gray-100">System Metrics</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4">
+                <CardContent className="p-6">
                   <ClaudeMetrics threadId={activeThreadId} />
                 </CardContent>
               </Card>
