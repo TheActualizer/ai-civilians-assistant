@@ -2,18 +2,26 @@ export interface SystemLoad {
   cpu: number;
   memory: number;
   network: number;
+  cpu_threads?: number[];
+  io_operations?: number[];
+  memory_allocation?: number[];
 }
 
 export interface NetworkStats {
   latency: number[];
   bandwidth: number[];
   connections: number[];
+  bandwidth_usage?: number[];
+  connection_pool?: number[];
+  latency_history?: number[];
 }
 
 export interface PerformanceMetrics {
   response_time: number[];
   success_rate: number[];
   error_rate: number[];
+  throughput?: number[];
+  response_times?: number[];
 }
 
 export interface AgentMetricsData {
@@ -24,11 +32,7 @@ export interface AgentMetricsData {
   successRate: number;
   totalInteractions: number;
   system_load: SystemLoad;
-  networkMetrics: {
-    bandwidth_usage: number[];
-    connection_pool: number[];
-    latency_history: number[];
-  };
+  networkMetrics: NetworkStats;
   performanceIndicators: {
     error_rate: number[];
     throughput: number[];
@@ -39,7 +43,7 @@ export interface AgentMetricsData {
 export interface AgentMessage {
   role: string;
   content: string;
-  timestamp: string;
+  timestamp?: string;
   agent?: string;
   message?: string;
 }
@@ -56,7 +60,10 @@ export interface ThreadAnalysis {
   connection_status: string;
   connection_score: number;
   analysis_data: Record<string, any>;
-  agent_states: Record<string, string>;
+  agent_states: Record<string, any>;
+  agent_feedback?: Record<string, any>;
+  auto_analysis_enabled?: boolean;
+  analysis_interval?: number;
 }
 
 export interface ServiceMetrics {
@@ -77,6 +84,18 @@ export interface ServiceMetrics {
   };
 }
 
+export interface ApiMetric {
+  id: string;
+  service_name: string;
+  endpoint: string;
+  response_time: number;
+  success_rate: number;
+  error_count: number;
+  total_requests: number;
+  performance_data: Record<string, any>;
+  system_metrics: SystemLoad;
+}
+
 export interface DifyAgent {
   id: string;
   name: string;
@@ -87,5 +106,45 @@ export interface DifyAgent {
   model?: string;
   progress?: number;
   documents?: string[];
-  lastAction?: string;
+}
+
+export interface SiteStructurePage {
+  id: string;
+  page_path: string;
+  title: string;
+  description?: string;
+  hub_name?: string;
+  parent_path?: string;
+  is_active: boolean;
+  requires_auth: boolean;
+  page_type: string;
+  metadata: Record<string, any>;
+  component_data: {
+    sections: any[];
+    features: any[];
+    integrations: any[];
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SharedComputerState {
+  session_id: string;
+  screen_sharing: {
+    active: boolean;
+    userId: string | null;
+    resolution?: string;
+  };
+  voice_chat: {
+    active: boolean;
+    participants: string[];
+    quality?: string;
+  };
+  video_chat: {
+    active: boolean;
+    participants: string[];
+    quality?: string;
+  };
+  active_users: string[];
+  system_metrics: SystemLoad;
 }

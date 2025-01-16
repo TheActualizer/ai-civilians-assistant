@@ -61,11 +61,13 @@
   }
 }
 
-@layer utilities {
+@layer components {
   .glass-morphism {
     @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-white/20 dark:border-gray-800/20;
   }
+}
 
+@layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r;
   }
