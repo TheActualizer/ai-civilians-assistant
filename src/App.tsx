@@ -13,6 +13,7 @@ import AddressValidation from "./pages/AddressValidation";
 import AICivilEngineer from "./pages/AICivilEngineer";
 import Assessment from "./pages/Assessment";
 import AgentMonitoring from "./pages/AgentMonitoring";
+import AIChat from "./pages/AIChat";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 import { DebugProvider } from "@/lib/debug-panel/context/DebugContext";
@@ -37,6 +38,7 @@ function App() {
             <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
             <Route path="/assessment" element={<Assessment />} />
             <Route path="/agent-monitoring" element={<AgentMonitoring />} />
+            <Route path="/ai-chat" element={<AIChat />} />
             <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
           </Routes>
           <DebugPanel />
