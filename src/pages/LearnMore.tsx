@@ -1,7 +1,6 @@
 import { useSession } from "@supabase/auth-helpers-react";
 import { motion } from "framer-motion";
 import { Brain, Sparkles, Zap, Terminal, Network, Cpu, Boxes, LayoutGrid, Workflow, Activity, Globe, Cloud, Lock, Shield, Database, Monitor, Share2, Video, Mic, Camera } from "lucide-react";
-import Navbar from "@/components/Navbar";
 import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
 import { ClaudeMetrics } from "@/components/Agents/ClaudeMetrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,8 +16,6 @@ const LearnMore = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
-      <Navbar session={session} />
-      
       <div className="container mx-auto px-8 py-12 max-w-[2400px]">
         {/* Enterprise Command Center Hero */}
         <motion.div

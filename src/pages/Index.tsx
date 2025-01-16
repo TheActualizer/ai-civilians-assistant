@@ -25,6 +25,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 pt-6 pb-12">
+        {/* Main Content */}
         <div className="text-center mb-12">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
@@ -43,6 +44,7 @@ const Index = () => {
           </motion.p>
         </div>
 
+        {/* Rest of the content */}
         {/* Main AI Assistant Button */}
         <motion.div 
           initial={{ scale: 0.95, opacity: 0 }}

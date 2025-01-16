@@ -1,4 +1,5 @@
 import { useSession } from "@supabase/auth-helpers-react";
+import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import Navbar from "../Navbar";
 import { NavigationControls } from "../navigation/NavigationControls";
 import { DebugPanel } from "../DebugPanel/DebugPanel";
