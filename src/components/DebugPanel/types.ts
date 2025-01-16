@@ -22,3 +22,5 @@ export interface DebugPanelProps {
   onRetry: () => void;
   onMessageSubmit: (message: string) => void;
 }
+
+export type PanelPosition = "right" | "left" | "bottom";

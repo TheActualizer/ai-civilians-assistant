@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { 
   Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, 
   Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, 
   ArrowRight, ArrowDown, Rocket, CircuitBoard, Dna, Infinity,
-  Upload, Paperclip
+  Upload, Paperclip, GripVertical
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Toggle } from "@/components/ui/toggle";
-import type { DebugPanelProps } from "./types";
+import type { DebugPanelProps, PanelPosition } from "./types";
+
+const MIN_WIDTH = 400;
+const MAX_WIDTH = 800;
+const DEFAULT_WIDTH = 600;
 
 export function DebugPanel({
   isLoading,
@@ -28,11 +32,17 @@ export function DebugPanel({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<"detailed" | "compact">("detailed");
   const [activeViews, setActiveViews] = useState<string[]>(["history", "error", "request"]);
-  const [position, setPosition] = useState<"right" | "left" | "bottom">("right");
+  const [position, setPosition] = useState<PanelPosition>("right");
   const [isMinimized, setIsMinimized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [expandedFeatures, setExpandedFeatures] = useState(false);
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -59,21 +69,63 @@ export function DebugPanel({
     );
   };
 
+  const startResize = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    startX.current = e.clientX;
+    startWidth.current = width;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResize);
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging.current) return;
+    
+    const delta = position === 'right' 
+      ? startX.current - e.clientX 
+      : e.clientX - startX.current;
+    
+    const newWidth = Math.min(
+      Math.max(startWidth.current + delta, MIN_WIDTH),
+      MAX_WIDTH
+    );
+    
+    setWidth(newWidth);
+  }, [position]);
+
+  const stopResize = useCallback(() => {
+    isDragging.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', stopResize);
+  }, [handleMouseMove]);
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResize);
+    };
+  }, [handleMouseMove, stopResize]);
+
   const getPositionClasses = () => {
+    const baseClasses = "fixed transition-all duration-300 ease-in-out bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50";
+    
+    if (isFullscreen) return `${baseClasses} inset-0 w-full h-full`;
+    
+    if (isMinimized) return `${baseClasses} ${position === 'right' ? 'right-0' : position === 'left' ? 'left-0' : 'bottom-0'} h-12`;
+    
     switch (position) {
       case "left":
-        return "left-0";
+        return `${baseClasses} left-0 h-screen border-r ${isCollapsed ? 'w-16' : `w-[${width}px]`}`;
       case "right":
-        return "right-0";
+        return `${baseClasses} right-0 h-screen border-l ${isCollapsed ? 'w-16' : `w-[${width}px]`}`;
       case "bottom":
-        return "bottom-0 w-full h-[300px]";
+        return `${baseClasses} bottom-0 w-full h-[300px] border-t`;
       default:
-        return "right-0";
+        return `${baseClasses} right-0`;
     }
   };
 
   const cyclePosition = () => {
-    const positions: ("right" | "left" | "bottom")[] = ["right", "left", "bottom"];
+    const positions: PanelPosition[] = ["right", "left", "bottom"];
     const currentIndex = positions.indexOf(position);
     const nextIndex = (currentIndex + 1) % positions.length;
     setPosition(positions[nextIndex]);
@@ -155,7 +207,7 @@ export function DebugPanel({
 
     return (
       <>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-4">
           <div className="text-sm text-gray-400">
             Request ID: <span className="font-mono">{requestId || 'Not available'}</span>
           </div>
@@ -172,7 +224,7 @@ export function DebugPanel({
 
         {activeTab === 'advanced' && renderAdvancedControls()}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-4">
           <Toggle 
             pressed={activeViews.includes('history')} 
             onPressedChange={() => toggleView('history')}
@@ -196,7 +248,7 @@ export function DebugPanel({
           </Toggle>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-4">
           <Button 
             onClick={onRetry} 
             variant="outline"
@@ -237,131 +289,147 @@ export function DebugPanel({
           </form>
         </div>
 
-        {activeViews.includes('error') && apiError && (
-          <Card className="bg-red-900/20 border-red-800/50 transition-colors hover:bg-red-900/30">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <XCircle className="h-5 w-5 text-red-400" />
-                <CardTitle className="text-red-300">API Error</CardTitle>
-                <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700">
-                  {new Date(apiError.timestamp).toLocaleTimeString()}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-red-300">{apiError.message}</p>
-              {apiError.details && viewMode === "detailed" && (
-                <ScrollArea className="h-[100px] mt-2 rounded-md border border-red-800/30 bg-red-900/10 p-4">
-                  <pre className="text-sm font-mono text-red-300">
-                    {JSON.stringify(apiError.details, null, 2)}
-                  </pre>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {activeViews.includes('history') && (
-          <Card className="bg-gray-800/40 border-gray-700 transition-colors hover:bg-gray-800/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">API Call History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px] pr-4">
-                <div className="space-y-4">
-                  {apiCallHistory.map((entry, index) => (
-                    <div 
-                      key={index} 
-                      className={`border-l-2 pl-4 py-2 transition-colors ${
-                        entry.event.includes('Error') 
-                          ? 'border-red-500 bg-red-900/20 hover:bg-red-900/30' 
-                          : 'border-primary bg-gray-800/40 hover:bg-gray-800/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant="outline" 
-                          className={entry.event.includes('Error') 
-                            ? 'bg-red-900/30 border-red-700' 
-                            : 'bg-primary/10 border-primary/50'
-                          }
-                        >
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </Badge>
-                        <span className={`font-medium ${
-                          entry.event.includes('Error') 
-                            ? 'text-red-300' 
-                            : 'text-gray-300'
-                        }`}>
-                          {entry.event}
-                        </span>
-                      </div>
-                      {entry.details && viewMode === "detailed" && (
-                        <pre className={`mt-2 text-sm p-2 rounded-md font-mono ${
-                          entry.event.includes('Error') 
-                            ? 'bg-red-900/10 text-red-300' 
-                            : 'bg-gray-800/60 text-gray-300'
-                        }`}>
-                          {JSON.stringify(entry.details, null, 2)}
-                        </pre>
-                      )}
-                    </div>
-                  ))}
+        <div className="space-y-4">
+          {activeViews.includes('error') && apiError && (
+            <Card className="bg-red-900/20 border-red-800/50 transition-colors hover:bg-red-900/30">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-red-400" />
+                  <CardTitle className="text-red-300">API Error</CardTitle>
+                  <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700">
+                    {new Date(apiError.timestamp).toLocaleTimeString()}
+                  </Badge>
                 </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
+              </CardHeader>
+              <CardContent>
+                <p className="text-red-300">{apiError.message}</p>
+                {apiError.details && viewMode === "detailed" && (
+                  <ScrollArea className="h-[100px] mt-2 rounded-md border border-red-800/30 bg-red-900/10 p-4">
+                    <pre className="text-sm font-mono text-red-300">
+                      {JSON.stringify(apiError.details, null, 2)}
+                    </pre>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {activeViews.includes('history') && (
+            <Card className="bg-gray-800/40 border-gray-700 transition-colors hover:bg-gray-800/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-300">API Call History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="space-y-4">
+                    {apiCallHistory.map((entry, index) => (
+                      <div 
+                        key={index} 
+                        className={`border-l-2 pl-4 py-2 transition-colors ${
+                          entry.event.includes('Error') 
+                            ? 'border-red-500 bg-red-900/20 hover:bg-red-900/30' 
+                            : 'border-primary bg-gray-800/40 hover:bg-gray-800/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={entry.event.includes('Error') 
+                              ? 'bg-red-900/30 border-red-700' 
+                              : 'bg-primary/10 border-primary/50'
+                            }
+                          >
+                            {new Date(entry.timestamp).toLocaleTimeString()}
+                          </Badge>
+                          <span className={`font-medium ${
+                            entry.event.includes('Error') 
+                              ? 'text-red-300' 
+                              : 'text-gray-300'
+                          }`}>
+                            {entry.event}
+                          </span>
+                        </div>
+                        {entry.details && viewMode === "detailed" && (
+                          <pre className={`mt-2 text-sm p-2 rounded-md font-mono ${
+                            entry.event.includes('Error') 
+                              ? 'bg-red-900/10 text-red-300' 
+                              : 'bg-gray-800/60 text-gray-300'
+                          }`}>
+                            {JSON.stringify(entry.details, null, 2)}
+                          </pre>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </>
     );
   };
 
   return (
-    <div 
-      className={`fixed transition-all duration-300 ease-in-out 
-        ${isFullscreen ? 'inset-0 w-full h-full' : `${getPositionClasses()} ${
-          isMinimized ? 'h-12' : position === 'bottom' ? 'h-[300px]' : 'h-screen'
-        } ${isCollapsed ? 'w-16' : position === 'bottom' ? 'w-full' : 'w-[600px]'}`}
-        bg-gray-900/95 backdrop-blur-sm border-gray-700/50 shadow-xl z-50
-        ${!isFullscreen && (position === 'left' ? 'border-r' : position === 'right' ? 'border-l' : 'border-t')}`}
-    >
-      <div className="p-4 space-y-4 h-full flex flex-col">
-        <div className="flex justify-between items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
-            >
-              {isCollapsed ? <Layout className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-            </Button>
-            {!isCollapsed && (
-              <>
-                <Terminal className="h-5 w-5 text-primary animate-pulse" />
-                <h2 className="font-semibold text-gray-100">Advanced Debug Console</h2>
-                {error && (
-                  <Badge variant="destructive" className="animate-pulse">
-                    <Bug className="w-4 h-4 mr-1" />
-                    Error
-                  </Badge>
-                )}
-              </>
-            )}
+    <>
+      <div className={getPositionClasses()}>
+        {!isMinimized && (position === 'left' || position === 'right') && !isFullscreen && (
+          <div
+            ref={resizeRef}
+            className={`absolute top-0 ${position === 'left' ? 'right-0' : 'left-0'} h-full w-1 cursor-col-resize group`}
+            onMouseDown={startResize}
+          >
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full bg-gray-700/50 opacity-0 group-hover:opacity-100 transition-opacity">
+              <GripVertical className="h-4 w-4 text-gray-400" />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleFullscreenToggle}
-              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
-            >
-              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
+        )}
+        <div className="p-4 space-y-4 h-full flex flex-col">
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+              >
+                {isCollapsed ? <Layout className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+              </Button>
+              {!isCollapsed && (
+                <>
+                  <Terminal className="h-5 w-5 text-primary animate-pulse" />
+                  <h2 className="font-semibold text-gray-100">Advanced Debug Console</h2>
+                  {error && (
+                    <Badge variant="destructive" className="animate-pulse">
+                      <Bug className="w-4 h-4 mr-1" />
+                      Error
+                    </Badge>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={cyclePosition}
+                className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+              >
+                {getPositionIcon()}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+              >
+                {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
+          {renderContent()}
         </div>
-        {renderContent()}
       </div>
-    </div>
+    </>
   );
 }
