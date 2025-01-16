@@ -2,7 +2,8 @@ import { useState, useCallback } from "react";
 import { 
   Terminal, RefreshCw, Send, Bug, XCircle, AlertCircle, 
   Maximize2, Minimize2, Layout, LayoutGrid, ArrowLeft, 
-  ArrowRight, ArrowDown, Rocket, CircuitBoard, Dna, Infinity
+  ArrowRight, ArrowDown, Rocket, CircuitBoard, Dna, Infinity,
+  Upload, Paperclip
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,15 @@ export function DebugPanel({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [expandedFeatures, setExpandedFeatures] = useState(false);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('File selected:', file.name);
+      // Here you can handle the file upload
+      // For now we'll just log it
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,12 +208,28 @@ export function DebugPanel({
           </Button>
           
           <form onSubmit={handleSubmit} className="flex-1 flex gap-2">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Debug message..."
-              className="flex-1 bg-gray-800/50 border-gray-700 focus:border-primary/50 transition-colors"
-            />
+            <div className="flex-1 flex gap-2 relative">
+              <Input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Debug message..."
+                className="flex-1 bg-gray-800/50 border-gray-700 focus:border-primary/50 transition-colors pr-24"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <label 
+                  htmlFor="file-upload" 
+                  className="cursor-pointer p-1.5 hover:bg-gray-700/50 rounded-md transition-colors"
+                >
+                  <Paperclip className="h-4 w-4 text-gray-400 hover:text-gray-200" />
+                  <input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                </label>
+              </div>
+            </div>
             <Button type="submit" variant="secondary" className="gap-2 bg-gray-800 hover:bg-gray-700 transition-colors">
               <Send className="h-4 w-4" />
               Send
