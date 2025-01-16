@@ -65,7 +65,10 @@ export type Database = {
           memory_usage: number | null
           metrics_data: Json | null
           network_latency: number | null
+          network_metrics: Json | null
+          performance_indicators: Json | null
           success_rate: number | null
+          system_load: Json | null
           timestamp: string | null
           total_interactions: number | null
         }
@@ -77,7 +80,10 @@ export type Database = {
           memory_usage?: number | null
           metrics_data?: Json | null
           network_latency?: number | null
+          network_metrics?: Json | null
+          performance_indicators?: Json | null
           success_rate?: number | null
+          system_load?: Json | null
           timestamp?: string | null
           total_interactions?: number | null
         }
@@ -89,7 +95,10 @@ export type Database = {
           memory_usage?: number | null
           metrics_data?: Json | null
           network_latency?: number | null
+          network_metrics?: Json | null
+          performance_indicators?: Json | null
           success_rate?: number | null
+          system_load?: Json | null
           timestamp?: string | null
           total_interactions?: number | null
         }
@@ -554,6 +563,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_events: {
+        Row: {
+          component: string
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          related_agents: string[] | null
+          severity: string
+        }
+        Insert: {
+          component: string
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          related_agents?: string[] | null
+          severity: string
+        }
+        Update: {
+          component?: string
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          related_agents?: string[] | null
+          severity?: string
+        }
+        Relationships: []
       }
     }
     Views: {
