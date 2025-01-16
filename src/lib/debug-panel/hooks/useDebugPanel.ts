@@ -5,10 +5,18 @@ export const useDebugPanel = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<"detailed" | "compact">("detailed");
   const [position, setPosition] = useState<"right" | "left" | "bottom">("right");
-  const [isMinimized, setIsMinimized] = useState(true); // Start minimized
+  const [isMinimized, setIsMinimized] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const debug = useDebug();
+
+  console.log("useDebugPanel hook state:", {
+    isCollapsed,
+    viewMode,
+    position,
+    isMinimized,
+    isFullscreen
+  });
 
   const handleRetry = useCallback(() => {
     debug.addToHistory("Retry requested");

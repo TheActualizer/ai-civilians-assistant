@@ -7,6 +7,12 @@ import { useDebugPanel } from "@/lib/debug-panel/hooks/useDebugPanel";
 export function DebugPanel() {
   const { state, actions } = useDebugPanel();
 
+  console.log("DebugPanel mounting with state:", {
+    isMinimized: state.isMinimized,
+    isCollapsed: state.isCollapsed,
+    position: state.position
+  });
+
   const getPositionClasses = () => {
     switch (state.position) {
       case "left":
@@ -20,7 +26,24 @@ export function DebugPanel() {
     }
   };
 
-  if (state.isMinimized || state.isCollapsed) return null;
+  // Show minimized state instead of returning null
+  if (state.isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => actions.setIsMinimized(false)}
+          className="bg-gray-900 text-white hover:bg-gray-800 gap-2"
+        >
+          <Terminal className="h-4 w-4" />
+          Debug Console
+        </Button>
+      </div>
+    );
+  }
+
+  if (state.isCollapsed) return null;
 
   return (
     <div 
