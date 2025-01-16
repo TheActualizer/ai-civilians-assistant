@@ -1,4 +1,4 @@
 project_id = "aocjoukjdsoynvbuzvas"
 
-[functions.crewai-architect]
+[rtc-signaling]
 verify_jwt = true

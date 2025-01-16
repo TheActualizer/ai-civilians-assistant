@@ -303,6 +303,42 @@ export type Database = {
           },
         ]
       }
+      communication_sessions: {
+        Row: {
+          created_at: string | null
+          ended_at: string | null
+          id: string
+          metrics: Json | null
+          participants: Json | null
+          session_data: Json | null
+          session_type: string
+          started_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          metrics?: Json | null
+          participants?: Json | null
+          session_data?: Json | null
+          session_type: string
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          metrics?: Json | null
+          participants?: Json | null
+          session_data?: Json | null
+          session_type?: string
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       computation_registry: {
         Row: {
           assigned_service: string | null
@@ -892,6 +928,45 @@ export type Database = {
         }
         Relationships: []
       }
+      microservice_endpoints: {
+        Row: {
+          created_at: string | null
+          endpoint_url: string
+          health_check_interval: number | null
+          id: string
+          last_health_check: string | null
+          performance_metrics: Json | null
+          service_name: string
+          service_type: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint_url: string
+          health_check_interval?: number | null
+          id?: string
+          last_health_check?: string | null
+          performance_metrics?: Json | null
+          service_name: string
+          service_type: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint_url?: string
+          health_check_interval?: number | null
+          id?: string
+          last_health_check?: string | null
+          performance_metrics?: Json | null
+          service_name?: string
+          service_type?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       microservice_registry: {
         Row: {
           created_at: string | null
@@ -1310,6 +1385,45 @@ export type Database = {
           status?: string
           updated_at?: string | null
           version_ids?: string[]
+        }
+        Relationships: []
+      }
+      rendering_jobs: {
+        Row: {
+          created_at: string | null
+          id: string
+          output_url: string | null
+          performance_metrics: Json | null
+          priority: number | null
+          render_settings: Json | null
+          render_time: number | null
+          scene_data: Json
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          output_url?: string | null
+          performance_metrics?: Json | null
+          priority?: number | null
+          render_settings?: Json | null
+          render_time?: number | null
+          scene_data: Json
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          output_url?: string | null
+          performance_metrics?: Json | null
+          priority?: number | null
+          render_settings?: Json | null
+          render_time?: number | null
+          scene_data?: Json
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
