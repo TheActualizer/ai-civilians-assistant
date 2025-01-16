@@ -18,17 +18,31 @@ export function NotificationFeed() {
   
   // Keep track of recently shown notifications to prevent duplicates
   const recentNotifications = new Set<string>();
+  const [errorCount, setErrorCount] = useState(0);
+  const ERROR_THRESHOLD = 3; // Maximum number of errors to show in a 5-second window
+  const ERROR_RESET_INTERVAL = 5000; // 5 seconds
 
   const handleNewNotification = useCallback((log: any) => {
     // Create a unique key for deduplication
     const notificationKey = `${log.level}-${log.message}`;
     
-    // Check if this is a duplicate notification within the last 5 seconds
+    // Check if this is a duplicate notification
     if (recentNotifications.has(notificationKey)) {
       return;
     }
 
-    // Only show critical notifications
+    // For error notifications, check against threshold
+    if (log.level === 'error') {
+      if (errorCount >= ERROR_THRESHOLD) {
+        console.log('🚫 Error notification suppressed due to threshold');
+        return;
+      }
+      setErrorCount(prev => prev + 1);
+      // Reset error count after interval
+      setTimeout(() => setErrorCount(prev => Math.max(0, prev - 1)), ERROR_RESET_INTERVAL);
+    }
+
+    // Only show important notifications
     if (log.level === 'error' || 
         (log.level === 'warning' && log.message.includes('critical')) ||
         (log.level === 'info' && (
@@ -40,7 +54,7 @@ export function NotificationFeed() {
       recentNotifications.add(notificationKey);
       setTimeout(() => {
         recentNotifications.delete(notificationKey);
-      }, 5000);
+      }, ERROR_RESET_INTERVAL);
 
       // Add new notification
       setNotifications(prev => [{
@@ -48,13 +62,13 @@ export function NotificationFeed() {
         type: log.level as 'success' | 'error' | 'warning' | 'info',
         message: log.message,
         timestamp: new Date(log.timestamp)
-      }, ...prev].slice(0, 10)); // Keep only last 10 notifications
+      }, ...prev].slice(0, 5)); // Keep only last 5 notifications
 
-      // Show toast for errors and critical warnings
-      if (log.level === 'error' || (log.level === 'warning' && log.message.includes('critical'))) {
+      // Show toast only for critical errors
+      if (log.level === 'error' && log.message.includes('critical')) {
         toast({
-          variant: log.level === 'error' ? 'destructive' : 'warning',
-          title: log.level === 'error' ? 'Error' : 'Warning',
+          variant: 'destructive',
+          title: 'Critical Error',
           description: log.message,
         });
       }
@@ -62,7 +76,7 @@ export function NotificationFeed() {
       // Log to console for debugging
       console.log(`🔔 New ${log.level} notification:`, log.message);
     }
-  }, [toast]);
+  }, [toast, errorCount]);
 
   useEffect(() => {
     console.log('🎯 Setting up notification feed subscription');
@@ -112,7 +126,7 @@ export function NotificationFeed() {
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="flex items-start gap-3 p-2 rounded-md bg-muted/50"
+                className="flex items-start gap-3 p-2 rounded-md bg-muted/50 transition-all duration-200 hover:bg-muted"
               >
                 {getIcon(notification.type)}
                 <div className="flex-1 space-y-1">
