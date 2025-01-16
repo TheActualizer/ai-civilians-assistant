@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { DebugPanel } from "@/components/DebugPanel/DebugPanel";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight } from "lucide-react";
+import { PropertyTab } from "@/components/ParcelDetails/PropertyTab";
+import { AddressTab } from "@/components/ParcelDetails/AddressTab";
+import { AdditionalTab } from "@/components/ParcelDetails/AdditionalTab";
+import { ParsedTab } from "@/components/ParcelDetails/ParsedTab";
+import { RawTab } from "@/components/ParcelDetails/RawTab";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -158,62 +158,6 @@ const ParcelDetails = () => {
     fetchLatestRequest();
   }, [toast]);
 
-  const renderPropertyDetails = () => {
-    if (!lightboxData) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No property details available</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {lightboxData.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
-            <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="text-sm font-medium text-gray-500 capitalize">
-                {key.replace(/([A-Z])/g, ' $1').trim()}
-              </h3>
-              <p className="mt-1 text-lg">{value || 'Not available'}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderAdditionalDetails = () => {
-    if (!lightboxData) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No additional details available</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">Processing Status</h3>
-            <Badge className="mt-2" variant={lightboxData.lightbox_processed ? "default" : "secondary"}>
-              {lightboxData.lightbox_processed ? "Processed" : "Pending"}
-            </Badge>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">Processing Time</h3>
-            <p className="mt-1">
-              {lightboxData.processed_at 
-                ? new Date(lightboxData.processed_at).toLocaleString()
-                : 'Not processed yet'}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar session={session} />
@@ -233,180 +177,32 @@ const ParcelDetails = () => {
           <div className="flex-1 pt-16 px-6 pb-8">
             <Tabs defaultValue="property" className="w-full">
               <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 backdrop-blur-sm border border-gray-700 p-1">
-                <TabsTrigger 
-                  value="property"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Property
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="address"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Address
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="additional"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Info className="h-4 w-4 mr-2" />
-                  Additional
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="parsed"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Parsed
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="raw"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Database className="h-4 w-4 mr-2" />
-                  Raw
-                </TabsTrigger>
+                <TabsTrigger value="property">Property</TabsTrigger>
+                <TabsTrigger value="address">Address</TabsTrigger>
+                <TabsTrigger value="additional">Additional</TabsTrigger>
+                <TabsTrigger value="parsed">Parsed</TabsTrigger>
+                <TabsTrigger value="raw">Raw</TabsTrigger>
               </TabsList>
 
               <div className="mt-6 space-y-6">
                 <TabsContent value="property">
-                  <Card className="bg-gray-800/40 border-gray-700 backdrop-blur-sm shadow-lg">
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-gray-100">Property Analysis</CardTitle>
-                      </div>
-                      <CardDescription className="text-gray-400">Comprehensive property details from LightBox</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {renderPropertyDetails()}
-                    </CardContent>
-                  </Card>
+                  <PropertyTab lightboxData={lightboxData} />
                 </TabsContent>
 
                 <TabsContent value="address">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-primary" />
-                        <CardTitle>Address Details</CardTitle>
-                      </div>
-                      <CardDescription>Verified address information</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 className="text-sm font-medium text-gray-500">Street Address</h3>
-                            <p className="mt-1 text-lg">{lightboxData?.address?.streetAddress || 'Not available'}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 className="text-sm font-medium text-gray-500">City</h3>
-                            <p className="mt-1 text-lg">{lightboxData?.address?.city || 'Not available'}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 className="text-sm font-medium text-gray-500">State</h3>
-                            <p className="mt-1 text-lg">{lightboxData?.address?.state || 'Not available'}</p>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 className="text-sm font-medium text-gray-500">ZIP Code</h3>
-                            <p className="mt-1 text-lg">{lightboxData?.address?.zip || 'Not available'}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AddressTab lightboxData={lightboxData} />
                 </TabsContent>
 
                 <TabsContent value="additional">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <Info className="h-5 w-5 text-primary" />
-                        <CardTitle>Additional Property Information</CardTitle>
-                      </div>
-                      <CardDescription>Extended property details from LightBox API</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {renderAdditionalDetails()}
-                    </CardContent>
-                  </Card>
+                  <AdditionalTab lightboxData={lightboxData} />
                 </TabsContent>
 
                 <TabsContent value="parsed">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        <CardTitle>Parsed LightBox Data</CardTitle>
-                      </div>
-                      <CardDescription>Structured data from LightBox API</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="text-lg font-semibold mb-4">Property Information</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                              <h4 className="text-sm font-medium text-gray-500">Parcel ID</h4>
-                              <p className="mt-1">{lightboxData?.parcelId || 'Not available'}</p>
-                            </div>
-                            {lightboxData?.propertyDetails && Object.entries(lightboxData.propertyDetails).map(([key, value]) => (
-                              <div key={key} className="bg-white p-4 rounded-lg shadow-sm">
-                                <h4 className="text-sm font-medium text-gray-500 capitalize">
-                                  {key.replace(/([A-Z])/g, ' $1').trim()}
-                                </h4>
-                                <p className="mt-1">{value || 'Not available'}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        <div>
-                          <h3 className="text-lg font-semibold mb-4">Processing Information</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                              <h4 className="text-sm font-medium text-gray-500">Processing Status</h4>
-                              <Badge className="mt-2" variant={lightboxData?.lightbox_processed ? "default" : "secondary"}>
-                                {lightboxData?.lightbox_processed ? "Processed" : "Pending"}
-                              </Badge>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                              <h4 className="text-sm font-medium text-gray-500">Processing Time</h4>
-                              <p className="mt-1">
-                                {lightboxData?.processed_at 
-                                  ? new Date(lightboxData.processed_at).toLocaleString()
-                                  : 'Not processed yet'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <ParsedTab lightboxData={lightboxData} />
                 </TabsContent>
 
                 <TabsContent value="raw">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <Database className="h-5 w-5 text-primary" />
-                        <CardTitle>Raw API Response</CardTitle>
-                      </div>
-                      <CardDescription>Complete unmodified response from LightBox API</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[400px] w-full rounded-md border">
-                        <pre className="p-4 text-sm">
-                          {JSON.stringify(lightboxData?.rawResponse || {}, null, 2)}
-                        </pre>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
+                  <RawTab lightboxData={lightboxData} />
                 </TabsContent>
 
                 <div className="sticky bottom-8 flex justify-end mt-8">
