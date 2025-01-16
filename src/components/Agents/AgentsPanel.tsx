@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Brain, Activity, AlertCircle, Settings, FileText } from 'lucide-react';
+import { Brain, Activity, AlertCircle, Settings, FileText, Network, Cpu, Database, Workflow } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VoiceControls } from "@/components/DebugPanel/VoiceControls";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { initializeAgentFlow, queryAgentContext, subscribeToAgentUpdates } from '@/utils/agentFlow';
 import type { DifyAgent, AgentAction, AgentState, AgentsPanelProps } from './types';
 
 const INITIAL_AGENTS: DifyAgent[] = [
@@ -71,6 +73,26 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
   const [selectedAgent, setSelectedAgent] = useState<DifyAgent | null>(null);
   const [customInstructions, setCustomInstructions] = useState<string>('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [systemMetrics, setSystemMetrics] = useState({
+    cpuUsage: 0,
+    memoryUsage: 0,
+    networkLatency: 0,
+    activeFlows: 0
+  });
+
+  useEffect(() => {
+    // Simulate system metrics updates
+    const interval = setInterval(() => {
+      setSystemMetrics({
+        cpuUsage: Math.random() * 100,
+        memoryUsage: Math.random() * 100,
+        networkLatency: Math.random() * 200,
+        activeFlows: Math.floor(Math.random() * 10)
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleCompute = async (message: string, agent: DifyAgent) => {
     try {
@@ -215,6 +237,35 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
     }
   };
 
+  const renderMetricsCard = () => (
+    <Card className="bg-gray-800/50 border-gray-700">
+      <CardHeader>
+        <CardTitle className="text-gray-100 flex items-center gap-2">
+          <Cpu className="h-5 w-5 text-primary" />
+          System Metrics
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-400">CPU Usage</p>
+            <Progress value={systemMetrics.cpuUsage} className="h-2 mt-1" />
+            <p className="text-xs text-gray-500 mt-1">{systemMetrics.cpuUsage.toFixed(1)}%</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-400">Memory</p>
+            <Progress value={systemMetrics.memoryUsage} className="h-2 mt-1" />
+            <p className="text-xs text-gray-500 mt-1">{systemMetrics.memoryUsage.toFixed(1)}%</p>
+          </div>
+        </div>
+        <div className="flex justify-between text-sm text-gray-400">
+          <span>Network Latency: {systemMetrics.networkLatency.toFixed(0)}ms</span>
+          <span>Active Flows: {systemMetrics.activeFlows}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const renderAgentCard = (agent: DifyAgent) => (
     <div 
       key={agent.id} 
@@ -283,45 +334,89 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {state.agents.map(renderAgentCard)}
-          </div>
-          
-          {selectedAgent && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="mt-4">Configure Agent</Button>
-              </DialogTrigger>
-              <DialogContent className="bg-gray-900 text-gray-100">
-                <DialogHeader>
-                  <DialogTitle>{selectedAgent.name} Configuration</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Backstory</h4>
-                    <p className="text-sm text-gray-400">{selectedAgent.backstory}</p>
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="metrics">Metrics</TabsTrigger>
+            <TabsTrigger value="agents">Agents</TabsTrigger>
+            <TabsTrigger value="logs">Logs</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            {renderMetricsCard()}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-gray-100 flex items-center gap-2">
+                    <Network className="h-5 w-5 text-primary" />
+                    Network Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-400">Active Connections: {state.agents.filter(a => a.status === 'processing').length}</p>
+                    <p className="text-sm text-gray-400">Total Agents: {state.agents.length}</p>
+                    <p className="text-sm text-gray-400">Recent Actions: {state.actions.length}</p>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Custom Instructions</h4>
-                    <Textarea
-                      value={customInstructions}
-                      onChange={(e) => setCustomInstructions(e.target.value)}
-                      placeholder="Enter custom instructions for this agent..."
-                      className="h-32"
-                    />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-gray-100 flex items-center gap-2">
+                    <Database className="h-5 w-5 text-primary" />
+                    Knowledge Base
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-400">Indexed Documents: 1,234</p>
+                    <p className="text-sm text-gray-400">Last Updated: 2 minutes ago</p>
+                    <p className="text-sm text-gray-400">Active Queries: 3</p>
                   </div>
-                  <Button onClick={handleCustomInstructions}>
-                    Update Instructions
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-          
-          {state.actions.length > 0 && (
-            <div className="mt-8 border-t border-gray-700 pt-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">Recent Actions</h3>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="metrics">
+            <div className="space-y-4">
+              {renderMetricsCard()}
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-gray-100 flex items-center gap-2">
+                    <Workflow className="h-5 w-5 text-primary" />
+                    Flow Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-400">Successful Flows</p>
+                        <p className="text-2xl font-bold text-green-400">89%</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-400">Average Response Time</p>
+                        <p className="text-2xl font-bold text-blue-400">1.2s</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="agents">
+            <ScrollArea className="h-[500px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {state.agents.map(renderAgentCard)}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <ScrollArea className="h-[500px]">
               <div className="space-y-2">
                 {state.actions.map((action) => (
                   <div 
@@ -336,9 +431,40 @@ export function AgentsPanel({ onMessage, onVoiceInput, messages }: AgentsPanelPr
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-        </ScrollArea>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+
+        {selectedAgent && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="mt-4">Configure Agent</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-900 text-gray-100">
+              <DialogHeader>
+                <DialogTitle>{selectedAgent.name} Configuration</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Backstory</h4>
+                  <p className="text-sm text-gray-400">{selectedAgent.backstory}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Custom Instructions</h4>
+                  <Textarea
+                    value={customInstructions}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    placeholder="Enter custom instructions for this agent..."
+                    className="h-32"
+                  />
+                </div>
+                <Button onClick={handleCustomInstructions}>
+                  Update Instructions
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardContent>
     </Card>
   );
