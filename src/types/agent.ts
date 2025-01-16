@@ -11,11 +11,7 @@ export interface AgentMetricsData {
   activeFlows: number;
   successRate: number;
   totalInteractions: number;
-  system_load: {
-    cpu_threads: number[];
-    io_operations: number[];
-    memory_allocation: number[];
-  };
+  system_load: SystemLoad;
   networkMetrics: {
     bandwidth_usage: number[];
     connection_pool: number[];
@@ -54,7 +50,7 @@ export interface ThreadAnalysis {
 export interface AgentMessage {
   role: string;
   content: string;
-  timestamp?: string;
+  timestamp: string;
   agent?: string;
   message?: string;
 }
@@ -84,13 +80,18 @@ export interface SharedComputerState {
   };
 }
 
-export interface DifyAgent {
+export interface ApiMetric {
   id: string;
-  name: string;
-  status: 'idle' | 'processing' | 'completed' | 'error';
-  type?: string;
-  capabilities?: string[];
-  role?: string;
+  service_name: string;
+  endpoint: string;
+  response_time: number;
+  success_rate: number;
+  error_count: number;
+  total_requests: number;
+  performance_data: Record<string, any>;
+  system_metrics: SystemLoad;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SystemAnalysis {
@@ -122,14 +123,9 @@ export interface SiteStructurePage {
   updated_at?: string;
 }
 
-export interface PerformanceMetrics {
-  response_time: number[];
-  success_rate: number[];
-  error_rate: number[];
-}
-
-export interface NetworkStats {
-  latency: number[];
-  bandwidth: number[];
-  connections: number[];
+export interface NavItem {
+  path: string;
+  label: string;
+  icon?: JSX.Element;
+  children?: NavItem[];
 }

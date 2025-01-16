@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Cpu, Network, Database, Info } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import { Activity, Cpu, Network, Database } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -16,7 +15,7 @@ const initialMetrics: AgentMetricsData = {
   activeFlows: 0,
   successRate: 0,
   totalInteractions: 0,
-  systemLoad: {
+  system_load: {
     cpu_threads: [],
     io_operations: [],
     memory_allocation: []
@@ -54,9 +53,9 @@ export function AgentMetrics() {
           console.log('New metrics received:', payload);
           setLastUpdate(new Date().toISOString());
           
-          const systemLoad = typeof payload.new.system_load === 'string' 
+          const system_load = typeof payload.new.system_load === 'string' 
             ? JSON.parse(payload.new.system_load)
-            : payload.new.system_load || initialMetrics.systemLoad;
+            : payload.new.system_load || initialMetrics.system_load;
 
           const networkMetrics = typeof payload.new.network_metrics === 'string'
             ? JSON.parse(payload.new.network_metrics)
@@ -73,7 +72,7 @@ export function AgentMetrics() {
             activeFlows: payload.new.active_flows || 0,
             successRate: payload.new.success_rate || 0,
             totalInteractions: payload.new.total_interactions || 0,
-            systemLoad,
+            system_load,
             networkMetrics,
             performanceIndicators
           };
@@ -104,9 +103,9 @@ export function AgentMetrics() {
       }
 
       if (data) {
-        const systemLoad = typeof data.system_load === 'string' 
+        const system_load = typeof data.system_load === 'string' 
           ? JSON.parse(data.system_load)
-          : data.system_load || initialMetrics.systemLoad;
+          : data.system_load || initialMetrics.system_load;
 
         const networkMetrics = typeof data.network_metrics === 'string'
           ? JSON.parse(data.network_metrics)
@@ -123,7 +122,7 @@ export function AgentMetrics() {
           activeFlows: data.active_flows || 0,
           successRate: data.success_rate || 0,
           totalInteractions: data.total_interactions || 0,
-          systemLoad,
+          system_load,
           networkMetrics,
           performanceIndicators
         };
