@@ -1,43 +1,116 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { ToolbarStyleProvider } from "./contexts/ToolbarStyleContext";
-import Index from "./pages/Index";
-import GetStarted from "./pages/GetStarted";
-import LearnMore from "./pages/LearnMore";
-import Login from "./pages/Login";
-import Solutions from "./pages/Solutions";
-import Marketplace from "./pages/Marketplace";
-import Orders from "./pages/Orders";
-import NewReport from "./pages/NewReport";
-import Calculations from "./pages/Calculations";
-import AddressValidation from "./pages/AddressValidation";
-import AICivilEngineer from "./pages/AICivilEngineer";
-import Assessment from "./pages/Assessment";
-import AgentMonitoring from "./pages/AgentMonitoring";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
+import LoadingSpinner from "./components/ui/LoadingSpinner";
+
+// Preserve direct imports for critical pages
+import LearnMore from "./pages/LearnMore";
+import AICivilEngineer from "./pages/AICivilEngineer";
+
+// Lazy load other pages
+const Index = lazy(() => import("./pages/Index"));
+const Login = lazy(() => import("./pages/Login"));
+const GetStarted = lazy(() => import("./pages/GetStarted"));
+const Solutions = lazy(() => import("./pages/Solutions"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const Orders = lazy(() => import("./pages/Orders"));
+const NewReport = lazy(() => import("./pages/NewReport"));
+const Calculations = lazy(() => import("./pages/Calculations"));
+const AddressValidation = lazy(() => import("./pages/AddressValidation"));
+const Assessment = lazy(() => import("./pages/Assessment"));
+const AgentMonitoring = lazy(() => import("./pages/AgentMonitoring"));
+
+// Enterprise Hub
+const EnterpriseOverview = lazy(() => import("./pages/enterprise/Overview"));
+const ResourcePlanning = lazy(() => import("./pages/enterprise/ResourcePlanning"));
+const Analytics = lazy(() => import("./pages/enterprise/Analytics"));
+
+// Infrastructure Hub
+const InfrastructureOverview = lazy(() => import("./pages/infrastructure/Overview"));
+const NetworkManagement = lazy(() => import("./pages/infrastructure/NetworkManagement"));
+const SecurityMonitoring = lazy(() => import("./pages/infrastructure/SecurityMonitoring"));
+
+// Technology Hub
+const TechnologyOverview = lazy(() => import("./pages/technology/Overview"));
+const Innovation = lazy(() => import("./pages/technology/Innovation"));
+const Research = lazy(() => import("./pages/technology/Research"));
+
+// Business Operations Hub
+const OperationsOverview = lazy(() => import("./pages/operations/Overview"));
+const Workflow = lazy(() => import("./pages/operations/Workflow"));
+const Reporting = lazy(() => import("./pages/operations/Reporting"));
+
+// Innovation Center Hub
+const InnovationOverview = lazy(() => import("./pages/innovation/Overview"));
+const LabProjects = lazy(() => import("./pages/innovation/LabProjects"));
+const Experiments = lazy(() => import("./pages/innovation/Experiments"));
 
 function App() {
   return (
     <SessionContextProvider supabaseClient={supabase}>
       <ToolbarStyleProvider>
         <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/get-started" element={<GetStarted />} />
-            <Route path="/learn-more" element={<LearnMore />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/solutions" element={<Solutions />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/new-report" element={<NewReport />} />
-            <Route path="/calculations" element={<Calculations />} />
-            <Route path="/address-validation" element={<AddressValidation />} />
-            <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
-            <Route path="/assessment" element={<Assessment />} />
-            <Route path="/agent-monitoring" element={<AgentMonitoring />} />
-            <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
-          </Routes>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              {/* Core Routes - Not Lazy Loaded */}
+              <Route path="/learn-more" element={<LearnMore />} />
+              <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
+              
+              {/* Lazy Loaded Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/get-started" element={<GetStarted />} />
+              <Route path="/solutions" element={<Solutions />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/new-report" element={<NewReport />} />
+              <Route path="/calculations" element={<Calculations />} />
+              <Route path="/address-validation" element={<AddressValidation />} />
+              <Route path="/assessment" element={<Assessment />} />
+              <Route path="/agent-monitoring" element={<AgentMonitoring />} />
+
+              {/* Enterprise Hub */}
+              <Route path="/enterprise">
+                <Route index element={<EnterpriseOverview />} />
+                <Route path="planning" element={<ResourcePlanning />} />
+                <Route path="analytics" element={<Analytics />} />
+              </Route>
+
+              {/* Infrastructure Hub */}
+              <Route path="/infrastructure">
+                <Route index element={<InfrastructureOverview />} />
+                <Route path="network" element={<NetworkManagement />} />
+                <Route path="security" element={<SecurityMonitoring />} />
+              </Route>
+
+              {/* Technology Hub */}
+              <Route path="/technology">
+                <Route index element={<TechnologyOverview />} />
+                <Route path="innovation" element={<Innovation />} />
+                <Route path="research" element={<Research />} />
+              </Route>
+
+              {/* Business Operations Hub */}
+              <Route path="/operations">
+                <Route index element={<OperationsOverview />} />
+                <Route path="workflow" element={<Workflow />} />
+                <Route path="reporting" element={<Reporting />} />
+              </Route>
+
+              {/* Innovation Center Hub */}
+              <Route path="/innovation">
+                <Route index element={<InnovationOverview />} />
+                <Route path="lab" element={<LabProjects />} />
+                <Route path="experiments" element={<Experiments />} />
+              </Route>
+
+              {/* Legacy Route Redirect */}
+              <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />
+            </Routes>
+          </Suspense>
           <Toaster />
         </Router>
       </ToolbarStyleProvider>
