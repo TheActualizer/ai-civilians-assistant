@@ -2829,6 +2829,63 @@ export type Database = {
         }
         Relationships: []
       }
+      tri_lion_integrations: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          id: string
+          integration_type: string
+          metrics: Json | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          integration_type: string
+          metrics?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          integration_type?: string
+          metrics?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tri_lion_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          metrics: Json | null
+          session_data: Json | null
+          session_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metrics?: Json | null
+          session_data?: Json | null
+          session_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metrics?: Json | null
+          session_data?: Json | null
+          session_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ui_versions: {
         Row: {
           component_data: Json
