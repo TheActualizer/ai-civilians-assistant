@@ -36,7 +36,8 @@ Deno.serve(async (req) => {
       city,
       state,
       zip,
-      apiKeyPresent: !!LIGHTBOX_API_KEY
+      apiKeyPresent: !!LIGHTBOX_API_KEY,
+      apiKeyLength: LIGHTBOX_API_KEY.length
     })
 
     const requestPayload = {
@@ -55,6 +56,7 @@ Deno.serve(async (req) => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${LIGHTBOX_API_KEY}`,
+          'Accept': 'application/json'
         },
         body: JSON.stringify(requestPayload),
       })
@@ -64,7 +66,8 @@ Deno.serve(async (req) => {
         console.error('LightBox API error response:', {
           status: response.status,
           statusText: response.statusText,
-          body: errorText
+          body: errorText,
+          headers: Object.fromEntries(response.headers.entries())
         })
         throw new Error(`LightBox API returned ${response.status}: ${errorText}`)
       }
@@ -74,16 +77,29 @@ Deno.serve(async (req) => {
       
       const formattedResponse = {
         parcelId: responseData.parcelId || null,
+        address: {
+          streetAddress: address,
+          city: city,
+          state: state,
+          zip: zip
+        },
         propertyDetails: responseData.propertyDetails || {},
         coordinates: responseData.coordinates || { lat: null, lng: null },
         rawResponse: responseData,
         lightbox_processed: true,
-        processed_at: new Date().toISOString()
+        processed_at: new Date().toISOString(),
+        status: 'success',
+        lightbox_request_id: responseData.requestId || null
       }
 
       return new Response(
         JSON.stringify(formattedResponse),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
       )
 
     } catch (apiError) {
