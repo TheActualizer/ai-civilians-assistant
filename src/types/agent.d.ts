@@ -2,12 +2,26 @@ export interface SystemLoad {
   cpu: number;
   memory: number;
   network: number;
+  cpu_threads?: number[];
+  io_operations?: number[];
+  memory_allocation?: number[];
 }
 
 export interface NetworkStats {
   latency: number[];
   bandwidth: number[];
   connections: number[];
+  bandwidth_usage?: number[];
+  connection_pool?: number[];
+  latency_history?: number[];
+}
+
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+  throughput?: number[];
+  response_times?: number[];
 }
 
 export interface AgentMessage {
@@ -23,18 +37,14 @@ export interface ThreadAnalysis {
   page_path: string;
   thread_type: string;
   system_load: SystemLoad;
-  performance_metrics: {
-    response_time: number[];
-    success_rate: number[];
-    error_rate: number[];
-  };
+  performance_metrics: PerformanceMetrics;
   network_stats: NetworkStats;
   analysis_status: string;
   last_analysis_timestamp: string;
   connection_status: string;
   connection_score: number;
   analysis_data: Record<string, any>;
-  agent_states: Record<string, string>;
+  agent_states: Record<string, any>;
   auto_analysis_enabled?: boolean;
   analysis_interval?: number;
 }
@@ -46,21 +56,18 @@ export interface AgentMetricsData {
   activeFlows: number;
   successRate: number;
   totalInteractions: number;
-  system_load: {
-    cpu_threads: number[];
-    io_operations: number[];
-    memory_allocation: number[];
-  };
-  networkMetrics: {
-    bandwidth_usage: number[];
-    connection_pool: number[];
-    latency_history: number[];
-  };
+  system_load: SystemLoad;
+  networkMetrics: NetworkStats;
   performanceIndicators: {
     error_rate: number[];
     throughput: number[];
     response_times: number[];
   };
+}
+
+export interface MainLayoutProps {
+  children: React.ReactNode;
+  showNavigation?: boolean;
 }
 
 export interface SiteStructurePage {
@@ -83,31 +90,29 @@ export interface SiteStructurePage {
   updated_at: string;
 }
 
-export interface SharedComputerState {
-  id?: string;
-  session_id?: string;
-  screen_sharing: {
-    active: boolean;
-    userId: string | null;
-  };
-  voice_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  video_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  active_users: string[];
-  system_metrics: SystemLoad;
-  browser_state?: {
-    url: string;
-    title: string;
-    isClaudeActive: boolean;
-    lastInteraction: string;
-  };
+export interface ApiMetric {
+  endpoint: string;
+  responseTime: number;
+  successRate: number;
+  errorCount: number;
+  timestamp: string;
 }
 
-export interface MainLayoutProps {
-  children: React.ReactNode;
+export interface VideoSynthesis {
+  id: string;
+  prompt: string;
+  status: string;
+  duration: number;
+  segment_count: number;
+  raw_segments: any[];
+  synthesized_output: {
+    url: string;
+    duration: number;
+    timestamp: string;
+    quality_score: number;
+  };
+  generation_metrics: Record<string, any>;
+  metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 }

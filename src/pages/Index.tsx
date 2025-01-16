@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import { Brain, Sparkles, Zap } from "lucide-react";
+import { motion } from "framer-motion"; // Add this import
 import { Button } from "@/components/ui/button";
 import Features from "@/components/Features";
 import { CoreFeatures } from "@/components/home/CoreFeatures";
