@@ -116,11 +116,7 @@ export interface SharedComputerState {
     participants: string[];
   };
   active_users: string[];
-  system_metrics: {
-    cpu: number;
-    memory: number;
-    network: number;
-  };
+  system_metrics: SystemLoad;
   browser_state?: {
     url: string;
     title: string;
@@ -185,4 +181,80 @@ export interface UIVersion {
   metadata?: Record<string, any>;
   created_by?: string;
   parent_version_id?: string;
+}
+
+export interface DualMonitorState {
+  primary: {
+    active: boolean;
+    content: string;
+    theme: 'tech' | 'adventure' | 'quantum';
+  };
+  secondary: {
+    active: boolean;
+    content: string;
+    theme: 'tech' | 'adventure' | 'quantum';
+  };
+  sync_status: 'synced' | 'syncing' | 'error';
+}
+
+export interface GameState {
+  score: number;
+  level: number;
+  achievements: string[];
+  theme: 'adventure' | 'tech' | 'quantum';
+  avatar: {
+    name: string;
+    type: 'developer' | 'architect' | 'explorer';
+    level: number;
+  };
+}
+
+export interface ServiceMetrics {
+  id: string;
+  name: string;
+  status: string;
+  performance_metrics: {
+    response_times: number[];
+    error_rates: number[];
+    throughput: number[];
+    resource_usage: {
+      cpu: number[];
+      memory: number[];
+      network: number[];
+    };
+  };
+}
+
+export interface ApiMetric {
+  endpoint: string;
+  responseTime: number;
+  successRate: number;
+  errorCount: number;
+  timestamp: string;
+}
+
+export interface SiteStructurePage {
+  id: string;
+  path: string;
+  title: string;
+  sections: any[];
+  features: string[];
+  integrations: string[];
+}
+
+export interface MainLayoutProps {
+  children: React.ReactNode;
+  showNavigation?: boolean;
+}
+
+export interface CommunicationSession {
+  id: string;
+  type: string;
+  participants: string[];
+  status: 'active' | 'ended';
+  metrics: {
+    latency: number;
+    bandwidth: number;
+    quality: number;
+  };
 }

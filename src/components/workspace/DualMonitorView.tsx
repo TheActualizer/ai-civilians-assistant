@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Monitor, GitBranch, Zap } from 'lucide-react';
+import { Monitor, GitBranch, Zap, Trophy, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -37,11 +37,14 @@ export function DualMonitorView() {
   });
 
   useEffect(() => {
+    console.log('Initializing dual monitor system...');
+    
     const channel = supabase.channel('dual_monitor')
       .on('presence', { event: 'sync' }, () => {
         console.log('Monitor states synced');
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        console.log('New monitor presence detected:', newPresences);
         toast({
           title: 'Monitor Connected',
           description: 'Secondary monitor is now active',
@@ -50,11 +53,13 @@ export function DualMonitorView() {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      console.log('Cleaning up monitor subscriptions');
+      supabase.removeChannel(channel);
     };
   }, [toast]);
 
   const toggleSecondaryMonitor = () => {
+    console.log('Toggling secondary monitor...');
     setMonitorState(prev => ({
       ...prev,
       secondary: {
@@ -99,6 +104,10 @@ export function DualMonitorView() {
                 </div>
                 <span className="text-sm text-gray-400">Level {gameState.level}</span>
               </div>
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm text-gray-400">{gameState.score} points</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -112,7 +121,7 @@ export function DualMonitorView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Monitor className="h-6 w-6 text-green-400" />
-                  <CardTitle>Tri_LioNsquared Explorer</CardTitle>
+                  <CardTitle>Adventure Quest Explorer</CardTitle>
                 </div>
                 <Button
                   variant="outline"
@@ -133,7 +142,7 @@ export function DualMonitorView() {
               >
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                    <span className="text-white font-bold">{gameState.avatar.level}</span>
+                    <Star className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold">{gameState.avatar.name}</h3>
