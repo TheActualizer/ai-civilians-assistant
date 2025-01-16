@@ -6,77 +6,62 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface SystemLoad {
+  cpu: number;
+  memory: number;
+  network: number;
+}
+
+interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+}
+
+interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
+}
+
+interface MetricsState {
+  system_load: SystemLoad;
+  performance_metrics: PerformanceMetrics;
+  network_stats: NetworkStats;
+}
 
 interface ClaudeMetricsProps {
   threadId: string;
 }
 
-interface MetricsState {
+const defaultMetrics: MetricsState = {
   system_load: {
-    cpu: number;
-    memory: number;
-    network: number;
-  };
+    cpu: 0,
+    memory: 0,
+    network: 0
+  },
   performance_metrics: {
-    response_time: number[];
-    success_rate: number[];
-    error_rate: number[];
-  };
+    response_time: [],
+    success_rate: [],
+    error_rate: []
+  },
   network_stats: {
-    latency: number[];
-    bandwidth: number[];
-    connections: number[];
-  };
-}
+    latency: [],
+    bandwidth: [],
+    connections: []
+  }
+};
 
 export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
-  const [metrics, setMetrics] = useState<MetricsState>({
-    system_load: {
-      cpu: 0,
-      memory: 0,
-      network: 0
-    },
-    performance_metrics: {
-      response_time: [],
-      success_rate: [],
-      error_rate: []
-    },
-    network_stats: {
-      latency: [],
-      bandwidth: [],
-      connections: []
-    }
-  });
+  const [metrics, setMetrics] = useState<MetricsState>(defaultMetrics);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log('Initializing Claude metrics monitoring for thread:', threadId);
     
-    // First fetch current state
-    const fetchInitialMetrics = async () => {
-      const { data, error } = await supabase
-        .from('debug_thread_analysis')
-        .select('system_load, performance_metrics, network_stats')
-        .eq('id', threadId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching initial metrics:', error);
-        return;
-      }
-
-      console.log('Initial metrics loaded:', data);
-      if (data) {
-        setMetrics({
-          system_load: data.system_load || metrics.system_load,
-          performance_metrics: data.performance_metrics || metrics.performance_metrics,
-          network_stats: data.network_stats || metrics.network_stats
-        });
-      }
-    };
-
-    fetchInitialMetrics();
-
-    // Subscribe to real-time updates
     const channel = supabase
       .channel(`claude-metrics-${threadId}`)
       .on(
@@ -95,12 +80,33 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
           });
 
           if (payload.new) {
-            setMetrics(prev => ({
-              system_load: payload.new.system_load || prev.system_load,
-              performance_metrics: payload.new.performance_metrics || prev.performance_metrics,
-              network_stats: payload.new.network_stats || prev.network_stats
-            }));
+            const newData = payload.new as any;
+            
+            // Safely parse and validate metrics data
+            const systemLoad = typeof newData.system_load === 'object' ? newData.system_load : defaultMetrics.system_load;
+            const perfMetrics = typeof newData.performance_metrics === 'object' ? newData.performance_metrics : defaultMetrics.performance_metrics;
+            const netStats = typeof newData.network_stats === 'object' ? newData.network_stats : defaultMetrics.network_stats;
 
+            setMetrics({
+              system_load: {
+                cpu: Number(systemLoad.cpu) || 0,
+                memory: Number(systemLoad.memory) || 0,
+                network: Number(systemLoad.network) || 0
+              },
+              performance_metrics: {
+                response_time: Array.isArray(perfMetrics.response_time) ? perfMetrics.response_time : [],
+                success_rate: Array.isArray(perfMetrics.success_rate) ? perfMetrics.success_rate : [],
+                error_rate: Array.isArray(perfMetrics.error_rate) ? perfMetrics.error_rate : []
+              },
+              network_stats: {
+                latency: Array.isArray(netStats.latency) ? netStats.latency : [],
+                bandwidth: Array.isArray(netStats.bandwidth) ? netStats.bandwidth : [],
+                connections: Array.isArray(netStats.connections) ? netStats.connections : []
+              }
+            });
+
+            setLastUpdate(new Date().toISOString());
+            
             // Log detailed metrics to system_metrics table
             logDetailedMetrics(payload.new);
           }
@@ -108,68 +114,86 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
       )
       .subscribe();
 
+    // Initial metrics fetch
+    const fetchInitialMetrics = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('debug_thread_analysis')
+          .select('*')
+          .eq('id', threadId)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          console.log('Initial metrics loaded:', data);
+          const systemLoad = typeof data.system_load === 'object' ? data.system_load : defaultMetrics.system_load;
+          const perfMetrics = typeof data.performance_metrics === 'object' ? data.performance_metrics : defaultMetrics.performance_metrics;
+          const netStats = typeof data.network_stats === 'object' ? data.network_stats : defaultMetrics.network_stats;
+
+          setMetrics({
+            system_load: {
+              cpu: Number(systemLoad.cpu) || 0,
+              memory: Number(systemLoad.memory) || 0,
+              network: Number(systemLoad.network) || 0
+            },
+            performance_metrics: {
+              response_time: Array.isArray(perfMetrics.response_time) ? perfMetrics.response_time : [],
+              success_rate: Array.isArray(perfMetrics.success_rate) ? perfMetrics.success_rate : [],
+              error_rate: Array.isArray(perfMetrics.error_rate) ? perfMetrics.error_rate : []
+            },
+            network_stats: {
+              latency: Array.isArray(netStats.latency) ? netStats.latency : [],
+              bandwidth: Array.isArray(netStats.bandwidth) ? netStats.bandwidth : [],
+              connections: Array.isArray(netStats.connections) ? netStats.connections : []
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching initial metrics:', error);
+        toast({
+          variant: "destructive",
+          title: "Error fetching metrics",
+          description: error.message
+        });
+      }
+    };
+
+    fetchInitialMetrics();
+
     return () => {
-      console.log('Cleaning up Claude metrics subscription');
+      console.log('Cleaning up metrics subscription');
       supabase.removeChannel(channel);
     };
-  }, [threadId]);
+  }, [threadId, toast]);
 
   const logDetailedMetrics = async (data: any) => {
-    const timestamp = new Date().toISOString();
-    
-    // Log CPU metrics
-    await supabase.from('system_metrics').insert([
-      {
-        metric_type: 'cpu_usage',
-        value: data.system_load?.cpu || 0,
-        component: 'claude',
-        metadata: {
-          thread_id: threadId,
-          timestamp,
-          context: 'system_load'
-        }
-      }
-    ]);
-
-    // Log memory metrics
-    await supabase.from('system_metrics').insert([
-      {
-        metric_type: 'memory_usage',
-        value: data.system_load?.memory || 0,
-        component: 'claude',
-        metadata: {
-          thread_id: threadId,
-          timestamp,
-          context: 'system_load'
-        }
-      }
-    ]);
-
-    // Log performance metrics
-    const performanceData = data.performance_metrics || {};
-    Object.entries(performanceData).forEach(async ([metric, value]) => {
-      if (Array.isArray(value) && value.length > 0) {
-        await supabase.from('system_metrics').insert([
-          {
-            metric_type: metric,
-            value: value[value.length - 1],
-            component: 'claude',
-            metadata: {
-              thread_id: threadId,
-              timestamp,
-              context: 'performance',
-              history: value
-            }
+    try {
+      const timestamp = new Date().toISOString();
+      
+      // Log system metrics
+      await supabase.from('system_metrics').insert([
+        {
+          metric_type: 'claude_system_load',
+          value: data.system_load?.cpu || 0,
+          component: 'claude',
+          metadata: {
+            thread_id: threadId,
+            timestamp,
+            context: 'system_load',
+            full_metrics: data.system_load
           }
-        ]);
-      }
-    });
+        }
+      ]);
 
-    console.log('Detailed metrics logged to system_metrics table', {
-      timestamp,
-      threadId,
-      metrics: data
-    });
+      console.log('Detailed metrics logged successfully', {
+        timestamp,
+        threadId,
+        metrics: data
+      });
+    } catch (error) {
+      console.error('Error logging detailed metrics:', error);
+    }
   };
 
   return (
