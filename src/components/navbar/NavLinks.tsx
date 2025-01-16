@@ -21,6 +21,13 @@ export const NavLinks = () => {
         AI Civil Engineer
       </Link>
 
+      <Link
+        to="/solutions"
+        className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200"
+      >
+        Solutions
+      </Link>
+
       {/* Legacy Pages Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
@@ -69,6 +76,7 @@ export const NavLinks = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Enterprise Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
           <Building2 className="mr-2 h-5 w-5" />
@@ -91,6 +99,7 @@ export const NavLinks = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Infrastructure Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
           <Network className="mr-2 h-5 w-5" />
@@ -113,6 +122,7 @@ export const NavLinks = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Technology Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
           <Cpu className="mr-2 h-5 w-5" />
@@ -135,6 +145,7 @@ export const NavLinks = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Operations Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
           <Settings className="mr-2 h-5 w-5" />
@@ -157,6 +168,7 @@ export const NavLinks = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Innovation Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center px-4 py-2 text-gray-700 hover:text-[#8B5CF6] transition-colors duration-200 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200">
           <Sparkles className="mr-2 h-5 w-5" />
