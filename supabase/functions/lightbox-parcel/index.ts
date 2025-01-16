@@ -9,6 +9,7 @@ interface AddressRequest {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -29,7 +30,6 @@ Deno.serve(async (req) => {
     }
 
     try {
-      // Using the correct LightBox API endpoint
       const lightboxUrl = 'https://api-prod.lightboxre.com/api/v2/property/search'
       const requestPayload = {
         address: {
@@ -40,7 +40,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      console.log('Calling LightBox API with payload:', requestPayload)
+      console.log('Calling LightBox API with payload:', JSON.stringify(requestPayload))
+      console.log('Using API key:', LIGHTBOX_API_KEY.substring(0, 5) + '...')
       
       const lightboxResponse = await fetch(lightboxUrl, {
         method: 'POST',
@@ -52,17 +53,20 @@ Deno.serve(async (req) => {
         body: JSON.stringify(requestPayload)
       })
 
+      // Log the full response for debugging
+      const responseText = await lightboxResponse.text()
+      console.log('LightBox API raw response:', responseText)
+
       if (!lightboxResponse.ok) {
-        const errorText = await lightboxResponse.text()
         console.error('LightBox API error response:', {
           status: lightboxResponse.status,
           statusText: lightboxResponse.statusText,
-          body: errorText
+          body: responseText
         })
-        throw new Error(`LightBox API error: ${lightboxResponse.status} - ${errorText}`)
+        throw new Error(`LightBox API error: ${lightboxResponse.status} - ${responseText}`)
       }
 
-      const lightboxData = await lightboxResponse.json()
+      const lightboxData = JSON.parse(responseText)
       console.log('LightBox API successful response:', lightboxData)
 
       // Store the response in Supabase
