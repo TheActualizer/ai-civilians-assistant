@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Brain, Activity, MessageSquare, Memory, 
+  Brain, Activity, MessageSquare, Database, 
   Users, Zap, Bot, Network, GitBranch,
   AlertCircle, CheckCircle2, XCircle 
 } from "lucide-react";
@@ -86,7 +86,7 @@ export function ProjectOverview() {
           <Card className="bg-gray-900/50 border-gray-700">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Memory className="h-5 w-5 text-primary" />
+                <Database className="h-5 w-5 text-primary" />
                 <CardTitle className="text-gray-100">Memory Management</CardTitle>
               </div>
               <CardDescription>

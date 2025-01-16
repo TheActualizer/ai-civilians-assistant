@@ -1,25 +1,23 @@
-export interface DifyAgent {
+export type DifyAgent = {
   id: string;
   name: string;
   role: string;
   status: 'idle' | 'processing' | 'completed' | 'error';
-  lastAction?: string;
   progress?: number;
-}
+  lastAction?: string;
+};
 
-export interface AgentAction {
+export type AgentAction = {
   id: string;
-  agentId: string;
-  type: string;
   description: string;
   timestamp: string;
-  status: 'pending' | 'completed' | 'error';
-  result?: any;
-}
+  agentId?: string;
+  status?: 'success' | 'error' | 'warning';
+};
 
-export interface AgentState {
+export type AgentState = {
   agents: DifyAgent[];
   actions: AgentAction[];
   currentPhase: string;
   isProcessing: boolean;
-}
+};
