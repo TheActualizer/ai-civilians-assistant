@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, Maximize2, Minimize2, Play, Pause, Activity, Cpu, Zap } from 'lucide-react';
+import { Camera, Maximize2, Minimize2, Play, Pause, Activity, Cpu, Zap, Shield, Database, Radar } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +37,6 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
       const captureData = canvas.toDataURL('image/png');
       setLastCapture(captureData);
 
-      // Simulate advanced AI analysis
       const mockAnalysis = {
         timestamp: new Date().toISOString(),
         elements_detected: Math.floor(Math.random() * 50) + 20,
@@ -46,7 +45,8 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
           render_time: Math.random() * 100 + 50,
           memory_usage: Math.random() * 500 + 200,
           cpu_utilization: Math.random() * 60 + 20,
-          quantum_efficiency: Math.random() * 100
+          quantum_efficiency: Math.random() * 100,
+          security_rating: Math.random() * 100
         }
       };
 
@@ -70,40 +70,35 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
       clearInterval(captureInterval);
       setCaptureInterval(null);
     }
-
     return () => {
-      if (captureInterval) {
-        clearInterval(captureInterval);
-      }
+      if (captureInterval) clearInterval(captureInterval);
     };
   }, [autoCapture]);
-
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
 
   return (
     <div ref={captureRef} className="space-y-4">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between bg-gradient-to-r from-gray-900 via-blue-900 to-gray-900 p-4 rounded-lg border border-blue-500/30"
+        className="flex items-center justify-between bg-gradient-to-r from-gray-900 via-[#1A1F2C] to-gray-900 p-4 rounded-lg border border-[#0FA0CE]/30 shadow-lg shadow-[#0FA0CE]/10"
       >
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Camera className="h-5 w-5 text-blue-400" />
+            <Shield className="h-5 w-5 text-[#0FA0CE]" />
             <motion.div 
-              className="absolute -inset-1 bg-blue-500/20 rounded-full"
+              className="absolute -inset-1 bg-[#0FA0CE]/20 rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
           </div>
-          <h3 className="text-lg font-semibold text-blue-100">Quantum Analysis Matrix</h3>
+          <h3 className="text-lg font-semibold bg-gradient-to-r from-[#0FA0CE] to-[#D946EF] bg-clip-text text-transparent">
+            Quantum Analysis Matrix
+          </h3>
           <Badge 
             variant={isCapturing ? "default" : "outline"}
-            className={`${isCapturing ? 'bg-blue-500 animate-pulse' : 'border-blue-500/50'}`}
+            className={`${isCapturing ? 'bg-[#0FA0CE] animate-pulse' : 'border-[#0FA0CE]/50'}`}
           >
-            {isCapturing ? "Quantum Capture Active" : "Ready"}
+            {isCapturing ? "Quantum Capture Active" : "Standby"}
           </Badge>
         </div>
         <div className="flex items-center gap-2">
@@ -111,8 +106,8 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
             variant="outline"
             size="sm"
             onClick={() => setAutoCapture(!autoCapture)}
-            className={`border-blue-500/30 hover:bg-blue-500/20 ${
-              autoCapture ? 'bg-blue-500/20 text-blue-200' : 'text-blue-400'
+            className={`border-[#0FA0CE]/30 hover:bg-[#0FA0CE]/20 ${
+              autoCapture ? 'bg-[#0FA0CE]/20 text-[#0FA0CE]' : 'text-[#0FA0CE]'
             }`}
           >
             {autoCapture ? (
@@ -130,8 +125,8 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
           <Button
             variant="outline"
             size="sm"
-            onClick={toggleFullscreen}
-            className="border-blue-500/30 hover:bg-blue-500/20 text-blue-400"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="border-[#0FA0CE]/30 hover:bg-[#0FA0CE]/20 text-[#0FA0CE]"
           >
             {isFullscreen ? (
               <Minimize2 className="h-4 w-4" />
@@ -142,7 +137,7 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
         </div>
       </motion.div>
 
-      <ScrollArea className={`rounded-lg border border-blue-500/30 bg-gray-900/80 backdrop-blur-sm ${
+      <ScrollArea className={`rounded-lg border border-[#0FA0CE]/30 bg-gray-900/80 backdrop-blur-sm ${
         isFullscreen ? 'h-[600px]' : 'h-[300px]'
       }`}>
         <div className="p-4 space-y-4">
@@ -152,7 +147,7 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <div className="relative rounded-lg overflow-hidden border border-blue-500/30">
+              <div className="relative rounded-lg overflow-hidden border border-[#0FA0CE]/30">
                 <img
                   src={lastCapture}
                   alt="Quantum Capture"
@@ -162,18 +157,18 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
               </div>
               {analysisData && (
                 <motion.div 
-                  className="space-y-2 p-4 bg-gray-800/50 rounded-lg border border-blue-500/20"
+                  className="space-y-2 p-4 bg-gray-800/50 rounded-lg border border-[#0FA0CE]/20"
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                 >
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-blue-200 flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-blue-400" />
+                    <h4 className="font-medium text-[#0FA0CE] flex items-center gap-2">
+                      <Radar className="h-4 w-4" />
                       Quantum Analysis Results
                     </h4>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="border-blue-500/30 text-blue-300">
-                        Energy: {energyLevel}%
+                      <Badge variant="outline" className="border-[#0FA0CE]/30 text-[#0FA0CE]">
+                        Power: {energyLevel}%
                       </Badge>
                     </div>
                   </div>
@@ -181,27 +176,27 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400 flex items-center gap-1">
-                          <Cpu className="h-3 w-3" /> Elements
+                          <Database className="h-3 w-3" /> Elements
                         </span>
-                        <span className="text-blue-200">{analysisData.elements_detected}</span>
+                        <span className="text-[#0FA0CE]">{analysisData.elements_detected}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400 flex items-center gap-1">
-                          <Zap className="h-3 w-3" /> Interactions
+                          <Activity className="h-3 w-3" /> Interactions
                         </span>
-                        <span className="text-blue-200">{analysisData.interaction_points}</span>
+                        <span className="text-[#0FA0CE]">{analysisData.interaction_points}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">Render Time</span>
-                        <span className="text-blue-200">
-                          {analysisData.performance_metrics.render_time.toFixed(2)}ms
+                        <span className="text-gray-400">Security Rating</span>
+                        <span className="text-[#0FA0CE]">
+                          {analysisData.performance_metrics.security_rating.toFixed(1)}%
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">CPU Usage</span>
-                        <span className="text-blue-200">
+                        <span className="text-gray-400">CPU Load</span>
+                        <span className="text-[#0FA0CE]">
                           {analysisData.performance_metrics.cpu_utilization.toFixed(1)}%
                         </span>
                       </div>
@@ -210,7 +205,7 @@ export function ClaudeScreenAnalysis({ onAnalysisComplete }: ClaudeScreenAnalysi
                   <div className="mt-4">
                     <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
                       <motion.div 
-                        className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"
+                        className="h-full bg-gradient-to-r from-[#0FA0CE] via-[#D946EF] to-[#0FA0CE]"
                         initial={{ width: 0 }}
                         animate={{ width: `${energyLevel}%` }}
                         transition={{ duration: 0.5 }}
