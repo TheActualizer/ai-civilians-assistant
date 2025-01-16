@@ -3,11 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 export interface VisualizationData {
   id: string;
   type: string;
-  data: Record<string, any>;
-  settings?: Record<string, any>;
+  data: Record<string, unknown>;
+  settings?: Record<string, unknown>;
 }
 
-export class DebugVisualizationService {
+class DebugVisualizationService {
   private static instance: DebugVisualizationService;
 
   private constructor() {}
@@ -24,7 +24,7 @@ export class DebugVisualizationService {
       .from('debug_visualizations')
       .insert({
         panel_type: data.type,
-        visualization_data: data.data,
+        visualization_data: data.data as Record<string, unknown>,
         settings: data.settings || {}
       })
       .select()
@@ -35,8 +35,8 @@ export class DebugVisualizationService {
     return {
       id: newViz.id,
       type: newViz.panel_type,
-      data: newViz.visualization_data,
-      settings: newViz.settings
+      data: newViz.visualization_data as Record<string, unknown>,
+      settings: newViz.settings as Record<string, unknown>
     };
   }
 
@@ -52,8 +52,10 @@ export class DebugVisualizationService {
     return {
       id: data.id,
       type: data.panel_type,
-      data: data.visualization_data,
-      settings: data.settings
+      data: data.visualization_data as Record<string, unknown>,
+      settings: data.settings as Record<string, unknown>
     };
   }
 }
+
+export const debugVisualizationService = DebugVisualizationService.getInstance();

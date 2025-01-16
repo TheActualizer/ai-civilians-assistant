@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { DifyAgent, AgentMetrics } from "@/types/agent";
 
-export class AgentMonitoringService {
+class AgentMonitoringService {
   private static instance: AgentMonitoringService;
   private agents: Map<string, DifyAgent> = new Map();
 
@@ -75,3 +75,5 @@ export class AgentMonitoringService {
     return Array.from(this.agents.values());
   }
 }
+
+export const agentMonitoringService = AgentMonitoringService.getInstance();
