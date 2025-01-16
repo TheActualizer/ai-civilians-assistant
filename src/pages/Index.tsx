@@ -10,10 +10,10 @@ import {
   Cpu, 
   Settings, 
   Sparkles, 
-  Archive, 
-  Brain,
   BookOpen,
-  ChevronRight
+  Brain,
+  ChevronRight,
+  Archive
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -21,7 +21,7 @@ const Index = () => {
   const session = useSession();
   const navigate = useNavigate();
 
-  console.log("🔄 Table of Contents page rendering...", { isAuthenticated: !!session });
+  console.log("🔄 Index page rendering...", { isAuthenticated: !!session });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -29,16 +29,30 @@ const Index = () => {
       
       <div className="container mx-auto px-4 pt-24 pb-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-bold text-gray-900 mb-4"
+          >
             AI Civil Engineering Portal
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl text-gray-600 max-w-2xl mx-auto"
+          >
             Your comprehensive hub for AI-powered civil engineering solutions and analysis
-          </p>
+          </motion.p>
         </div>
 
-        {/* Main Features */}
-        <div className="grid gap-6 mb-12">
+        {/* Main AI Assistant Button */}
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="grid gap-6 mb-12"
+        >
           <Button
             onClick={() => navigate("/ai-civil-engineer")}
             className="w-full flex items-center justify-between p-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-lg h-auto"
@@ -49,7 +63,7 @@ const Index = () => {
             </div>
             <ChevronRight className="h-5 w-5" />
           </Button>
-        </div>
+        </motion.div>
 
         {/* Core Features Grid */}
         <CoreFeatures />
