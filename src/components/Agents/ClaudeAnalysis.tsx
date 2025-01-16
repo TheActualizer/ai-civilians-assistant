@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Brain } from 'lucide-react';
+import { AlertCircle, Brain, Network, Cpu, RotateCw, Play, Pause } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +18,13 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [autoAnalysis, setAutoAnalysis] = useState(false);
   const [analysisInterval, setAnalysisInterval] = useState<number | null>(null);
+  const [analysisCount, setAnalysisCount] = useState(0);
+  const [systemHealth, setSystemHealth] = useState({
+    claudeStatus: 'idle',
+    geminiStatus: 'idle',
+    proStatus: 'idle',
+    syncStatus: 'pending'
+  });
 
   useEffect(() => {
     console.log('Initializing thread analysis subscription...');
@@ -40,6 +48,13 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
               description: `New connection score: ${payload.new.connection_score}`,
             });
           }
+
+          // Update system health based on analysis
+          setSystemHealth(prev => ({
+            ...prev,
+            claudeStatus: 'active',
+            syncStatus: 'syncing'
+          }));
         }
       )
       .subscribe();
@@ -52,9 +67,14 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
   useEffect(() => {
     if (autoAnalysis && !analysisInterval) {
-      const interval = window.setInterval(startClaudeAnalysis, 300000); // Run every 5 minutes
+      const interval = window.setInterval(startClaudeAnalysis, 60000); // Run every minute
       setAnalysisInterval(interval);
-      console.log('Started automated Claude analysis');
+      console.log('Started automated Claude analysis loop');
+      
+      toast({
+        title: "Auto Analysis Active",
+        description: "Claude will continuously analyze and improve thread connections.",
+      });
     } else if (!autoAnalysis && analysisInterval) {
       window.clearInterval(analysisInterval);
       setAnalysisInterval(null);
@@ -69,7 +89,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   }, [autoAnalysis]);
 
   const startClaudeAnalysis = async () => {
-    console.log('Starting Claude analysis...');
+    console.log('Starting Claude analysis iteration:', analysisCount + 1);
     setIsAnalyzing(true);
     
     try {
@@ -77,13 +97,17 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         body: {
           messages: [{ 
             role: 'user', 
-            content: 'Analyze the current page state and identify potential issues or improvements.' 
+            content: 'Analyze the current system state, identify improvements, and coordinate with other agents.' 
           }],
-          systemPrompt: 'You are an expert system analyzer. Identify UI/UX issues, data inconsistencies, and potential improvements.',
+          systemPrompt: `You are an expert system analyzer working with Gemini and Pro-01 agents. 
+                        Identify UI/UX issues, data inconsistencies, and potential improvements.
+                        Current analysis iteration: ${analysisCount + 1}
+                        Previous findings: ${JSON.stringify(threadAnalysis?.analysis_data || {})}`,
           pageContext: {
             route: pageRoute,
             agents: agentState.agents,
-            actions: agentState.actions
+            actions: agentState.actions,
+            systemHealth: systemHealth
           }
         }
       });
@@ -95,7 +119,11 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         .upsert({
           page_path: pageRoute,
           thread_type: 'claude-analysis',
-          analysis_data: analysisData,
+          analysis_data: {
+            ...analysisData,
+            iteration: analysisCount + 1,
+            timestamp: new Date().toISOString()
+          },
           analysis_status: 'completed',
           last_analysis_timestamp: new Date().toISOString()
         })
@@ -105,18 +133,33 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
       if (updateError) throw updateError;
 
       setThreadAnalysis(threadUpdate);
+      setAnalysisCount(prev => prev + 1);
       
       toast({
         title: "Analysis Complete",
-        description: "Claude has analyzed the current page state.",
+        description: `Iteration ${analysisCount + 1} completed successfully.`,
       });
+
+      // Update system health
+      setSystemHealth(prev => ({
+        ...prev,
+        claudeStatus: 'completed',
+        syncStatus: 'synced'
+      }));
+
     } catch (error) {
       console.error('Error in Claude analysis:', error);
       toast({
         variant: "destructive",
         title: "Analysis Error",
-        description: "Failed to complete Claude analysis.",
+        description: "Failed to complete Claude analysis iteration.",
       });
+      
+      setSystemHealth(prev => ({
+        ...prev,
+        claudeStatus: 'error',
+        syncStatus: 'error'
+      }));
     } finally {
       setIsAnalyzing(false);
     }
@@ -126,24 +169,91 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     <ScrollArea className="h-[500px]">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-200">Thread Analysis</h3>
+          <h3 className="text-lg font-semibold text-gray-200">AI System Analysis</h3>
           <div className="flex items-center gap-2">
             <Button 
               variant="outline"
               onClick={() => setAutoAnalysis(!autoAnalysis)}
               className={autoAnalysis ? 'bg-green-500/20 border-green-500' : ''}
             >
-              {autoAnalysis ? 'Stop Auto Analysis' : 'Start Auto Analysis'}
+              {autoAnalysis ? (
+                <>
+                  <Pause className="h-4 w-4 mr-2" />
+                  Stop Auto Analysis
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4 mr-2" />
+                  Start Auto Analysis
+                </>
+              )}
             </Button>
             <Button 
               variant="outline"
               onClick={startClaudeAnalysis}
               disabled={isAnalyzing}
             >
-              {isAnalyzing ? 'Analyzing...' : 'Run Analysis Now'}
+              {isAnalyzing ? (
+                <>
+                  <RotateCw className="h-4 w-4 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Run Analysis Now
+                </>
+              )}
             </Button>
           </div>
         </div>
+
+        <div className="grid grid-cols-4 gap-4">
+          <div className="p-4 bg-gray-800/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain className="h-4 w-4 text-purple-400" />
+              <span className="text-sm text-gray-300">Claude</span>
+            </div>
+            <Badge variant="outline" className={`
+              ${systemHealth.claudeStatus === 'active' && 'bg-green-500/10 text-green-400'}
+              ${systemHealth.claudeStatus === 'error' && 'bg-red-500/10 text-red-400'}
+              ${systemHealth.claudeStatus === 'idle' && 'bg-gray-500/10 text-gray-400'}
+            `}>
+              {systemHealth.claudeStatus}
+            </Badge>
+          </div>
+
+          <div className="p-4 bg-gray-800/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Cpu className="h-4 w-4 text-blue-400" />
+              <span className="text-sm text-gray-300">Gemini</span>
+            </div>
+            <Badge variant="outline" className="bg-blue-500/10 text-blue-400">
+              {systemHealth.geminiStatus}
+            </Badge>
+          </div>
+
+          <div className="p-4 bg-gray-800/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Network className="h-4 w-4 text-yellow-400" />
+              <span className="text-sm text-gray-300">Pro-01</span>
+            </div>
+            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400">
+              {systemHealth.proStatus}
+            </Badge>
+          </div>
+
+          <div className="p-4 bg-gray-800/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="h-4 w-4 text-green-400" />
+              <span className="text-sm text-gray-300">Sync Status</span>
+            </div>
+            <Badge variant="outline" className="bg-green-500/10 text-green-400">
+              {systemHealth.syncStatus}
+            </Badge>
+          </div>
+        </div>
+
         {threadAnalysis && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -159,6 +269,15 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
                 </Badge>
               )}
             </div>
+
+            <div className="p-4 bg-gray-800/50 rounded-lg">
+              <h4 className="font-medium text-gray-300 mb-2">Analysis Progress</h4>
+              <Progress value={analysisCount * 10} className="h-2" />
+              <p className="text-sm text-gray-400 mt-2">
+                Completed Iterations: {analysisCount}
+              </p>
+            </div>
+
             {threadAnalysis.analysis_data && (
               <div className="space-y-2">
                 <h4 className="font-medium text-gray-300">Analysis Results</h4>
@@ -167,6 +286,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
                 </pre>
               </div>
             )}
+
             {threadAnalysis.suggested_connections?.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-medium text-gray-300">Suggested Connections</h4>
