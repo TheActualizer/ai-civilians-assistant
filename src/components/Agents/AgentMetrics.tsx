@@ -178,7 +178,7 @@ export function AgentMetrics() {
             Performance
           </CardTitle>
           <Badge 
-            variant={metrics.successRate > 90 ? "default" : "warning"}
+            variant={metrics.successRate > 90 ? "default" : "secondary"}
             className="bg-yellow-500/10 text-yellow-400"
           >
             {metrics.successRate > 90 ? 'Excellent' : 'Good'}
