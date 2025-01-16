@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,6 +24,25 @@ export function ProjectOverview() {
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Array<{
+    agent: string;
+    message: string;
+    timestamp: string;
+  }>>([]);
+
+  const handleMessage = async (message: string, agent: string) => {
+    const newMessage = {
+      agent,
+      message,
+      timestamp: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, newMessage]);
+  };
+
+  const handleVoiceInput = async (transcript: string) => {
+    console.log('Voice input received:', transcript);
+    // Handle voice input processing here
+  };
 
   const fetchKnowledgeBase = useCallback(async () => {
     setLoading(true);
@@ -60,7 +79,11 @@ export function ProjectOverview() {
 
       <div className="mt-6 space-y-6">
         <TabsContent value="agents">
-          <AgentsPanel />
+          <AgentsPanel 
+            onMessage={handleMessage}
+            onVoiceInput={handleVoiceInput}
+            messages={messages}
+          />
         </TabsContent>
 
         <TabsContent value="crewai">
