@@ -418,6 +418,65 @@ export type Database = {
         }
         Relationships: []
       }
+      property_assessments: {
+        Row: {
+          assessment_date: string | null
+          assessment_year: number | null
+          created_at: string | null
+          id: string
+          improvement_value: number | null
+          land_value: number | null
+          last_sale_date: string | null
+          last_sale_price: number | null
+          property_class: string | null
+          property_request_id: string | null
+          tax_rate: number | null
+          tax_status: string | null
+          total_value: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          assessment_date?: string | null
+          assessment_year?: number | null
+          created_at?: string | null
+          id?: string
+          improvement_value?: number | null
+          land_value?: number | null
+          last_sale_date?: string | null
+          last_sale_price?: number | null
+          property_class?: string | null
+          property_request_id?: string | null
+          tax_rate?: number | null
+          tax_status?: string | null
+          total_value?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          assessment_date?: string | null
+          assessment_year?: number | null
+          created_at?: string | null
+          id?: string
+          improvement_value?: number | null
+          land_value?: number | null
+          last_sale_date?: string | null
+          last_sale_price?: number | null
+          property_class?: string | null
+          property_request_id?: string | null
+          tax_rate?: number | null
+          tax_status?: string | null
+          total_value?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_assessments_property_request_id_fkey"
+            columns: ["property_request_id"]
+            isOneToOne: false
+            referencedRelation: "property_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_requests: {
         Row: {
           api_data: Json | null
