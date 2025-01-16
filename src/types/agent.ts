@@ -100,161 +100,30 @@ export interface ThreadAnalysis {
   analysis_interval?: number;
 }
 
-export interface SharedComputerState {
-  id?: string;
-  session_id?: string;
-  screen_sharing: {
-    active: boolean;
-    userId: string | null;
-  };
-  voice_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  video_chat: {
-    active: boolean;
-    participants: string[];
-  };
-  active_users: string[];
-  system_metrics: SystemLoad;
-  browser_state?: {
-    url: string;
-    title: string;
-    isClaudeActive: boolean;
-    lastInteraction: string;
-  };
-}
-
-export interface DebugPanelState {
-  isCollapsed: boolean;
-  position: 'right' | 'left' | 'bottom';
-  isMinimized: boolean;
-  activeTab: string;
-  messages: AgentMessage[];
-  systemHealth: {
-    cpu: number;
-    memory: number;
-    network: number;
-    lastUpdate: string;
-  };
-  threadAnalysis: ThreadAnalysis | null;
-}
-
-export interface EnterpriseDebugFeatures {
-  aiAssistance: boolean;
-  realTimeMetrics: boolean;
-  advancedLogging: boolean;
-  systemOptimization: boolean;
-  threadManagement: boolean;
-  performanceAnalytics: boolean;
-}
-
-export interface DebugConsoleConfig {
-  features: EnterpriseDebugFeatures;
-  theme: 'light' | 'dark' | 'system';
-  autoAnalysis: boolean;
-  refreshInterval: number;
-  maxLogRetention: number;
-  aiModel: string;
-}
-
-export interface UIVersion {
-  id: string;
-  name: string;
-  route: string;
-  component_data: Record<string, any>;
-  version_type: string;
-  version_tags: string[];
-  performance_metrics: {
-    api_latency: number[];
-    render_time: number[];
-    memory_usage: number[];
-  };
-  integration_data: {
-    connected_services: string[];
-    api_dependencies: string[];
-    data_flow: string[];
-  };
-  created_at: string;
-  is_active?: boolean;
-  description?: string;
-  metadata?: Record<string, any>;
-  created_by?: string;
-  parent_version_id?: string;
-}
-
-export interface DualMonitorState {
-  primary: {
-    active: boolean;
-    content: string;
-    theme: 'tech' | 'adventure' | 'quantum';
-  };
-  secondary: {
-    active: boolean;
-    content: string;
-    theme: 'tech' | 'adventure' | 'quantum';
-  };
-  sync_status: 'synced' | 'syncing' | 'error';
-}
-
-export interface GameState {
-  score: number;
-  level: number;
-  achievements: string[];
-  theme: 'adventure' | 'tech' | 'quantum';
-  avatar: {
-    name: string;
-    type: 'developer' | 'architect' | 'explorer';
-    level: number;
-  };
-}
-
-export interface ServiceMetrics {
-  id: string;
-  name: string;
-  status: string;
-  performance_metrics: {
-    response_times: number[];
-    error_rates: number[];
-    throughput: number[];
-    resource_usage: {
-      cpu: number[];
-      memory: number[];
-      network: number[];
-    };
-  };
-}
-
 export interface ApiMetric {
   endpoint: string;
   responseTime: number;
   successRate: number;
   errorCount: number;
   timestamp: string;
-}
-
-export interface SiteStructurePage {
-  id: string;
-  path: string;
-  title: string;
-  sections: any[];
-  features: string[];
-  integrations: string[];
-}
-
-export interface MainLayoutProps {
-  children: React.ReactNode;
-  showNavigation?: boolean;
-}
-
-export interface CommunicationSession {
-  id: string;
-  type: string;
-  participants: string[];
-  status: 'active' | 'ended';
-  metrics: {
-    latency: number;
-    bandwidth: number;
-    quality: number;
+  service_name?: string;
+  system_metrics?: {
+    cpu: number;
+    memory: number;
+    network: number;
   };
+}
+
+export interface ServiceHealth {
+  service_name: string;
+  status: 'healthy' | 'degraded' | 'down';
+  uptime_percentage: number;
+  resource_usage: {
+    cpu: number;
+    memory: number;
+    network: number;
+  };
+  last_check: Date;
+  alerts: any[];
+  dependencies: string[];
 }
