@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, XCircle, AlertCircle } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -157,7 +157,10 @@ const ParcelDetails = () => {
       <div className="min-h-screen bg-gray-50">
         <Navbar session={session} />
         <div className="container mx-auto pt-24 px-4">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
+            <div className="animate-spin">
+              <Terminal className="h-5 w-5 text-primary" />
+            </div>
             <p className="text-gray-600">Loading parcel details...</p>
           </div>
         </div>
@@ -171,6 +174,7 @@ const ParcelDetails = () => {
         <Navbar session={session} />
         <div className="container mx-auto pt-24 px-4">
           <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -227,7 +231,7 @@ const ParcelDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar session={session} />
-      <div className="container mx-auto pt-24 px-4 pb-8 overflow-auto max-h-screen">
+      <div className="container mx-auto pt-24 px-4 pb-8">
         <div className="flex flex-col gap-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">LightBox Property Analysis</h1>
@@ -238,12 +242,30 @@ const ParcelDetails = () => {
 
           <Tabs defaultValue="api-debug" className="w-full">
             <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="property">Property Details</TabsTrigger>
-              <TabsTrigger value="address">Address Info</TabsTrigger>
-              <TabsTrigger value="additional">Additional Data</TabsTrigger>
-              <TabsTrigger value="api-debug">API Debug</TabsTrigger>
-              <TabsTrigger value="parsed">Parsed Data</TabsTrigger>
-              <TabsTrigger value="raw">Raw Response</TabsTrigger>
+              <TabsTrigger value="api-debug" className="gap-2">
+                <Terminal className="h-4 w-4" />
+                API Debug
+              </TabsTrigger>
+              <TabsTrigger value="property">
+                <Building2 className="h-4 w-4 mr-2" />
+                Property
+              </TabsTrigger>
+              <TabsTrigger value="address">
+                <MapPin className="h-4 w-4 mr-2" />
+                Address
+              </TabsTrigger>
+              <TabsTrigger value="additional">
+                <Info className="h-4 w-4 mr-2" />
+                Additional
+              </TabsTrigger>
+              <TabsTrigger value="parsed">
+                <FileText className="h-4 w-4 mr-2" />
+                Parsed
+              </TabsTrigger>
+              <TabsTrigger value="raw">
+                <Database className="h-4 w-4 mr-2" />
+                Raw
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="api-debug">
