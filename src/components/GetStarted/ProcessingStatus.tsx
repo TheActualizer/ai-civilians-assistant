@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ProcessingStatusProps, PropertyRequest, FunctionLog } from "./types";
 
 export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
+  const navigate = useNavigate();
   const [request, setRequest] = useState<PropertyRequest | null>(null);
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
@@ -559,11 +560,11 @@ export const ProcessingStatus = ({ requestId }: ProcessingStatusProps) => {
       {/* Add sticky navigation button */}
       <div className="sticky bottom-8 flex justify-end mt-8 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
         <Button
-          onClick={() => navigate('/address-validation')}
+          onClick={() => navigate('/parcel-details')}
           className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white gap-2"
           size="lg"
         >
-          Continue to Address Validation
+          Continue to Parcel Details
           <ArrowRight className="h-5 w-5" />
         </Button>
       </div>
