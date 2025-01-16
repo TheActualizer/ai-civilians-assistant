@@ -1310,9 +1310,11 @@ export type Database = {
       ui_versions: {
         Row: {
           component_data: Json
+          component_registry: Json | null
           created_at: string | null
           created_by: string | null
           description: string | null
+          feature_list: Json | null
           id: string
           integration_data: Json | null
           is_active: boolean | null
@@ -1320,16 +1322,21 @@ export type Database = {
           name: string
           parent_version_id: string | null
           performance_metrics: Json | null
+          preview_data: Json | null
+          restore_point_hash: string | null
           route: string
+          synthesis_history: Json | null
           updated_at: string | null
           version_tags: string[] | null
           version_type: string | null
         }
         Insert: {
           component_data?: Json
+          component_registry?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          feature_list?: Json | null
           id?: string
           integration_data?: Json | null
           is_active?: boolean | null
@@ -1337,16 +1344,21 @@ export type Database = {
           name: string
           parent_version_id?: string | null
           performance_metrics?: Json | null
+          preview_data?: Json | null
+          restore_point_hash?: string | null
           route: string
+          synthesis_history?: Json | null
           updated_at?: string | null
           version_tags?: string[] | null
           version_type?: string | null
         }
         Update: {
           component_data?: Json
+          component_registry?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          feature_list?: Json | null
           id?: string
           integration_data?: Json | null
           is_active?: boolean | null
@@ -1354,7 +1366,10 @@ export type Database = {
           name?: string
           parent_version_id?: string | null
           performance_metrics?: Json | null
+          preview_data?: Json | null
+          restore_point_hash?: string | null
           route?: string
+          synthesis_history?: Json | null
           updated_at?: string | null
           version_tags?: string[] | null
           version_type?: string | null
