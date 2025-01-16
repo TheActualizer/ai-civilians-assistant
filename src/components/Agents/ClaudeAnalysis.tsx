@@ -34,7 +34,12 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const startClaudeAnalysis = async () => {
     if (isAnalyzing) return;
     
-    console.log('Starting Claude analysis...');
+    console.log('Starting Claude analysis...', {
+      timestamp: new Date().toISOString(),
+      route: pageRoute,
+      phase: analysisCount + 1
+    });
+    
     setIsAnalyzing(true);
     
     try {
@@ -46,7 +51,11 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         .maybeSingle();
 
       if (fetchError) {
-        console.error('Error fetching existing analysis:', fetchError);
+        console.error('Error fetching existing analysis:', {
+          timestamp: new Date().toISOString(),
+          error: fetchError,
+          context: 'fetch_existing'
+        });
         throw fetchError;
       }
 
@@ -55,7 +64,8 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
         previousAnalysis: existingAnalysis?.analysis_data || {},
         evolutionPhase: analysisCount + 1,
         pageRoute,
-        systemHealth
+        systemHealth,
+        timestamp: new Date().toISOString()
       };
 
       console.log('Sending analysis request with context:', analysisContext);
@@ -74,36 +84,46 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
       });
 
       if (claudeError) {
-        console.error('Claude compute error:', claudeError);
+        console.error('Claude compute error:', {
+          timestamp: new Date().toISOString(),
+          error: claudeError,
+          context: 'claude_compute'
+        });
         throw claudeError;
       }
 
       console.log('Received Claude response:', claudeResponse);
 
       // Update the thread analysis with new data
-      const { data: threadUpdate, error: updateError } = await supabase
+      const threadUpdate = {
+        page_path: pageRoute,
+        thread_type: 'claude-analysis',
+        analysis_data: {
+          ...claudeResponse,
+          iteration: analysisCount + 1,
+          timestamp: new Date().toISOString()
+        },
+        analysis_status: 'completed',
+        last_analysis_timestamp: new Date().toISOString()
+      };
+
+      const { data: updatedThread, error: updateError } = await supabase
         .from('debug_thread_analysis')
-        .upsert({
-          page_path: pageRoute,
-          thread_type: 'claude-analysis',
-          analysis_data: {
-            ...claudeResponse,
-            iteration: analysisCount + 1,
-            timestamp: new Date().toISOString()
-          },
-          analysis_status: 'completed',
-          last_analysis_timestamp: new Date().toISOString()
-        })
+        .upsert(threadUpdate)
         .select()
         .single();
 
       if (updateError) {
-        console.error('Error updating thread:', updateError);
+        console.error('Error updating thread:', {
+          timestamp: new Date().toISOString(),
+          error: updateError,
+          context: 'thread_update'
+        });
         throw updateError;
       }
 
-      console.log('Thread analysis updated:', threadUpdate);
-      setThreadAnalysis(threadUpdate);
+      console.log('Thread analysis updated:', updatedThread);
+      setThreadAnalysis(updatedThread);
       setAnalysisCount(prev => prev + 1);
       
       toast({
@@ -118,7 +138,13 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
       }));
 
     } catch (error) {
-      console.error('Error in Claude analysis:', error);
+      console.error('Error in Claude analysis:', {
+        timestamp: new Date().toISOString(),
+        error: error.message,
+        stack: error.stack,
+        context: 'full_analysis'
+      });
+      
       toast({
         variant: "destructive",
         title: "Analysis Error",
