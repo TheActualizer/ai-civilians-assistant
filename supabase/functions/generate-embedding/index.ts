@@ -13,6 +13,7 @@ serve(async (req) => {
 
   try {
     const { text } = await req.json();
+    console.log('Generating embedding for text:', text);
     
     const configuration = new Configuration({
       apiKey: Deno.env.get('OPENAI_API_KEY'),
@@ -25,6 +26,7 @@ serve(async (req) => {
     });
 
     const [{ embedding }] = embeddingResponse.data.data;
+    console.log('Generated embedding successfully');
 
     return new Response(
       JSON.stringify({ embedding }),

@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { DifyAgent, AgentAction } from "@/components/Agents/types";
+import type { DifyAgent, AgentAction } from '@/components/Agents/types';
 
 export type FlowContext = {
   priority: number;
@@ -10,7 +10,11 @@ export type FlowContext = {
   subscribers: string[];
 };
 
-export async function initializeAgentFlow(agent: DifyAgent, action: string, details: any = {}) {
+export async function initializeAgentFlow(
+  agent: DifyAgent, 
+  action: string, 
+  details: any = {}
+) {
   console.log(`Initializing flow for agent ${agent.id}:`, { action, details });
   
   try {
@@ -63,7 +67,7 @@ export async function queryAgentContext(query: string, threshold = 0.7, limit = 
   console.log('Querying agent context:', { query, threshold, limit });
   
   try {
-    // First, get embedding for the query using the embedding edge function
+    // First, get embedding for the query
     const { data: embeddingData, error: embeddingError } = await supabase.functions.invoke(
       'generate-embedding',
       {
@@ -73,7 +77,7 @@ export async function queryAgentContext(query: string, threshold = 0.7, limit = 
 
     if (embeddingError) throw embeddingError;
 
-    // Search across knowledge base and chat history using the embedding
+    // Search across knowledge base using the embedding
     const { data: results, error: searchError } = await supabase.rpc(
       'search_agent_context',
       {
