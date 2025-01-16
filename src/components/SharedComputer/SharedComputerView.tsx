@@ -14,9 +14,14 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
+  const [isMicActive, setIsMicActive] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      console.log('No session ID provided, cannot initialize shared computer view');
+      return;
+    }
 
     console.log('Initializing shared computer view:', { sessionId });
 
@@ -63,6 +68,7 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
   }, [sessionId, toast]);
 
   const toggleSharing = async () => {
+    console.log('Toggling screen sharing:', { currentState: isSharing });
     try {
       const { data, error } = await supabase.functions.invoke('shared-computer', {
         body: {
@@ -79,8 +85,12 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error toggling screen share:', error);
+        throw error;
+      }
 
+      console.log('Screen sharing toggle successful:', data);
       setIsSharing(!isSharing);
       toast({
         title: isSharing ? "Screen sharing stopped" : "Screen sharing started",
@@ -92,6 +102,78 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
         variant: "destructive",
         title: "Error",
         description: "Failed to toggle screen sharing",
+      });
+    }
+  };
+
+  const toggleMicrophone = async () => {
+    console.log('Toggling microphone:', { currentState: isMicActive });
+    try {
+      const { data, error } = await supabase.functions.invoke('shared-computer', {
+        body: {
+          action: 'update_state',
+          data: {
+            session_id: sessionId,
+            state: {
+              voiceChat: {
+                active: !isMicActive,
+                userId: sessionId
+              }
+            }
+          }
+        }
+      });
+
+      if (error) throw error;
+      
+      console.log('Microphone toggle successful:', data);
+      setIsMicActive(!isMicActive);
+      toast({
+        title: isMicActive ? "Microphone disabled" : "Microphone enabled",
+        description: isMicActive ? "Your microphone is now muted" : "Your microphone is now active",
+      });
+    } catch (error) {
+      console.error('Error toggling microphone:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to toggle microphone",
+      });
+    }
+  };
+
+  const toggleCamera = async () => {
+    console.log('Toggling camera:', { currentState: isCameraActive });
+    try {
+      const { data, error } = await supabase.functions.invoke('shared-computer', {
+        body: {
+          action: 'update_state',
+          data: {
+            session_id: sessionId,
+            state: {
+              videoChat: {
+                active: !isCameraActive,
+                userId: sessionId
+              }
+            }
+          }
+        }
+      });
+
+      if (error) throw error;
+      
+      console.log('Camera toggle successful:', data);
+      setIsCameraActive(!isCameraActive);
+      toast({
+        title: isCameraActive ? "Camera disabled" : "Camera enabled",
+        description: isCameraActive ? "Your camera is now off" : "Your camera is now on",
+      });
+    } catch (error) {
+      console.error('Error toggling camera:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to toggle camera",
       });
     }
   };
@@ -123,13 +205,15 @@ export function SharedComputerView({ sessionId }: SharedComputerProps) {
             </Button>
             <Button
               variant="ghost"
-              className="text-blue-400 hover:text-blue-300"
+              className={`${isCameraActive ? 'text-blue-400' : 'text-gray-400'} hover:text-blue-300`}
+              onClick={toggleCamera}
             >
               <Camera className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
-              className="text-purple-400 hover:text-purple-300"
+              className={`${isMicActive ? 'text-purple-400' : 'text-gray-400'} hover:text-purple-300`}
+              onClick={toggleMicrophone}
             >
               <Mic className="h-5 w-5" />
             </Button>

@@ -16,6 +16,10 @@ interface SharedComputerState {
     active: boolean;
     participants: string[];
   };
+  videoChat: {
+    active: boolean;
+    participants: string[];
+  };
   systemLoad: {
     cpu: number;
     memory: number;
@@ -30,6 +34,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Received shared computer request:', req.url);
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
@@ -48,7 +54,9 @@ serve(async (req) => {
       case 'join':
         // Handle user joining the shared computer session
         const { user_id, session_id } = data
-        await supabase.from('debug_sessions').upsert({
+        console.log('User joining session:', { user_id, session_id });
+        
+        const joinResult = await supabase.from('debug_sessions').upsert({
           id: session_id,
           name: 'shared-computer',
           participants: [user_id],
@@ -57,6 +65,13 @@ serve(async (req) => {
             state: 'active'
           }
         })
+
+        if (joinResult.error) {
+          console.error('Error joining session:', joinResult.error);
+          throw joinResult.error;
+        }
+
+        console.log('Successfully joined session:', joinResult.data);
         return new Response(
           JSON.stringify({ success: true, session_id }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -65,18 +80,28 @@ serve(async (req) => {
       case 'update_state':
         // Handle state updates (screen sharing, voice chat, etc)
         const { session_id: sid, state } = data
-        await supabase.from('debug_sessions').update({
+        console.log('Updating session state:', { sid, state });
+        
+        const updateResult = await supabase.from('debug_sessions').update({
           session_data: {
             ...state,
             lastUpdated: timestamp
           }
         }).eq('id', sid)
+
+        if (updateResult.error) {
+          console.error('Error updating session state:', updateResult.error);
+          throw updateResult.error;
+        }
+
+        console.log('Successfully updated session state:', updateResult.data);
         return new Response(
           JSON.stringify({ success: true }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 
       default:
+        console.error('Unknown action:', action);
         throw new Error(`Unknown action: ${action}`)
     }
   } catch (error) {
