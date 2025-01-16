@@ -1389,6 +1389,13 @@ export type Database = {
             foreignKeyName: "ui_versions_parent_version_id_fkey"
             columns: ["parent_version_id"]
             isOneToOne: false
+            referencedRelation: "code_implementation_mapping"
+            referencedColumns: ["version_id"]
+          },
+          {
+            foreignKeyName: "ui_versions_parent_version_id_fkey"
+            columns: ["parent_version_id"]
+            isOneToOne: false
             referencedRelation: "final_build_restore_points"
             referencedColumns: ["id"]
           },
@@ -1403,6 +1410,23 @@ export type Database = {
       }
     }
     Views: {
+      code_implementation_mapping: {
+        Row: {
+          component_registry: Json | null
+          components: Json | null
+          implementation_details: Json | null
+          integration_points: Json | null
+          layout_type: string | null
+          page_category: string | null
+          page_sections: Json | null
+          restore_point_hash: string | null
+          route: string | null
+          synthesis_history: Json | null
+          version_id: string | null
+          version_name: string | null
+        }
+        Relationships: []
+      }
       final_build_restore_points: {
         Row: {
           build_metrics: Json | null

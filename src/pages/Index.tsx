@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import Features from "@/components/Features";
 import { CoreFeatures } from "@/components/home/CoreFeatures";
 import { HubSection } from "@/components/home/HubSection";
+import { PageSelector } from "@/components/VersionManagement/PageSelector";
 
 const Index = () => {
   useEffect(() => {
@@ -98,39 +99,16 @@ const Index = () => {
         {/* Core Features Section */}
         <CoreFeatures />
 
-        {/* Enterprise Features */}
+        {/* Page Selection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1.0 }}
           className="mt-16"
         >
-          <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 p-8">
-            <div className="text-center mb-8">
-              <Sparkles className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold text-white mb-4">Enterprise Features</h2>
-              <p className="text-gray-300">Advanced capabilities for professional users</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Link to="/enterprise/overview" className="group">
-                <Card className="bg-gray-800/50 border-gray-700 p-6 hover:bg-gray-800 transition-all duration-300">
-                  <Brain className="h-8 w-8 text-purple-500 mb-4 group-hover:text-purple-400" />
-                  <h3 className="text-xl font-semibold text-white mb-2">AI Command Center</h3>
-                  <p className="text-gray-400">Centralized control for AI operations</p>
-                </Card>
-              </Link>
-              
-              <Link to="/enterprise/analytics" className="group">
-                <Card className="bg-gray-800/50 border-gray-700 p-6 hover:bg-gray-800 transition-all duration-300">
-                  <Zap className="h-8 w-8 text-blue-500 mb-4 group-hover:text-blue-400" />
-                  <h3 className="text-xl font-semibold text-white mb-2">Advanced Analytics</h3>
-                  <p className="text-gray-400">Deep insights and performance metrics</p>
-                </Card>
-              </Link>
-            </div>
-          </Card>
+          <PageSelector />
         </motion.div>
+
       </div>
     </div>
   );
