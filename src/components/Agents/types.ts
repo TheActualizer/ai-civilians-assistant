@@ -44,6 +44,26 @@ export interface SystemLoad {
   cpu: number;
   memory: number;
   network: number;
+  cpu_threads?: number[];
+  io_operations?: number[];
+  memory_allocation?: number[];
+}
+
+export interface NetworkStats {
+  latency: number[];
+  bandwidth: number[];
+  connections: number[];
+  bandwidth_usage?: number[];
+  connection_pool?: number[];
+  latency_history?: number[];
+}
+
+export interface PerformanceMetrics {
+  response_time: number[];
+  success_rate: number[];
+  error_rate: number[];
+  throughput?: number[];
+  response_times?: number[];
 }
 
 export interface AgentMetricsData {
@@ -53,16 +73,8 @@ export interface AgentMetricsData {
   activeFlows: number;
   successRate: number;
   totalInteractions: number;
-  system_load: {
-    cpu_threads: number[];
-    io_operations: number[];
-    memory_allocation: number[];
-  };
-  networkMetrics: {
-    bandwidth_usage: number[];
-    connection_pool: number[];
-    latency_history: number[];
-  };
+  system_load: SystemLoad;
+  networkMetrics: NetworkStats;
   performanceIndicators: {
     error_rate: number[];
     throughput: number[];
@@ -75,22 +87,15 @@ export interface ThreadAnalysis {
   page_path: string;
   thread_type: string;
   system_load: SystemLoad;
-  performance_metrics: {
-    response_time: number[];
-    success_rate: number[];
-    error_rate: number[];
-  };
-  network_stats: {
-    latency: number[];
-    bandwidth: number[];
-    connections: number[];
-  };
+  performance_metrics: PerformanceMetrics;
+  network_stats: NetworkStats;
   analysis_status: string;
   last_analysis_timestamp: string;
   connection_status: string;
   connection_score: number;
   analysis_data: Record<string, any>;
-  agent_states: Record<string, string>;
+  agent_states: Record<string, any>;
+  agent_feedback?: Record<string, any>;
   auto_analysis_enabled?: boolean;
   analysis_interval?: number;
 }
@@ -120,35 +125,86 @@ export interface SharedComputerState {
   };
 }
 
-export interface DebugPanelState {
-  isCollapsed: boolean;
-  position: 'right' | 'left' | 'bottom';
-  isMinimized: boolean;
-  activeTab: string;
-  messages: AgentMessage[];
-  systemHealth: {
-    cpu: number;
-    memory: number;
-    network: number;
-    lastUpdate: string;
+export interface SystemAnalysis {
+  metrics: Record<string, any>;
+  patterns: Record<string, any>;
+  insights: string[];
+  correlations: any[];
+  predictions: any[];
+  recommendations: any[];
+}
+
+export interface ApiMetric {
+  endpoint: string;
+  responseTime: number;
+  successRate: number;
+  errorCount: number;
+  timestamp: string;
+}
+
+export interface ServiceMetrics {
+  id: string;
+  name: string;
+  status: string;
+  performance_metrics: {
+    response_times: number[];
+    error_rates: number[];
+    throughput: number[];
+    resource_usage: {
+      cpu: number[];
+      memory: number[];
+      network: number[];
+    };
   };
-  threadAnalysis: ThreadAnalysis | null;
 }
 
-export interface EnterpriseDebugFeatures {
-  aiAssistance: boolean;
-  realTimeMetrics: boolean;
-  advancedLogging: boolean;
-  systemOptimization: boolean;
-  threadManagement: boolean;
-  performanceAnalytics: boolean;
+export interface SiteStructurePage {
+  id: string;
+  path: string;
+  title: string;
+  sections: any[];
+  features: string[];
+  integrations: string[];
 }
 
-export interface DebugConsoleConfig {
-  features: EnterpriseDebugFeatures;
-  theme: 'light' | 'dark' | 'system';
-  autoAnalysis: boolean;
-  refreshInterval: number;
-  maxLogRetention: number;
-  aiModel: string;
+export interface MainLayoutProps {
+  children: React.ReactNode;
+  showNavigation?: boolean;
+}
+
+export interface PageVersion {
+  version_id: string;
+  version_name: string;
+  route: string;
+  components: any;
+  implementation_details: Record<string, any>;
+  layout_type: string;
+  page_category: string;
+  integration_points: string[];
+  component_registry: Record<string, any>;
+}
+
+export interface UIVersion {
+  id: string;
+  name: string;
+  route: string;
+  component_data: Record<string, any>;
+  version_type: string;
+  version_tags: string[];
+  performance_metrics: {
+    api_latency: number[];
+    render_time: number[];
+    memory_usage: number[];
+  };
+  integration_data: {
+    connected_services: string[];
+    api_dependencies: string[];
+    data_flow: string[];
+  };
+  created_at: string;
+  is_active?: boolean;
+  description?: string;
+  metadata?: Record<string, any>;
+  created_by?: string;
+  parent_version_id?: string;
 }
