@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ClaudeScreenAnalysis } from './ClaudeScreenAnalysis';
 
 interface ClaudeAnalysisProps {
   pageRoute: string;
@@ -379,6 +380,20 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     }
   };
 
+  const handleScreenAnalysis = (analysisData: any) => {
+    console.log('Received screen analysis:', analysisData);
+    // Update thread analysis with screen data
+    if (threadAnalysis) {
+      setThreadAnalysis({
+        ...threadAnalysis,
+        analysis_data: {
+          ...threadAnalysis.analysis_data,
+          screen_analysis: analysisData
+        }
+      });
+    }
+  };
+
   return (
     <ScrollArea className="h-[500px]">
       <div className="space-y-4">
@@ -432,7 +447,11 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             <Activity className="h-4 w-4 text-primary" />
             <h4 className="font-medium text-gray-300">Claude Activity Log</h4>
           </div>
-          <ScrollArea className="h-[200px] border border-gray-700 rounded-md p-2">
+          
+          {/* Add Screen Analysis Component */}
+          <ClaudeScreenAnalysis onAnalysisComplete={handleScreenAnalysis} />
+          
+          <ScrollArea className="h-[200px] border border-gray-700 rounded-md p-2 mt-4">
             {threadAnalysis?.analysis_data ? (
               <div className="text-sm text-gray-400">
                 <div className="flex items-center gap-2">
