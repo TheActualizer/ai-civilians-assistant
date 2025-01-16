@@ -48,7 +48,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const { toast } = useToast();
 
   const initSystem = useCallback(async () => {
-    if (isInitializing) return; // Prevent multiple initialization attempts
+    if (isInitializing) return;
     
     try {
       setIsInitializing(true);
@@ -66,7 +66,24 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
       if (data) {
         console.log('Found existing analysis:', data);
-        setAnalysis(data as ThreadAnalysis);
+        const transformedData: ThreadAnalysis = {
+          id: data.id,
+          page_path: data.page_path,
+          thread_type: data.thread_type,
+          system_load: data.system_load as SystemLoad,
+          performance_metrics: data.performance_metrics as PerformanceMetrics,
+          network_stats: data.network_stats as NetworkStats,
+          analysis_status: data.analysis_status,
+          last_analysis_timestamp: data.last_analysis_timestamp,
+          connection_status: data.connection_status,
+          connection_score: data.connection_score,
+          analysis_data: data.analysis_data || {},
+          agent_states: data.agent_states || {},
+          agent_feedback: data.agent_feedback,
+          auto_analysis_enabled: data.auto_analysis_enabled,
+          analysis_interval: data.analysis_interval
+        };
+        setAnalysis(transformedData);
       } else {
         console.log('Creating new analysis for route:', pageRoute);
         const { data: newAnalysis, error: insertError } = await supabase
@@ -81,11 +98,25 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
           .single();
 
         if (insertError) throw insertError;
-        setAnalysis(newAnalysis as ThreadAnalysis);
+        
+        const transformedNewAnalysis: ThreadAnalysis = {
+          id: newAnalysis.id,
+          page_path: newAnalysis.page_path,
+          thread_type: newAnalysis.thread_type,
+          system_load: newAnalysis.system_load as SystemLoad,
+          performance_metrics: newAnalysis.performance_metrics as PerformanceMetrics,
+          network_stats: newAnalysis.network_stats as NetworkStats,
+          analysis_status: newAnalysis.analysis_status,
+          last_analysis_timestamp: newAnalysis.last_analysis_timestamp,
+          connection_status: newAnalysis.connection_status,
+          connection_score: newAnalysis.connection_score,
+          analysis_data: newAnalysis.analysis_data || {},
+          agent_states: newAnalysis.agent_states || {}
+        };
+        setAnalysis(transformedNewAnalysis);
       }
     } catch (error: any) {
       console.error('Error initializing Claude system:', error);
-      // Only show one error toast
       toast({
         variant: "destructive",
         title: "Initialization Error",

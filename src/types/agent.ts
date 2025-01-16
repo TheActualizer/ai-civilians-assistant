@@ -1,28 +1,43 @@
-// ... keep existing code (up to UIVersion interface)
-
-export interface UIVersion {
+export interface DifyAgent {
   id: string;
   name: string;
-  route: string;
-  component_data: Record<string, any>;
-  version_type: string;
-  version_tags: string[];
-  performance_metrics: {
-    api_latency: number[];
-    render_time: number[];
-    memory_usage: number[];
-  };
-  integration_data: {
-    connected_services: string[];
-    api_dependencies: string[];
-    data_flow: string[];
-  };
-  created_at: string;
-  is_active?: boolean;
-  description?: string;
-  metadata?: Record<string, any>;
-  created_by?: string;
-  parent_version_id?: string;
+  role: string;
+  status: 'idle' | 'processing' | 'completed' | 'error';
+  backstory: string;
+  systemPrompt?: string;
+  model?: string;
+  progress?: number;
+  documents?: string[];
+  lastAction?: string;
+}
+
+export interface AgentAction {
+  id: string;
+  description: string;
+  timestamp: string;
+  agentId: string;
+  status: 'pending' | 'success' | 'error';
+}
+
+export interface AgentState {
+  agents: DifyAgent[];
+  actions: AgentAction[];
+  currentPhase: string;
+  isProcessing: boolean;
+}
+
+export interface AgentMessage {
+  role: string;
+  content: string;
+  agent?: string;
+  message?: string;
+  timestamp: string;
+}
+
+export interface AgentsPanelProps {
+  onMessage: (message: string, agent: string) => Promise<void>;
+  onVoiceInput: (transcript: string) => Promise<void>;
+  messages: AgentMessage[];
 }
 
 export interface SystemLoad {
@@ -41,10 +56,6 @@ export interface NetworkStats {
   bandwidth_usage?: number[];
   connection_pool?: number[];
   latency_history?: number[];
-}
-
-export interface MainLayoutProps {
-  children: React.ReactNode;
 }
 
 export interface PerformanceMetrics {
@@ -71,14 +82,6 @@ export interface AgentMetricsData {
   };
 }
 
-export interface AgentMessage {
-  role: string;
-  content: string;
-  timestamp?: string;
-  agent?: string;
-  message?: string;
-}
-
 export interface ThreadAnalysis {
   id: string;
   page_path: string;
@@ -97,85 +100,85 @@ export interface ThreadAnalysis {
   analysis_interval?: number;
 }
 
-export interface ServiceMetrics {
-  id: string;
-  service_name: string;
-  service_type: string;
-  status: string;
-  health_score: number;
-  performance_metrics: {
-    response_times: number[];
-    error_rates: number[];
-    throughput: number[];
-    resource_usage: {
-      cpu: number[];
-      memory: number[];
-      network: number[];
-    };
-  };
-}
-
-export interface ApiMetric {
-  id: string;
-  service_name: string;
-  endpoint: string;
-  response_time: number;
-  success_rate: number;
-  error_count: number;
-  total_requests: number;
-  performance_data: Record<string, any>;
-  system_metrics: SystemLoad;
-}
-
-export interface DifyAgent {
-  id: string;
-  name: string;
-  role: string;
-  status: 'idle' | 'processing' | 'completed' | 'error';
-  backstory?: string;
-  systemPrompt?: string;
-  model?: string;
-  progress?: number;
-  documents?: string[];
-}
-
-export interface SiteStructurePage {
-  id: string;
-  page_path: string;
-  title: string;
-  description?: string;
-  hub_name?: string;
-  parent_path?: string;
-  is_active: boolean;
-  requires_auth: boolean;
-  page_type: string;
-  metadata: Record<string, any>;
-  component_data: {
-    sections: any[];
-    features: any[];
-    integrations: any[];
-  };
-  created_at: string;
-  updated_at: string;
-}
-
 export interface SharedComputerState {
-  session_id: string;
+  id?: string;
+  session_id?: string;
   screen_sharing: {
     active: boolean;
     userId: string | null;
-    resolution?: string;
   };
   voice_chat: {
     active: boolean;
     participants: string[];
-    quality?: string;
   };
   video_chat: {
     active: boolean;
     participants: string[];
-    quality?: string;
   };
   active_users: string[];
   system_metrics: SystemLoad;
+  browser_state?: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
+  };
+}
+
+export interface DebugPanelState {
+  isCollapsed: boolean;
+  position: 'right' | 'left' | 'bottom';
+  isMinimized: boolean;
+  activeTab: string;
+  messages: AgentMessage[];
+  systemHealth: {
+    cpu: number;
+    memory: number;
+    network: number;
+    lastUpdate: string;
+  };
+  threadAnalysis: ThreadAnalysis | null;
+}
+
+export interface EnterpriseDebugFeatures {
+  aiAssistance: boolean;
+  realTimeMetrics: boolean;
+  advancedLogging: boolean;
+  systemOptimization: boolean;
+  threadManagement: boolean;
+  performanceAnalytics: boolean;
+}
+
+export interface DebugConsoleConfig {
+  features: EnterpriseDebugFeatures;
+  theme: 'light' | 'dark' | 'system';
+  autoAnalysis: boolean;
+  refreshInterval: number;
+  maxLogRetention: number;
+  aiModel: string;
+}
+
+export interface UIVersion {
+  id: string;
+  name: string;
+  route: string;
+  component_data: Record<string, any>;
+  version_type: string;
+  version_tags: string[];
+  performance_metrics: {
+    api_latency: number[];
+    render_time: number[];
+    memory_usage: number[];
+  };
+  integration_data: {
+    connected_services: string[];
+    api_dependencies: string[];
+    data_flow: string[];
+  };
+  created_at: string;
+  is_active?: boolean;
+  description?: string;
+  metadata?: Record<string, any>;
+  created_by?: string;
+  parent_version_id?: string;
 }

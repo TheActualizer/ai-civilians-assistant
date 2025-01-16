@@ -914,6 +914,42 @@ export type Database = {
           },
         ]
       }
+      rebuild_operations: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          rebuild_config: Json | null
+          rebuild_metrics: Json | null
+          rebuild_type: string
+          status: string
+          updated_at: string | null
+          version_ids: string[]
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          rebuild_config?: Json | null
+          rebuild_metrics?: Json | null
+          rebuild_type: string
+          status?: string
+          updated_at?: string | null
+          version_ids: string[]
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          rebuild_config?: Json | null
+          rebuild_metrics?: Json | null
+          rebuild_type?: string
+          status?: string
+          updated_at?: string | null
+          version_ids?: string[]
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
