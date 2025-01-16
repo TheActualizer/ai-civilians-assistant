@@ -4,6 +4,33 @@ export interface SystemLoad {
   network: number;
 }
 
+export interface SharedComputerState {
+  activeUsers: string[];
+  screenSharing: {
+    active: boolean;
+    userId?: string;
+    resolution: string;
+    frameRate: number;
+  };
+  voiceChat: {
+    active: boolean;
+    participants: string[];
+    quality: string;
+  };
+  videoChat: {
+    active: boolean;
+    participants: string[];
+    quality: string;
+  };
+  systemLoad: SystemLoad;
+  browserState: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
+  };
+}
+
 export interface PerformanceMetrics {
   response_time: number[];
   success_rate: number[];
