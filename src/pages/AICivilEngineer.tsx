@@ -12,12 +12,11 @@ import { AgentMetrics } from "@/components/Agents/AgentMetrics";
 import { AgentNetwork } from "@/components/Agents/AgentNetwork";
 import { ClaudeAnalysis } from "@/components/Agents/ClaudeAnalysis";
 import { ApiMetricsPanel } from "@/components/Enterprise/ApiMetricsPanel";
+import { IntegrationMetricsPanel } from '@/components/Enterprise/IntegrationMetricsPanel';
 import { ScreenshotButton } from "@/components/ScreenshotButton/ScreenshotButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { AgentMessage } from '@/types/agent';
-
-// ... keep existing code (imports and type definitions)
 
 const AICivilEngineer = () => {
   const session = useSession();
@@ -305,6 +304,7 @@ const AICivilEngineer = () => {
                 }
               }}
             />
+            <IntegrationMetricsPanel />
           </motion.div>
         </div>
       </div>
