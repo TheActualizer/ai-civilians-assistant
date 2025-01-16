@@ -279,10 +279,10 @@ const AICivilEngineer = () => {
                 />
                 <Button
                   onClick={() => navigate('/agent-monitoring')}
-                  className="ml-4 gap-2 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
+                  className="ml-4 gap-2 bg-primary hover:bg-primary/90"
                 >
-                  <span>Advanced Monitoring</span>
-                  <ArrowRight className="h-5 w-5 animate-pulse" />
+                  Advanced Monitoring
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
