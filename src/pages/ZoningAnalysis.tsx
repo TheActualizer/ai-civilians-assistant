@@ -1,36 +1,51 @@
-import { useSession } from "@supabase/auth-helpers-react";
-import Navbar from "@/components/Navbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
-const ZoningAnalysis = () => {
-  const session = useSession();
-
+export default function ZoningAnalysis() {
+  console.log('Rendering Zoning Analysis page');
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar session={session} />
-      <div className="container mx-auto pt-24 px-4">
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">Zoning Analysis</h1>
-        
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Property Zoning Details</h2>
-          <p className="text-gray-600 mb-6">
-            Analyze zoning regulations, restrictions, and development potential for your property.
-          </p>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-800 mb-2">Current Zoning</h3>
-              <p className="text-gray-600">View current zoning designation and permitted uses.</p>
-            </div>
-            
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-800 mb-2">Development Potential</h3>
-              <p className="text-gray-600">Analyze maximum buildable area and development options.</p>
-            </div>
-          </div>
+    <div className="container mx-auto p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>Zoning Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600">
+              Welcome to the Zoning Analysis tool. This feature will help you analyze zoning regulations and requirements for your property.
+            </p>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Property Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">
+                Enter your property details to begin the zoning analysis.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Zoning Requirements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">
+                View applicable zoning requirements and restrictions.
+              </p>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
-};
-
-export default ZoningAnalysis;
+}
