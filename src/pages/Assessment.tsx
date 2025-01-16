@@ -117,12 +117,12 @@ const Assessment = () => {
   }, []);
 
   const renderJsonData = () => {
-    if (!propertyRequest?.api_data) {
+    if (!propertyRequest?.lightbox_data) {
       return (
         <Alert>
-          <AlertTitle>No API Data</AlertTitle>
+          <AlertTitle>No LightBox API Data</AlertTitle>
           <AlertDescription>
-            No API data has been fetched yet for this property.
+            No LightBox API data has been fetched yet for this property.
           </AlertDescription>
         </Alert>
       );
@@ -130,29 +130,19 @@ const Assessment = () => {
 
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(propertyRequest.api_data).map(([key, value]) => (
-            <Card key={key} className="overflow-hidden">
-              <CardHeader className="bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium capitalize">
-                    {key.replace(/_/g, ' ')}
-                  </CardTitle>
-                  <Badge variant={value ? "default" : "secondary"}>
-                    {value ? "Data Present" : "No Data"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[200px]">
-                  <pre className="p-4 text-xs font-mono bg-gray-50 rounded-sm">
-                    {JSON.stringify(value, null, 2)}
-                  </pre>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Raw LightBox API Response</CardTitle>
+            <CardDescription>Complete unmodified response from the LightBox API</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] w-full rounded-md border">
+              <pre className="p-4 text-sm font-mono whitespace-pre-wrap">
+                {JSON.stringify(propertyRequest.lightbox_data, null, 2)}
+              </pre>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
     );
   };

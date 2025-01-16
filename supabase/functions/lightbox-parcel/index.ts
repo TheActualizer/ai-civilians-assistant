@@ -8,26 +8,6 @@ interface AddressRequest {
   zip: string;
 }
 
-interface LightBoxResponse {
-  parcelId?: string;
-  address?: {
-    streetAddress: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
-  propertyDetails?: {
-    landUse?: string;
-    lotSize?: string;
-    zoning?: string;
-    yearBuilt?: string;
-  };
-  rawResponse?: any;
-  timestamp?: string;
-  lightbox_processed?: boolean;
-  processed_at?: string;
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -48,7 +28,7 @@ Deno.serve(async (req) => {
       throw new Error('Missing required address components')
     }
 
-    // Attempt to call the actual LightBox API
+    // Call the LightBox API
     try {
       const lightboxUrl = 'https://api.lightbox.com/v1/property/search'
       console.log('Calling LightBox API at:', lightboxUrl)
@@ -84,32 +64,9 @@ Deno.serve(async (req) => {
       }
 
       const lightboxData = await lightboxResponse.json()
-      console.log('LightBox API response:', lightboxData)
+      console.log('Raw LightBox API response:', lightboxData)
 
-      // Transform the real API response into our expected format
-      const response: LightBoxResponse = {
-        parcelId: lightboxData.parcelId || `LB${Date.now()}`,
-        address: {
-          streetAddress: address,
-          city: city,
-          state: state,
-          zip: zip
-        },
-        propertyDetails: {
-          landUse: lightboxData.landUse || "Unknown",
-          lotSize: lightboxData.lotSize || "Unknown",
-          zoning: lightboxData.zoning || "Unknown",
-          yearBuilt: lightboxData.yearBuilt || "Unknown"
-        },
-        timestamp: new Date().toISOString(),
-        lightbox_processed: true,
-        processed_at: new Date().toISOString(),
-        rawResponse: lightboxData
-      }
-
-      console.log('Transformed response:', response)
-
-      // Store the response in Supabase
+      // Store the raw response in Supabase
       const supabaseClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -127,15 +84,13 @@ Deno.serve(async (req) => {
         throw new Error('Failed to fetch property request')
       }
 
+      // Store the raw response without transformation
       const { error: updateError } = await supabaseClient
         .from('property_requests')
         .update({
-          lightbox_data: response,
+          lightbox_data: lightboxData, // Store the raw response
           lightbox_processed_at: new Date().toISOString(),
-          status: 'processed',
-          status_details: {
-            ...response
-          }
+          status: 'processed'
         })
         .eq('id', propertyRequest.id)
 
@@ -144,8 +99,9 @@ Deno.serve(async (req) => {
         throw new Error('Failed to update property request with LightBox data')
       }
 
+      // Return the raw response
       return new Response(
-        JSON.stringify(response),
+        JSON.stringify(lightboxData),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
 
