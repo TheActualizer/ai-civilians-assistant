@@ -1,7 +1,7 @@
-import Navbar from "@/components/Navbar";
 import { useSession } from "@supabase/auth-helpers-react";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
 import { 
   Building2, 
   Network, 
