@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from "@supabase/auth-helpers-react";
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Send } from "lucide-react";
+import { ArrowRight, Send, MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -172,7 +172,7 @@ const AICivilEngineer = () => {
       <Navbar session={session} />
       <SidebarProvider>
         <div className="flex flex-col w-full min-h-[calc(100vh-4rem)]">
-          <div className="flex-1 pt-16 px-6 pb-8">
+          <div className="flex-1 pt-16 px-6 pb-[500px]"> {/* Increased bottom padding to make room for chat */}
             <div className="mb-8">
               <AgentsPanel 
                 onMessage={handleAgentMessage}
@@ -230,44 +230,54 @@ const AICivilEngineer = () => {
             </Tabs>
           </div>
           
-          <div className="fixed bottom-0 left-0 right-0 bg-gray-900/95 border-t border-gray-700 backdrop-blur-sm">
+          {/* Enhanced Chat Section */}
+          <div className="fixed bottom-0 left-0 right-0 bg-gray-900/95 border-t border-gray-700 backdrop-blur-sm z-40">
             <div className="container mx-auto px-4">
-              <div className="flex flex-col h-[400px] py-4">
-                <ScrollArea className="flex-1 mb-4 px-4">
-                  <div className="space-y-4">
-                    {messages.map((msg, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${
-                          msg.agent === 'user' ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
+              <div className="flex flex-col h-[450px] py-4"> {/* Increased height */}
+                <div className="flex items-center gap-2 mb-4 text-gray-200">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">Agent Chat</h3>
+                </div>
+                
+                <Card className="flex-1 bg-gray-800/50 border-gray-700 mb-4">
+                  <ScrollArea className="h-[300px] p-4"> {/* Increased scroll area height */}
+                    <div className="space-y-4">
+                      {messages.map((msg, index) => (
                         <div
-                          className={`max-w-[80%] p-3 rounded-lg ${
-                            msg.agent === 'user'
-                              ? 'bg-primary/10 text-primary-foreground'
-                              : 'bg-gray-800 text-gray-100'
+                          key={index}
+                          className={`flex ${
+                            msg.agent === 'user' ? 'justify-end' : 'justify-start'
                           }`}
                         >
-                          <div className="text-sm font-medium mb-1">
-                            {msg.agent === 'user' ? 'You' : msg.agent}
-                          </div>
-                          <div className="text-sm">{msg.message}</div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {new Date(msg.timestamp).toLocaleTimeString()}
+                          <div
+                            className={`max-w-[80%] p-4 rounded-lg ${
+                              msg.agent === 'user'
+                                ? 'bg-primary/10 text-primary-foreground ml-auto'
+                                : 'bg-gray-700/50 text-gray-100'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-medium">
+                                {msg.agent === 'user' ? 'You' : msg.agent}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {new Date(msg.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </Card>
                 
-                <div className="flex gap-2 px-4">
+                <div className="flex gap-3">
                   <Textarea
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    placeholder="Type your message..."
-                    className="min-h-[60px] bg-gray-800/50 border-gray-700"
+                    placeholder="Type your message to the agent team..."
+                    className="min-h-[80px] bg-gray-800/50 border-gray-700 text-gray-100"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -278,7 +288,7 @@ const AICivilEngineer = () => {
                   <Button
                     onClick={() => handleSubmit()}
                     disabled={isProcessing}
-                    className="px-8 h-[60px]"
+                    className="px-8 h-[80px] bg-primary hover:bg-primary/90"
                   >
                     <Send className="h-5 w-5" />
                   </Button>
