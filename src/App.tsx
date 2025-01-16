@@ -7,7 +7,17 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 import { DynamicPage } from "./components/DynamicPage/DynamicPage";
 
-// Lazy load all pages
+// Lazy load all pages with loading boundaries
+const lazyLoad = (importFn: () => Promise<any>) => {
+  const Component = lazy(importFn);
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <Component />
+    </Suspense>
+  );
+};
+
+// Core Routes
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
@@ -65,70 +75,94 @@ function App() {
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* Core Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/get-started" element={<GetStarted />} />
-              <Route path="/solutions" element={<Solutions />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/new-report" element={<NewReport />} />
-              <Route path="/calculations" element={<Calculations />} />
-              <Route path="/address-validation" element={<AddressValidation />} />
-              <Route path="/assessment" element={<Assessment />} />
-              <Route path="/agent-monitoring" element={<AgentMonitoring />} />
-              <Route path="/learn-more" element={<LearnMore />} />
-              <Route path="/ai-civil-engineer" element={<AICivilEngineer />} />
-              <Route path="/area-calculations" element={<AreaCalculations />} />
-              
+              <Route path="/" element={lazyLoad(() => import("./pages/Index"))} />
+              <Route path="/login" element={lazyLoad(() => import("./pages/Login"))} />
+              <Route path="/get-started" element={lazyLoad(() => import("./pages/GetStarted"))} />
+              <Route path="/solutions" element={lazyLoad(() => import("./pages/Solutions"))} />
+              <Route path="/marketplace" element={lazyLoad(() => import("./pages/Marketplace"))} />
+              <Route path="/orders" element={lazyLoad(() => import("./pages/Orders"))} />
+              <Route path="/new-report" element={lazyLoad(() => import("./pages/NewReport"))} />
+              <Route path="/calculations" element={lazyLoad(() => import("./pages/Calculations"))} />
+              <Route path="/address-validation" element={lazyLoad(() => import("./pages/AddressValidation"))} />
+              <Route path="/assessment" element={lazyLoad(() => import("./pages/Assessment"))} />
+              <Route path="/agent-monitoring" element={lazyLoad(() => import("./pages/AgentMonitoring"))} />
+              <Route path="/learn-more" element={lazyLoad(() => import("./pages/LearnMore"))} />
+              <Route path="/ai-civil-engineer" element={lazyLoad(() => import("./pages/AICivilEngineer"))} />
+              <Route path="/area-calculations" element={lazyLoad(() => import("./pages/AreaCalculations"))} />
+
               {/* Legacy Routes */}
-              <Route path="/legacy/parcel-analysis" element={<LegacyParcelAnalysis />} />
-              <Route path="/legacy/property-details" element={<LegacyPropertyDetails />} />
-              <Route path="/legacy/assessment-view" element={<LegacyAssessmentView />} />
-              <Route path="/legacy/agent-dashboard" element={<LegacyAgentDashboard />} />
-              <Route path="/legacy/debug-console" element={<LegacyDebugConsole />} />
-              <Route path="/legacy/system-intelligence" element={<LegacySystemIntelligence />} />
-              <Route path="/legacy/shared-computer" element={<LegacySharedComputer />} />
-              
+              <Route path="/legacy/*" element={
+                <Routes>
+                  <Route path="parcel-analysis" element={lazyLoad(() => import("./pages/legacy/ParcelAnalysis"))} />
+                  <Route path="property-details" element={lazyLoad(() => import("./pages/legacy/PropertyDetails"))} />
+                  <Route path="assessment-view" element={lazyLoad(() => import("./pages/legacy/AssessmentView"))} />
+                  <Route path="agent-dashboard" element={lazyLoad(() => import("./pages/legacy/AgentDashboard"))} />
+                  <Route path="debug-console" element={lazyLoad(() => import("./pages/legacy/DebugConsole"))} />
+                  <Route path="system-intelligence" element={lazyLoad(() => import("./pages/legacy/SystemIntelligence"))} />
+                  <Route path="shared-computer" element={lazyLoad(() => import("./pages/legacy/SharedComputer"))} />
+                </Routes>
+              } />
+
               {/* Dynamic Hub Routes */}
               <Route path="/:hubName">
                 <Route index element={<DynamicPage />} />
                 <Route path=":pagePath" element={<DynamicPage />} />
               </Route>
 
-              {/* Enterprise Hub */}
-              <Route path="/enterprise">
-                <Route index element={<EnterpriseOverview />} />
-                <Route path="planning" element={<ResourcePlanning />} />
-                <Route path="analytics" element={<Analytics />} />
-              </Route>
-
-              {/* Infrastructure Hub */}
-              <Route path="/infrastructure">
-                <Route index element={<InfrastructureOverview />} />
-                <Route path="network" element={<NetworkManagement />} />
-                <Route path="security" element={<SecurityMonitoring />} />
-              </Route>
-
-              {/* Technology Hub */}
-              <Route path="/technology">
-                <Route index element={<TechnologyOverview />} />
-                <Route path="innovation" element={<Innovation />} />
-                <Route path="research" element={<Research />} />
-              </Route>
-
-              {/* Business Operations Hub */}
-              <Route path="/operations">
-                <Route index element={<OperationsOverview />} />
-                <Route path="workflow" element={<Workflow />} />
-                <Route path="reporting" element={<Reporting />} />
-              </Route>
-
-              {/* Innovation Center Hub */}
-              <Route path="/innovation">
-                <Route index element={<InnovationOverview />} />
-                <Route path="lab" element={<LabProjects />} />
-                <Route path="experiments" element={<Experiments />} />
-              </Route>
+              {/* Hub Routes */}
+              {[
+                {
+                  path: "enterprise",
+                  routes: [
+                    { index: true, component: EnterpriseOverview },
+                    { path: "planning", component: ResourcePlanning },
+                    { path: "analytics", component: Analytics }
+                  ]
+                },
+                {
+                  path: "infrastructure",
+                  routes: [
+                    { index: true, component: InfrastructureOverview },
+                    { path: "network", component: NetworkManagement },
+                    { path: "security", component: SecurityMonitoring }
+                  ]
+                },
+                {
+                  path: "technology",
+                  routes: [
+                    { index: true, component: TechnologyOverview },
+                    { path: "innovation", component: Innovation },
+                    { path: "research", component: Research }
+                  ]
+                },
+                {
+                  path: "operations",
+                  routes: [
+                    { index: true, component: OperationsOverview },
+                    { path: "workflow", component: Workflow },
+                    { path: "reporting", component: Reporting }
+                  ]
+                },
+                {
+                  path: "innovation",
+                  routes: [
+                    { index: true, component: InnovationOverview },
+                    { path: "lab", component: LabProjects },
+                    { path: "experiments", component: Experiments }
+                  ]
+                }
+              ].map(hub => (
+                <Route key={hub.path} path={hub.path}>
+                  {hub.routes.map(route => (
+                    <Route
+                      key={route.path || 'index'}
+                      index={route.index}
+                      path={route.path}
+                      element={<Suspense fallback={<LoadingSpinner />}><route.component /></Suspense>}
+                    />
+                  ))}
+                </Route>
+              ))}
 
               {/* Legacy Route Redirect */}
               <Route path="/parcel-details" element={<Navigate to="/ai-civil-engineer" replace />} />

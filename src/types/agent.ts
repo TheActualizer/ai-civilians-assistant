@@ -54,18 +54,9 @@ export interface ThreadAnalysis {
 export interface AgentMessage {
   role: string;
   content: string;
-  timestamp?: string;
+  timestamp: string;
   agent?: string;
   message?: string;
-}
-
-export interface SystemAnalysis {
-  metrics: Record<string, any>;
-  patterns: Record<string, any>;
-  insights: string[];
-  correlations: any[];
-  predictions: any[];
-  recommendations: any[];
 }
 
 export interface SharedComputerState {
@@ -85,14 +76,29 @@ export interface SharedComputerState {
   };
   active_users: string[];
   system_metrics: SystemLoad;
+  browser_state?: {
+    url: string;
+    title: string;
+    isClaudeActive: boolean;
+    lastInteraction: string;
+  };
 }
 
 export interface DifyAgent {
   id: string;
   name: string;
-  status: string;
-  type: string;
-  capabilities: string[];
+  status: 'idle' | 'processing' | 'completed' | 'error';
+  type?: string;
+  capabilities?: string[];
+}
+
+export interface SystemAnalysis {
+  metrics: Record<string, any>;
+  patterns: Record<string, any>;
+  insights: string[];
+  correlations: any[];
+  predictions: any[];
+  recommendations: any[];
 }
 
 export interface SiteStructurePage {
@@ -113,16 +119,4 @@ export interface SiteStructurePage {
   };
   created_at?: string;
   updated_at?: string;
-}
-
-export interface PerformanceMetrics {
-  response_time: number[];
-  success_rate: number[];
-  error_rate: number[];
-}
-
-export interface NetworkStats {
-  latency: number[];
-  bandwidth: number[];
-  connections: number[];
 }
