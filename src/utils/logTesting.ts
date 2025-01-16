@@ -1,81 +1,82 @@
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 export async function testSystemLogs() {
-  console.log('🧪 Starting system log tests...');
+  console.log("Starting system log tests...");
 
   try {
-    // Test 1: Basic log insertion
+    // Test basic log insertion
     const { data: basicLog, error: basicError } = await supabase
       .from('system_intelligence_logs')
       .insert({
         log_type: 'test',
-        component: 'infrastructure',
+        component: 'log-tester',
         metrics: {
-          cpu: Math.random() * 100,
-          memory: Math.random() * 100,
-          latency: Math.random() * 50
+          test_value: 100,
+          timestamp: new Date().toISOString()
         }
       })
       .select()
       .single();
 
-    console.log('📝 Basic log test:', basicLog ? 'Success' : 'Failed', basicError || '');
+    if (basicError) throw basicError;
+    console.log("Basic log created:", basicLog);
 
-    // Test 2: Complex metrics
+    // Test complex metrics logging
     const { data: complexLog, error: complexError } = await supabase
       .from('system_intelligence_logs')
       .insert({
-        log_type: 'integration_test',
-        component: 'infrastructure',
+        log_type: 'complex-test',
+        component: 'log-tester',
         metrics: {
           performance: {
-            frontend: {
-              renderTime: Math.random() * 100,
-              memoryUsage: Math.random() * 1000,
-              fps: 60 * Math.random()
-            },
-            backend: {
-              queryTime: Math.random() * 50,
-              cacheHitRate: Math.random(),
-              activeConnections: Math.floor(Math.random() * 100)
-            }
+            cpu: 45,
+            memory: 80,
+            latency: 120
+          },
+          timestamps: {
+            start: new Date().toISOString(),
+            end: new Date().toISOString()
           }
         },
-        analysis_data: {
-          patterns: ['high_load', 'cache_miss', 'network_latency'],
-          recommendations: [
-            'Optimize query performance',
-            'Increase cache size',
-            'Load balance connections'
-          ]
+        integration_metrics: {
+          frontend: {
+            errors: [],
+            latency: [120, 130, 140],
+            performance: {
+              fps: 60,
+              renderTime: 16
+            }
+          }
         }
       })
       .select()
       .single();
 
-    console.log('🔍 Complex metrics test:', complexLog ? 'Success' : 'Failed', complexError || '');
+    if (complexError) throw complexError;
+    console.log("Complex log created:", complexLog);
 
-    // Test 3: Pattern Analysis
+    // Test pattern analysis
     const { data: patterns, error: patternError } = await supabase
-      .rpc('analyze_system_patterns', { time_window: '1 hour' });
+      .rpc('analyze_system_patterns', {
+        time_window: '1 hour'
+      });
 
-    console.log('📊 Pattern analysis test:', patterns ? 'Success' : 'Failed', patternError || '');
-    console.log('Found patterns:', patterns);
+    if (patternError) throw patternError;
+    console.log("Pattern analysis results:", patterns);
 
-    return {
-      success: !basicError && !complexError && !patternError,
-      results: {
-        basicLog,
-        complexLog,
-        patterns
-      }
-    };
+    toast({
+      title: "Log tests completed",
+      description: "All system log tests completed successfully",
+      variant: "success"
+    });
 
   } catch (error) {
-    console.error('❌ Error during log testing:', error);
-    return {
-      success: false,
-      error
-    };
+    console.error("Error during log testing:", error);
+    toast({
+      title: "Log test error",
+      description: error.message,
+      variant: "destructive"
+    });
   }
 }

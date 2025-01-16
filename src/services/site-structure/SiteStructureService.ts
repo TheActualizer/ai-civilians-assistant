@@ -1,98 +1,74 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { SiteStructurePage } from "@/types/agent";
+import { SiteStructurePage } from "@/types/site-structure";
 
-class SiteStructureService {
-  private static instance: SiteStructureService;
-  private pages: Map<string, SiteStructurePage> = new Map();
+export class SiteStructureService {
+  static async getPageStructure(path: string): Promise<SiteStructurePage | null> {
+    const { data, error } = await supabase
+      .from('site_structure')
+      .select('*')
+      .eq('page_path', path)
+      .single();
 
-  private constructor() {}
-
-  static getInstance(): SiteStructureService {
-    if (!SiteStructureService.instance) {
-      SiteStructureService.instance = new SiteStructureService();
+    if (error) {
+      console.error('Error fetching page structure:', error);
+      return null;
     }
-    return SiteStructureService.instance;
+
+    if (!data) return null;
+
+    // Transform the data to match SiteStructurePage interface
+    return {
+      id: data.id,
+      path: data.page_path,
+      title: data.title,
+      sections: data.component_data?.sections || [],
+      features: data.component_data?.features || [],
+      integrations: data.component_data?.integrations || [],
+      metadata: data.metadata || {}
+    };
   }
 
-  async initialize() {
-    try {
-      const { data: pagesData, error } = await supabase
-        .from('site_structure')
-        .select('*')
-        .eq('is_active', true);
+  static async getAllPages(): Promise<SiteStructurePage[]> {
+    const { data, error } = await supabase
+      .from('site_structure')
+      .select('*');
 
-      if (error) throw error;
-
-      pagesData?.forEach(page => {
-        const structuredPage: SiteStructurePage = {
-          id: page.id,
-          page_path: page.page_path,
-          title: page.title,
-          description: page.description || '',
-          hub_name: page.hub_name || '',
-          parent_path: page.parent_path || '',
-          is_active: page.is_active || true,
-          requires_auth: page.requires_auth || false,
-          page_type: page.page_type || 'content',
-          metadata: page.metadata || {},
-          component_data: {
-            sections: page.component_data?.sections || [],
-            features: page.component_data?.features || [],
-            integrations: page.component_data?.integrations || []
-          },
-          created_at: page.created_at,
-          updated_at: page.updated_at
-        };
-        this.pages.set(page.page_path, structuredPage);
-      });
-
-      console.log('Initialized site structure:', this.pages);
-    } catch (error) {
-      console.error('Error initializing site structure:', error);
-    }
-  }
-
-  async getPages(): Promise<SiteStructurePage[]> {
-    try {
-      const { data: pagesData, error } = await supabase
-        .from('site_structure')
-        .select('*')
-        .eq('is_active', true);
-
-      if (error) throw error;
-
-      return pagesData.map(page => ({
-        id: page.id,
-        page_path: page.page_path,
-        title: page.title,
-        description: page.description || '',
-        hub_name: page.hub_name || '',
-        parent_path: page.parent_path || '',
-        is_active: page.is_active || true,
-        requires_auth: page.requires_auth || false,
-        page_type: page.page_type || 'content',
-        metadata: page.metadata || {},
-        component_data: {
-          sections: page.component_data?.sections || [],
-          features: page.component_data?.features || [],
-          integrations: page.component_data?.integrations || []
-        },
-        created_at: page.created_at,
-        updated_at: page.updated_at
-      }));
-    } catch (error) {
-      console.error('Error fetching pages:', error);
+    if (error) {
+      console.error('Error fetching all pages:', error);
       return [];
     }
+
+    // Transform the data to match SiteStructurePage[] interface
+    return data.map(page => ({
+      id: page.id,
+      path: page.page_path,
+      title: page.title,
+      sections: page.component_data?.sections || [],
+      features: page.component_data?.features || [],
+      integrations: page.component_data?.integrations || [],
+      metadata: page.metadata || {}
+    }));
   }
 
-  getPage(path: string): SiteStructurePage | undefined {
-    return this.pages.get(path);
-  }
+  static async updatePageStructure(page: SiteStructurePage): Promise<boolean> {
+    const { error } = await supabase
+      .from('site_structure')
+      .update({
+        title: page.title,
+        component_data: {
+          sections: page.sections,
+          features: page.features,
+          integrations: page.integrations
+        },
+        metadata: page.metadata
+      })
+      .eq('page_path', page.path);
 
-  getAllPages(): SiteStructurePage[] {
-    return Array.from(this.pages.values());
+    if (error) {
+      console.error('Error updating page structure:', error);
+      return false;
+    }
+
+    return true;
   }
 }
-
-export const siteStructureService = SiteStructureService.getInstance();

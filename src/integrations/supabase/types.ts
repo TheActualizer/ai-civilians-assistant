@@ -1960,6 +1960,45 @@ export type Database = {
         }
         Relationships: []
       }
+      system_intelligence_logs: {
+        Row: {
+          analysis_data: Json | null
+          component: string
+          created_at: string | null
+          flow_analysis: Json | null
+          id: string
+          integration_metrics: Json | null
+          log_type: string
+          metrics: Json | null
+          quantum_metrics: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          analysis_data?: Json | null
+          component: string
+          created_at?: string | null
+          flow_analysis?: Json | null
+          id?: string
+          integration_metrics?: Json | null
+          log_type: string
+          metrics?: Json | null
+          quantum_metrics?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          analysis_data?: Json | null
+          component?: string
+          created_at?: string | null
+          flow_analysis?: Json | null
+          id?: string
+          integration_metrics?: Json | null
+          log_type?: string
+          metrics?: Json | null
+          quantum_metrics?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       system_metrics: {
         Row: {
           component: string
@@ -2365,6 +2404,17 @@ export type Database = {
           optimization_suggestions: Json
         }[]
       }
+      analyze_system_patterns: {
+        Args: {
+          time_window?: unknown
+        }
+        Returns: {
+          pattern_type: string
+          confidence: number
+          impact_score: number
+          suggested_actions: Json
+        }[]
+      }
       analyze_video_segments: {
         Args: {
           synthesis_id: string
@@ -2505,6 +2555,15 @@ export type Database = {
           details?: Json
         }
         Returns: undefined
+      }
+      log_system_intelligence: {
+        Args: {
+          p_log_type: string
+          p_component: string
+          p_metrics?: Json
+          p_analysis_data?: Json
+        }
+        Returns: string
       }
       rotate_crypto_keys: {
         Args: {
