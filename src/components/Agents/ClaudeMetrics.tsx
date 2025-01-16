@@ -11,19 +11,72 @@ interface ClaudeMetricsProps {
   threadId: string;
 }
 
+interface MetricsState {
+  system_load: {
+    cpu: number;
+    memory: number;
+    network: number;
+  };
+  performance_metrics: {
+    response_time: number[];
+    success_rate: number[];
+    error_rate: number[];
+  };
+  network_stats: {
+    latency: number[];
+    bandwidth: number[];
+    connections: number[];
+  };
+}
+
 export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
-  const [metrics, setMetrics] = useState<any>({
-    cpu: 0,
-    memory: 0,
-    network: 0,
-    responseTime: [],
-    successRate: [],
-    errorRate: []
+  const [metrics, setMetrics] = useState<MetricsState>({
+    system_load: {
+      cpu: 0,
+      memory: 0,
+      network: 0
+    },
+    performance_metrics: {
+      response_time: [],
+      success_rate: [],
+      error_rate: []
+    },
+    network_stats: {
+      latency: [],
+      bandwidth: [],
+      connections: []
+    }
   });
 
   useEffect(() => {
     console.log('Initializing Claude metrics monitoring for thread:', threadId);
     
+    // First fetch current state
+    const fetchInitialMetrics = async () => {
+      const { data, error } = await supabase
+        .from('debug_thread_analysis')
+        .select('system_load, performance_metrics, network_stats')
+        .eq('id', threadId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching initial metrics:', error);
+        return;
+      }
+
+      console.log('Initial metrics loaded:', data);
+      if (data) {
+        setMetrics({
+          system_load: data.system_load || metrics.system_load,
+          performance_metrics: data.performance_metrics || metrics.performance_metrics,
+          network_stats: data.network_stats || metrics.network_stats
+        });
+      }
+    };
+
+    fetchInitialMetrics();
+
+    // Subscribe to real-time updates
     const channel = supabase
       .channel(`claude-metrics-${threadId}`)
       .on(
@@ -35,16 +88,21 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
           filter: `id=eq.${threadId}`
         },
         (payload) => {
-          console.log('Received metrics update:', payload);
+          console.log('Received metrics update:', {
+            timestamp: new Date().toISOString(),
+            payload,
+            threadId
+          });
+
           if (payload.new) {
-            setMetrics({
-              cpu: payload.new.system_load?.cpu || 0,
-              memory: payload.new.system_load?.memory || 0,
-              network: payload.new.system_load?.network || 0,
-              responseTime: payload.new.performance_metrics?.response_time || [],
-              successRate: payload.new.performance_metrics?.success_rate || [],
-              errorRate: payload.new.performance_metrics?.error_rate || []
-            });
+            setMetrics(prev => ({
+              system_load: payload.new.system_load || prev.system_load,
+              performance_metrics: payload.new.performance_metrics || prev.performance_metrics,
+              network_stats: payload.new.network_stats || prev.network_stats
+            }));
+
+            // Log detailed metrics to system_metrics table
+            logDetailedMetrics(payload.new);
           }
         }
       )
@@ -55,6 +113,64 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
       supabase.removeChannel(channel);
     };
   }, [threadId]);
+
+  const logDetailedMetrics = async (data: any) => {
+    const timestamp = new Date().toISOString();
+    
+    // Log CPU metrics
+    await supabase.from('system_metrics').insert([
+      {
+        metric_type: 'cpu_usage',
+        value: data.system_load?.cpu || 0,
+        component: 'claude',
+        metadata: {
+          thread_id: threadId,
+          timestamp,
+          context: 'system_load'
+        }
+      }
+    ]);
+
+    // Log memory metrics
+    await supabase.from('system_metrics').insert([
+      {
+        metric_type: 'memory_usage',
+        value: data.system_load?.memory || 0,
+        component: 'claude',
+        metadata: {
+          thread_id: threadId,
+          timestamp,
+          context: 'system_load'
+        }
+      }
+    ]);
+
+    // Log performance metrics
+    const performanceData = data.performance_metrics || {};
+    Object.entries(performanceData).forEach(async ([metric, value]) => {
+      if (Array.isArray(value) && value.length > 0) {
+        await supabase.from('system_metrics').insert([
+          {
+            metric_type: metric,
+            value: value[value.length - 1],
+            component: 'claude',
+            metadata: {
+              thread_id: threadId,
+              timestamp,
+              context: 'performance',
+              history: value
+            }
+          }
+        ]);
+      }
+    });
+
+    console.log('Detailed metrics logged to system_metrics table', {
+      timestamp,
+      threadId,
+      metrics: data
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -70,11 +186,11 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
               CPU Usage
             </CardTitle>
             <Badge variant="outline" className="bg-blue-500/10">
-              {metrics.cpu.toFixed(1)}%
+              {metrics.system_load.cpu.toFixed(1)}%
             </Badge>
           </CardHeader>
           <CardContent>
-            <Progress value={metrics.cpu} className="h-2" />
+            <Progress value={metrics.system_load.cpu} className="h-2" />
           </CardContent>
         </Card>
 
@@ -85,11 +201,11 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
               Memory
             </CardTitle>
             <Badge variant="outline" className="bg-purple-500/10">
-              {metrics.memory.toFixed(1)}%
+              {metrics.system_load.memory.toFixed(1)}%
             </Badge>
           </CardHeader>
           <CardContent>
-            <Progress value={metrics.memory} className="h-2" />
+            <Progress value={metrics.system_load.memory} className="h-2" />
           </CardContent>
         </Card>
 
@@ -100,11 +216,11 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
               Network
             </CardTitle>
             <Badge variant="outline" className="bg-green-500/10">
-              {metrics.network.toFixed(1)}%
+              {metrics.system_load.network.toFixed(1)}%
             </Badge>
           </CardHeader>
           <CardContent>
-            <Progress value={metrics.network} className="h-2" />
+            <Progress value={metrics.system_load.network} className="h-2" />
           </CardContent>
         </Card>
       </motion.div>
@@ -123,11 +239,11 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">Response Time</span>
                   <Badge variant="outline" className="bg-blue-500/10">
-                    {metrics.responseTime[metrics.responseTime.length - 1]?.toFixed(2) || 0}ms
+                    {metrics.performance_metrics.response_time[metrics.performance_metrics.response_time.length - 1]?.toFixed(2) || 0}ms
                   </Badge>
                 </div>
                 <Progress 
-                  value={metrics.responseTime[metrics.responseTime.length - 1] || 0} 
+                  value={metrics.performance_metrics.response_time[metrics.performance_metrics.response_time.length - 1] || 0} 
                   className="h-2" 
                 />
               </div>
@@ -136,11 +252,11 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">Success Rate</span>
                   <Badge variant="outline" className="bg-green-500/10">
-                    {metrics.successRate[metrics.successRate.length - 1]?.toFixed(1) || 0}%
+                    {metrics.performance_metrics.success_rate[metrics.performance_metrics.success_rate.length - 1]?.toFixed(1) || 0}%
                   </Badge>
                 </div>
                 <Progress 
-                  value={metrics.successRate[metrics.successRate.length - 1] || 0} 
+                  value={metrics.performance_metrics.success_rate[metrics.performance_metrics.success_rate.length - 1] || 0} 
                   className="h-2" 
                 />
               </div>
@@ -149,11 +265,11 @@ export function ClaudeMetrics({ threadId }: ClaudeMetricsProps) {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">Error Rate</span>
                   <Badge variant="outline" className="bg-red-500/10">
-                    {metrics.errorRate[metrics.errorRate.length - 1]?.toFixed(1) || 0}%
+                    {metrics.performance_metrics.error_rate[metrics.performance_metrics.error_rate.length - 1]?.toFixed(1) || 0}%
                   </Badge>
                 </div>
                 <Progress 
-                  value={metrics.errorRate[metrics.errorRate.length - 1] || 0} 
+                  value={metrics.performance_metrics.error_rate[metrics.performance_metrics.error_rate.length - 1] || 0} 
                   className="h-2" 
                 />
               </div>

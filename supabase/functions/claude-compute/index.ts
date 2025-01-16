@@ -18,8 +18,38 @@ serve(async (req) => {
     console.log('Claude compute received request:', {
       timestamp: new Date().toISOString(),
       context,
-      messageCount: messages.length
+      messageCount: messages.length,
+      systemPrompt: systemPrompt?.slice(0, 100) + '...',
+      route: context?.pageRoute
     });
+
+    // Log computation start
+    const computeStartTime = performance.now();
+    
+    // Simulate neural network processing phases
+    const processingPhases = [
+      'Initializing neural pathways',
+      'Analyzing context vectors',
+      'Synthesizing response patterns',
+      'Optimizing output matrices'
+    ];
+
+    for (const phase of processingPhases) {
+      console.log(`[${new Date().toISOString()}] ${phase}`, {
+        route: context?.pageRoute,
+        phase: context?.evolutionPhase,
+        systemState: context?.systemHealth
+      });
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Calculate performance metrics
+    const computeTime = performance.now() - computeStartTime;
+    const responseLatency = Math.random() * 50 + 20; // Simulated network latency
+    const processingUnits = Math.floor(Math.random() * 10) + 1;
+    const memoryUsage = Math.random() * 100;
+    const confidenceScore = Math.random() * 100;
 
     // Clone the response data to avoid stream issues
     const analysisResponse = {
@@ -27,9 +57,9 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
       analysis: {
         systemState: {
-          route: context.pageRoute,
-          phase: context.evolutionPhase,
-          health: context.systemHealth
+          route: context?.pageRoute,
+          phase: context?.evolutionPhase,
+          health: context?.systemHealth
         },
         insights: [
           'System initialization successful',
@@ -42,22 +72,33 @@ serve(async (req) => {
           'Prepare for next evolution phase'
         ],
         metrics: {
-          responseTime: Math.random() * 100 + 50,
-          confidence: Math.random() * 100,
-          processingUnits: Math.floor(Math.random() * 10) + 1
+          responseTime: responseLatency,
+          confidence: confidenceScore,
+          processingUnits
         }
       },
       metadata: {
-        processingTime: Math.random() * 1000,
+        processingTime: computeTime,
         modelVersion: '2.0.1',
-        systemLoad: Math.random() * 100
+        systemLoad: {
+          cpu: Math.random() * 100,
+          memory: memoryUsage,
+          network: Math.random() * 100
+        },
+        performance: {
+          latency: responseLatency,
+          throughput: Math.random() * 1000,
+          errorRate: Math.random() * 5
+        }
       }
     };
 
     console.log('Claude compute sending response:', {
       timestamp: new Date().toISOString(),
       status: analysisResponse.status,
-      metrics: analysisResponse.analysis.metrics
+      metrics: analysisResponse.analysis.metrics,
+      computeTime,
+      systemLoad: analysisResponse.metadata.systemLoad
     });
 
     return new Response(
@@ -73,7 +114,8 @@ serve(async (req) => {
     console.error('Error in claude-compute function:', {
       timestamp: new Date().toISOString(),
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      context: 'claude-compute'
     });
     
     return new Response(
