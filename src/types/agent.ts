@@ -15,7 +15,11 @@ export interface AgentMetricsData {
   total_interactions: number;
   metrics_data: Record<string, any>;
   created_at: string;
-  system_load: SystemLoad;
+  system_load: {
+    cpu_threads: number[];
+    io_operations: number[];
+    memory_allocation: number[];
+  };
   network_metrics: {
     bandwidth_usage: number[];
     connection_pool: number[];
@@ -45,9 +49,9 @@ export interface ThreadAnalysis {
   analysis_data: Record<string, any>;
   system_load: SystemLoad;
   performance_metrics: {
-    error_rate: number[];
-    success_rate: number[];
     response_time: number[];
+    success_rate: number[];
+    error_rate: number[];
   };
   network_stats: {
     latency: number[];
@@ -61,27 +65,6 @@ export interface ThreadAnalysis {
   };
   last_analysis_timestamp: string;
   connection_score?: number;
-}
-
-export interface DifyAgent {
-  id: string;
-  name: string;
-  role: string;
-  status: 'idle' | 'processing' | 'completed' | 'error';
-  backstory?: string;
-  systemPrompt?: string;
-  model?: string;
-  progress?: number;
-  documents?: any[];
-}
-
-export interface AgentMetrics {
-  cpu_usage: number;
-  memory_usage: number;
-  network_latency: number;
-  active_flows: number;
-  success_rate: number;
-  total_interactions: number;
 }
 
 export interface SharedComputerState {
@@ -107,14 +90,30 @@ export interface SharedComputerState {
   };
 }
 
-export interface PerformanceMetrics {
-  response_time: number[];
-  success_rate: number[];
-  error_rate: number[];
+export interface DifyAgent {
+  id: string;
+  name: string;
+  role: string;
+  status: 'idle' | 'processing' | 'completed' | 'error';
+  progress?: number;
+  last_action?: string;
+  backstory?: string;
+  documents?: string[];
+  systemPrompt?: string;
+  model?: 'claude' | 'gemini' | 'gemini-vision' | 'grok' | 'perplexity' | 'skyvern';
 }
 
-export interface NetworkStats {
-  latency: number[];
-  bandwidth: number[];
-  connections: number[];
+export interface AgentAction {
+  id: string;
+  description: string;
+  timestamp: string;
+  agentId?: string;
+  status?: 'success' | 'error' | 'warning';
+}
+
+export interface AgentState {
+  agents: DifyAgent[];
+  actions: AgentAction[];
+  currentPhase: string;
+  isProcessing: boolean;
 }
