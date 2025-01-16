@@ -959,47 +959,65 @@ export type Database = {
       }
       site_structure: {
         Row: {
+          analytics_config: Json | null
           component_data: Json | null
           created_at: string | null
+          custom_components: Json | null
           description: string | null
           hub_name: string | null
           id: string
+          integration_points: Json | null
           is_active: boolean | null
+          layout_type: string | null
           metadata: Json | null
+          page_category: string | null
           page_path: string
           page_type: string | null
           parent_path: string | null
           requires_auth: boolean | null
+          sub_pages: Json | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          analytics_config?: Json | null
           component_data?: Json | null
           created_at?: string | null
+          custom_components?: Json | null
           description?: string | null
           hub_name?: string | null
           id?: string
+          integration_points?: Json | null
           is_active?: boolean | null
+          layout_type?: string | null
           metadata?: Json | null
+          page_category?: string | null
           page_path: string
           page_type?: string | null
           parent_path?: string | null
           requires_auth?: boolean | null
+          sub_pages?: Json | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          analytics_config?: Json | null
           component_data?: Json | null
           created_at?: string | null
+          custom_components?: Json | null
           description?: string | null
           hub_name?: string | null
           id?: string
+          integration_points?: Json | null
           is_active?: boolean | null
+          layout_type?: string | null
           metadata?: Json | null
+          page_category?: string | null
           page_path?: string
           page_type?: string | null
           parent_path?: string | null
           requires_auth?: boolean | null
+          sub_pages?: Json | null
           title?: string
           updated_at?: string | null
         }
