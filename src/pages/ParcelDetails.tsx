@@ -11,9 +11,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { LightBoxResponse } from "@/components/GetStarted/types";
-import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight } from "lucide-react";
+import { Building2, MapPin, FileText, Database, Terminal, Info, ArrowRight, AlertCircle, XCircle } from "lucide-react";
 
 const ParcelDetails = () => {
   const session = useSession();
@@ -28,6 +28,11 @@ const ParcelDetails = () => {
     event: string;
     details?: any;
   }>>([]);
+  const [apiError, setApiError] = useState<{
+    message: string;
+    details?: any;
+    timestamp: string;
+  } | null>(null);
 
   const addToHistory = (event: string, details?: any) => {
     console.log(`API Event: ${event}`, details);
@@ -102,6 +107,11 @@ const ParcelDetails = () => {
 
               if (apiError) {
                 console.error('LightBox API call error:', apiError);
+                setApiError({
+                  message: apiError.message || 'Error calling LightBox API',
+                  details: apiError,
+                  timestamp: new Date().toISOString()
+                });
                 addToHistory("LightBox API call failed", apiError);
                 throw apiError;
               }
@@ -116,6 +126,11 @@ const ParcelDetails = () => {
               });
             } catch (apiError) {
               console.error('Error calling LightBox API:', apiError);
+              setApiError({
+                message: apiError.message || 'Error calling LightBox API',
+                details: apiError,
+                timestamp: new Date().toISOString()
+              });
               addToHistory("Error in LightBox API call", apiError);
               setError('Failed to fetch LightBox data');
               toast({
@@ -221,6 +236,32 @@ const ParcelDetails = () => {
               Request ID: {requestId}
             </div>
           </div>
+
+          {apiError && (
+            <div className="animate-fade-in">
+              <Alert variant="destructive" className="mb-6 border-red-500">
+                <XCircle className="h-5 w-5" />
+                <AlertTitle className="flex items-center gap-2">
+                  API Error
+                  <Badge variant="outline" className="ml-2 animate-pulse bg-red-100">
+                    {new Date(apiError.timestamp).toLocaleTimeString()}
+                  </Badge>
+                </AlertTitle>
+                <AlertDescription className="mt-2">
+                  <div className="space-y-2">
+                    <p className="font-medium">{apiError.message}</p>
+                    {apiError.details && (
+                      <ScrollArea className="h-[100px] w-full rounded-md border border-red-200 bg-red-50 p-4">
+                        <pre className="text-sm text-red-800">
+                          {JSON.stringify(apiError.details, null, 2)}
+                        </pre>
+                      </ScrollArea>
+                    )}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
 
           <Tabs defaultValue="property" className="w-full">
             <TabsList className="grid w-full grid-cols-6">
