@@ -16,7 +16,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
   const { toast } = useToast();
   const [threadAnalysis, setThreadAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [autoAnalysis, setAutoAnalysis] = useState(false);
+  const [autoAnalysis, setAutoAnalysis] = useState(true); // Set to true by default
   const [analysisInterval, setAnalysisInterval] = useState<number | null>(null);
   const [analysisCount, setAnalysisCount] = useState(0);
   const [systemHealth, setSystemHealth] = useState({
@@ -25,6 +25,12 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
     proStatus: 'idle',
     syncStatus: 'pending'
   });
+
+  // Start analysis immediately when component mounts
+  useEffect(() => {
+    console.log('Initializing immediate analysis...');
+    startClaudeAnalysis();
+  }, []);
 
   useEffect(() => {
     console.log('Initializing thread analysis subscription...');
@@ -49,7 +55,6 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
             });
           }
 
-          // Update system health based on analysis
           setSystemHealth(prev => ({
             ...prev,
             claudeStatus: 'active',
@@ -67,7 +72,7 @@ export function ClaudeAnalysis({ pageRoute, agentState }: ClaudeAnalysisProps) {
 
   useEffect(() => {
     if (autoAnalysis && !analysisInterval) {
-      const interval = window.setInterval(startClaudeAnalysis, 60000); // Run every minute
+      const interval = window.setInterval(startClaudeAnalysis, 30000); // Run every 30 seconds for faster analysis
       setAnalysisInterval(interval);
       console.log('Started automated Claude analysis loop');
       
