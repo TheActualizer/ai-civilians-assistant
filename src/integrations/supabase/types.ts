@@ -148,6 +148,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_video_synthesis: {
+        Row: {
+          created_at: string | null
+          duration: number | null
+          generation_metrics: Json | null
+          id: string
+          metadata: Json | null
+          prompt: string
+          raw_segments: Json | null
+          segment_count: number | null
+          status: string | null
+          synthesized_output: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration?: number | null
+          generation_metrics?: Json | null
+          id?: string
+          metadata?: Json | null
+          prompt: string
+          raw_segments?: Json | null
+          segment_count?: number | null
+          status?: string | null
+          synthesized_output?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration?: number | null
+          generation_metrics?: Json | null
+          id?: string
+          metadata?: Json | null
+          prompt?: string
+          raw_segments?: Json | null
+          segment_count?: number | null
+          status?: string | null
+          synthesized_output?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       api_performance_metrics: {
         Row: {
           endpoint: string
@@ -1878,6 +1920,17 @@ export type Database = {
           peak_usage: number
           average_usage: number
           optimization_suggestions: Json
+        }[]
+      }
+      analyze_video_segments: {
+        Args: {
+          synthesis_id: string
+          segment_data: Json
+        }
+        Returns: {
+          segment_number: number
+          quality_score: number
+          recommended_trim: Json
         }[]
       }
       binary_quantize:
