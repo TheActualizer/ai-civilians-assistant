@@ -25,12 +25,12 @@ export function NavigationControls() {
   };
 
   return (
-    <div className="fixed top-24 left-4 z-40 flex flex-col gap-2">
+    <div className="fixed top-24 left-4 z-40 flex flex-col gap-2 bg-background/50 backdrop-blur-sm p-2 rounded-lg border border-border">
       <Button
         variant="outline"
         size="icon"
         onClick={handleBack}
-        className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
+        className="rounded-full hover:bg-background/80"
       >
         <ArrowLeft className="h-4 w-4" />
       </Button>
@@ -38,7 +38,7 @@ export function NavigationControls() {
         variant="outline"
         size="icon"
         onClick={handleForward}
-        className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
+        className="rounded-full hover:bg-background/80"
       >
         <ArrowRight className="h-4 w-4" />
       </Button>
