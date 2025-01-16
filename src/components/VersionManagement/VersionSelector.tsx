@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { UIVersion } from "@/components/GetStarted/types";
+import type { Json } from "@/integrations/supabase/types";
 
 export function VersionSelector() {
   const session = useSession();
@@ -31,23 +32,22 @@ export function VersionSelector() {
 
         console.log('Fetched versions:', data);
         
-        // Transform the data to match UIVersion interface
         const transformedData: UIVersion[] = (data || []).map(item => ({
           id: item.id,
           name: item.name,
           route: item.route,
-          component_data: item.component_data || {},
+          component_data: (item.component_data as Record<string, any>) || {},
           version_type: item.version_type || 'page',
           version_tags: item.version_tags || [],
           performance_metrics: {
-            api_latency: (item.performance_metrics?.api_latency || []) as number[],
-            render_time: (item.performance_metrics?.render_time || []) as number[],
-            memory_usage: (item.performance_metrics?.memory_usage || []) as number[],
+            api_latency: ((item.performance_metrics as any)?.api_latency || []) as number[],
+            render_time: ((item.performance_metrics as any)?.render_time || []) as number[],
+            memory_usage: ((item.performance_metrics as any)?.memory_usage || []) as number[],
           },
           integration_data: {
-            connected_services: (item.integration_data?.connected_services || []) as string[],
-            api_dependencies: (item.integration_data?.api_dependencies || []) as string[],
-            data_flow: (item.integration_data?.data_flow || []) as string[],
+            connected_services: ((item.integration_data as any)?.connected_services || []) as string[],
+            api_dependencies: ((item.integration_data as any)?.api_dependencies || []) as string[],
+            data_flow: ((item.integration_data as any)?.data_flow || []) as string[],
           },
           created_at: item.created_at,
         }));
@@ -86,18 +86,18 @@ export function VersionSelector() {
               id: newVersion.id,
               name: newVersion.name,
               route: newVersion.route,
-              component_data: newVersion.component_data || {},
+              component_data: (newVersion.component_data as Record<string, any>) || {},
               version_type: newVersion.version_type || 'page',
               version_tags: newVersion.version_tags || [],
               performance_metrics: {
-                api_latency: (newVersion.performance_metrics?.api_latency || []) as number[],
-                render_time: (newVersion.performance_metrics?.render_time || []) as number[],
-                memory_usage: (newVersion.performance_metrics?.memory_usage || []) as number[],
+                api_latency: ((newVersion.performance_metrics as any)?.api_latency || []) as number[],
+                render_time: ((newVersion.performance_metrics as any)?.render_time || []) as number[],
+                memory_usage: ((newVersion.performance_metrics as any)?.memory_usage || []) as number[],
               },
               integration_data: {
-                connected_services: (newVersion.integration_data?.connected_services || []) as string[],
-                api_dependencies: (newVersion.integration_data?.api_dependencies || []) as string[],
-                data_flow: (newVersion.integration_data?.data_flow || []) as string[],
+                connected_services: ((newVersion.integration_data as any)?.connected_services || []) as string[],
+                api_dependencies: ((newVersion.integration_data as any)?.api_dependencies || []) as string[],
+                data_flow: ((newVersion.integration_data as any)?.data_flow || []) as string[],
               },
               created_at: newVersion.created_at,
             };
